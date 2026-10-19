@@ -5,11 +5,13 @@ A model controls the people in a 2D grid building. Fire spreads through the buil
 the model must decide each timestep how every person moves. The benchmark measures how
 well the model's decisions get people out through the exits before the fire reaches them.
 
-> **Status: Phase 5.** This repository contains the benchmark contract, the
+> **Status: Phase 6.** This repository contains the benchmark contract, the
 > deterministic simulation core, the frozen V1 fairness and semantics
-> specification, auditable per-episode metrics, the canonical V1 public
-> scenario suite and resumable paired evaluation on exact scenario + seed
-> schedules. Model integrations, LLM APIs, a UI, procedural map generation,
+> specification, the finalized matched stochastic hazard contract, auditable
+> per-episode metrics, the canonical V1 public scenario suite and resumable
+> paired evaluation on exact scenario + seed schedules. Wind, delayed
+> ignitions, burn-out, smoke and material flammability are deferred to a
+> future benchmark version. Model integrations, LLM APIs, a UI, procedural map generation,
 > leaderboards, a composite score, cross-seed aggregation, win rates and
 > confidence intervals, and human-behaviour models are out of scope for now.
 
@@ -230,6 +232,8 @@ metadata), the fire trajectory invariance across different actions, and the
 canonical public suite (pinned hashes, strict manifest checks and per-scenario
 diagnostic properties), and paired evaluation (manifest hashing, seed privacy,
 fresh policies per episode, identical fire across models, resume and tamper
-rejection, exact pairing).
+rejection, exact pairing), and the stochastic hazard contract (exact ignition
+probability, one draw per frontier edge, matched fire across policies and
+pinned cross-platform golden fire traces).
 Any change to simulator output fails the golden test until you bump
 `SIMULATOR_VERSION` on purpose.

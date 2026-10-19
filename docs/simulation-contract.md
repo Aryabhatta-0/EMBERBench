@@ -115,6 +115,78 @@ V1 models:
   on the geometry. With `p = 1` the result equals `deterministic`. With
   `p = 0` there is no spread.
 
+### Stochastic fire (frozen V1 contract)
+
+**Frontier.** Before a spread step `t`, let `B` be the burning set. A
+*candidate* is a cell `c` that is not in `B`, is not a wall, is not a
+non-flammable exit, and has at least one 4-neighbour in `B`. An *edge* is a
+pair `(c, s)` with `c` a candidate and `s` a burning 4-neighbour of `c`. A
+candidate has `k` edges, with `1 <= k <= 4`.
+
+**Draw order.** Edges are visited in canonical order: candidates in row-major
+order, then, for each candidate, its sources in row-major order. Each edge
+takes exactly one `bernoulli(p)` from the simulator's `fire` stream, with
+`p = fire.spread_probability`. `c` ignites in step `t` if at least one of its
+edges succeeds. Every edge of every candidate is drawn, also after an earlier
+edge of the same candidate succeeded.
+
+**Probability.** The draws for the `k` edges of `c` are consecutive outputs
+of the specified PRNG stream, so under the model of independent Bernoulli(`p`)
+draws:
+
+```text
+P(c ignites at step t | B) = 1 - (1 - p)^k
+```
+
+- `p = 0` gives no spread. `p = 1` gives exactly the `deterministic` result on
+  spread steps.
+- "Independent" means sequential draws from the specified SplitMix64 stream.
+  It is a modelling statement about the generator, not a claim of physical
+  independence between neighbouring flames.
+- Exactly: `bernoulli(p)` is `u / 2**53 < p`, where `u = next_u64() >> 11` takes
+  the values `0 .. 2**53 - 1`. So exactly `ceil(p * 2**53)` of the `2**53`
+  values succeed. For `p = 0` this is none, and for `p = 1` it is all.
+
+**Draw-consumption rule.** Let `E_t` be the number of edges of the frontier of
+`B` before step `t`. The `fire` stream advances by exactly
+
+```text
+draws(t) = E_t   if t % spread_interval == 0
+draws(t) = 0     otherwise
+```
+
+for every `p` in `[0, 1]`, including `p = 0` and `p = 1`. No candidates means
+zero draws. The `deterministic` model never draws. Actions, people, action
+mapping order and the construction order of `B` cannot change the stream
+position. SplitMix64 adds a fixed constant to its state per draw, so the draw
+count between two recorded `rng_state` values can be computed exactly; the
+tests do this for every step of recorded runs.
+
+**Golden traces.** [`tests/fixtures/golden/stochastic_fire_traces.json`](../tests/fixtures/golden/stochastic_fire_traces.json)
+pins five short fire traces (8 to 12 steps). Each pins the scenario hash, seed,
+ignited cells per step, draws per step, final burning set and final `fire`
+RNG state. The same values must come out on every platform and Python version.
+
+### Not in V1
+
+V1 fire semantics, the scenario schema and the model-visible `RulesView` are
+frozen. V1 does **not** support, and `FireConfig` and `RulesView` have no
+fields for:
+
+- delayed ignition events after step 0 (all ignitions burn at step 0);
+- wind or other directional spread probabilities;
+- burn-out (cells burn until the end of the run, R8);
+- smoke or visibility effects;
+- material-specific flammability (every non-wall cell is flammable, except
+  exits when `exits_flammable` is false);
+- fire that depends on people or actions.
+
+These are future-version features. Each one changes simulator output or the
+model-visible rules, so it needs a new `SIMULATOR_VERSION` and, where the
+rules change, a new `OBSERVATION_VERSION` and scenario schema version. Issue #7
+mentions optional directional parameters and delayed-ignition behaviour; the
+decision is to defer both to a future version to keep the frozen V1 contract.
+
 ## Randomness
 
 - The only generator is `emberbench.rng.SplitMix64`. It is fully specified in

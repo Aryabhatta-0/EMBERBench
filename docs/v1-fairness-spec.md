@@ -112,6 +112,17 @@ matched runs comes from the decisions only, not from luck.
 A run can end earlier than another run (for example when everyone evacuates).
 The invariant holds for the overlapping steps.
 
+The exact probability and draw-count rules are in
+[simulation-contract.md](simulation-contract.md#stochastic-fire-frozen-v1-contract).
+
+*Tests:* `test_stochastic_hazard.py` checks the invariant for stay, greedy,
+deliberately conflicting, all-east and random policies against the fire with
+no people at all. It uses several development seeds on multiple ignitions,
+flammable and non-flammable exits, `spread_interval` 2, `p = 0`, `p = 1` and
+the public route-invalidation scenario. It compares ignitions, burning sets and
+the `fire` RNG state on every step. See also
+`test_fairness.py::test_fire_trajectory_*`.
+
 A future subsystem that needs randomness MUST use a new stream label (see
 [simulation-contract.md](simulation-contract.md#randomness)). If its draws
 depend on actions, it MUST NOT share a stream with the fire.
