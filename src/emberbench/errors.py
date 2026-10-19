@@ -47,3 +47,7 @@ class ModelOutputError(InvalidActionError):
 
 class ObservationFormatError(EmberBenchError):
     """A serialized observation is malformed, not canonical or of another observation version."""
+
+
+class IntegrityError(EmberBenchError):
+    """Held-out integrity check failed: provenance, submission identity, workspace layout or a leak guard."""
