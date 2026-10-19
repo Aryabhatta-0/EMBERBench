@@ -5,17 +5,16 @@ A model controls the people in a 2D grid building. Fire spreads through the buil
 the model must decide each timestep how every person moves. The benchmark measures how
 well the model's decisions get people out through the exits before the fire reaches them.
 
-> **Status: Phase 9.** This repository contains the benchmark contract, the
+> **Status: Phase 7.** This repository contains the benchmark contract, the
 > deterministic simulation core, the frozen V1 fairness and semantics
 > specification, the finalized matched stochastic hazard contract, auditable
 > per-episode metrics, crowd coordination diagnostics, the canonical V1
-> public scenario suite, resumable paired evaluation on exact scenario +
-> seed schedules, the provider-independent model interface, deterministic
-> aggregate and paired statistics, the procedural unseen-scenario generator
-> and deterministic non-LLM reference baselines. Wind, delayed
+> public scenario suite and resumable paired evaluation on exact scenario +
+> seed schedules. Wind, delayed
 > ignitions, burn-out, smoke and material flammability are deferred to a
-> future benchmark version. LLM provider integrations, a UI, leaderboards, a
-> composite score and human-behaviour models are out of scope for now.
+> future benchmark version. Model integrations, LLM APIs, a UI, procedural map generation,
+> leaderboards, a composite score, cross-seed aggregation, win rates and
+> confidence intervals, and human-behaviour models are out of scope for now.
 
 ## What EMBERBench measures
 
@@ -191,10 +190,10 @@ src/emberbench/
   replay.py     replay() and verify_record()
   metrics.py    compute_episode_metrics(): auditable raw per-episode metrics
   crowd.py      compute_crowd_diagnostics(): congestion, hotspots, exit load signals
-  suite.py      scenario suite manifests: strict parsing, load_suite() verification
-  evaluation.py evaluation manifests, run_evaluation() with resume, pair_results()
   baselines.py  fair reference baseline agents and their registry
   oracle.py     PRIVILEGED evaluator-side escape bound (not a model)
+  suite.py      scenario suite manifests: strict parsing, load_suite() verification
+  evaluation.py evaluation manifests, run_evaluation() with resume, pair_results()
   canonical.py  canonical JSON and SHA-256 hashing
   errors.py     explicit exception types
 ```
