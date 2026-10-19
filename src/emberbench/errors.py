@@ -27,3 +27,7 @@ class MetricsInputError(EmberBenchError):
 
 class SuiteValidationError(EmberBenchError):
     """A suite manifest is malformed, or it does not match the scenario files it lists."""
+
+
+class EvaluationError(EmberBenchError):
+    """An evaluation manifest or result artifact is malformed, inconsistent or incompatible."""

@@ -5,11 +5,13 @@ A model controls the people in a 2D grid building. Fire spreads through the buil
 the model must decide each timestep how every person moves. The benchmark measures how
 well the model's decisions get people out through the exits before the fire reaches them.
 
-> **Status: Phase 4.** This repository contains the benchmark contract, the
+> **Status: Phase 5.** This repository contains the benchmark contract, the
 > deterministic simulation core, the frozen V1 fairness and semantics
-> specification, auditable per-episode metrics and the canonical V1 public
-> scenario suite. Model integrations, LLM APIs, a UI, procedural map generation,
-> leaderboards, a composite score, cross-seed aggregation and human-behaviour models are out of scope for now.
+> specification, auditable per-episode metrics, the canonical V1 public
+> scenario suite and resumable paired evaluation on exact scenario + seed
+> schedules. Model integrations, LLM APIs, a UI, procedural map generation,
+> leaderboards, a composite score, cross-seed aggregation, win rates and
+> confidence intervals, and human-behaviour models are out of scope for now.
 
 ## What EMBERBench measures
 
@@ -123,6 +125,28 @@ frozen V1 decisions and their rationale are in
 8. Casualties and trapping updates
 9. Termination check
 
+### Paired evaluation
+
+An `EvaluationManifest` pins an ordered schedule of (scenario, seed) episodes,
+the suite hash and the simulator, observation and metrics versions. Every model
+runs the same manifest, so all models face the same fire (common random
+numbers). `run_evaluation()` builds a fresh policy per episode, gives it only
+`Observation` values, saves an authenticated per-model artifact after every
+episode and resumes it after an interruption. `pair_results()` reports exactly
+which episodes two artifacts can compare. The seeds come from the evaluator;
+this repository does not generate scored seeds. See
+[docs/evaluation.md](docs/evaluation.md).
+
+```python
+from emberbench import build_evaluation_manifest, load_suite, pair_results, run_evaluation
+
+suite = load_suite("scenarios/public/v1")
+manifest = build_evaluation_manifest(suite, [3, 1, 4])   # development seeds only
+a = run_evaluation(suite, manifest, "model-a", make_policy_a, "model-a.json")
+b = run_evaluation(suite, manifest, "model-b", make_policy_b, "model-b.json")
+print(pair_results(a, b).paired_count)
+```
+
 ## Architecture
 
 ```
@@ -139,6 +163,7 @@ src/emberbench/
   replay.py     replay() and verify_record()
   metrics.py    compute_episode_metrics(): auditable raw per-episode metrics
   suite.py      scenario suite manifests: strict parsing, load_suite() verification
+  evaluation.py evaluation manifests, run_evaluation() with resume, pair_results()
   canonical.py  canonical JSON and SHA-256 hashing
   errors.py     explicit exception types
 ```
@@ -203,6 +228,8 @@ actions, collision rules, termination, ID stability, golden trajectory digests,
 every frozen V1 rule, the observation contract (no seed, RNG state or hidden
 metadata), the fire trajectory invariance across different actions, and the
 canonical public suite (pinned hashes, strict manifest checks and per-scenario
-diagnostic properties).
+diagnostic properties), and paired evaluation (manifest hashing, seed privacy,
+fresh policies per episode, identical fire across models, resume and tamper
+rejection, exact pairing).
 Any change to simulator output fails the golden test until you bump
 `SIMULATOR_VERSION` on purpose.
