@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "one_person_one_exit",
+  "description": "TEST FIXTURE. One person walks four cells east to one exit. No fire. Layout: ####### / #P...E# / #######",
+  "grid": {
+    "width": 7,
+    "height": 3
+  },
+  "obstacles": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      0,
+      4
+    ],
+    [
+      0,
+      5
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      6
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      2,
+      2
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      2,
+      5
+    ],
+    [
+      2,
+      6
+    ]
+  ],
+  "exits": [
+    {
+      "id": "E1",
+      "position": [
+        1,
+        5
+      ]
+    }
+  ],
+  "people": [
+    {
+      "id": "P1",
+      "position": [
+        1,
+        1
+      ]
+    }
+  ],
+  "ignitions": [],
+  "fire": {
+    "model": "deterministic",
+    "spread_interval": 1,
+    "exits_flammable": true
+  },
+  "movement": {
+    "conflict_resolution": "lowest_id_wins",
+    "enter_fire": "casualty"
+  },
+  "termination": {
+    "max_steps": 20
+  },
+  "seed": 1
+}
