@@ -19,3 +19,7 @@ class SimulationError(EmberBenchError):
 
 class ReplayMismatchError(EmberBenchError):
     """A recorded run does not match a fresh replay of the same inputs."""
+
+
+class MetricsInputError(EmberBenchError):
+    """A scenario and run record cannot be scored: they do not match, or the record is malformed."""

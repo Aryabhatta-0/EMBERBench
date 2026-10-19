@@ -7,6 +7,7 @@ SIMULATOR_VERSION = "0.2.0"
 from .errors import (  # noqa: E402
     EmberBenchError,
     InvalidActionError,
+    MetricsInputError,
     ReplayMismatchError,
     ScenarioValidationError,
     SimulationError,
@@ -31,9 +32,11 @@ from .scenario import (  # noqa: E402
 )
 from .simulator import Simulator, run_episode  # noqa: E402
 from .state import PersonState, PersonStatus, SimState, TerminationReason, render  # noqa: E402
+from .metrics import METRICS_VERSION, EpisodeMetrics, compute_episode_metrics  # noqa: E402
 
 __all__ = [
     "ALLOWED_ACTIONS",
+    "METRICS_VERSION",
     "OBSERVATION_VERSION",
     "SCHEMA_VERSION",
     "SIMULATOR_VERSION",
@@ -43,12 +46,14 @@ __all__ = [
     "Cell",
     "EmberBenchError",
     "EnterFirePolicy",
+    "EpisodeMetrics",
     "Evacuation",
     "ExitSpec",
     "FireConfig",
     "FireModelName",
     "InvalidActionError",
     "MapView",
+    "MetricsInputError",
     "MoveOutcome",
     "MoveResolution",
     "MovementConfig",
@@ -68,6 +73,7 @@ __all__ = [
     "StepRecord",
     "TerminationConfig",
     "TerminationReason",
+    "compute_episode_metrics",
     "load_scenario",
     "render",
     "replay",
