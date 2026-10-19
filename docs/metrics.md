@@ -319,7 +319,7 @@ composite score MUST:
    through a lexicographic order with safety first, not a weighted sum in
    which time can offset lives.
 
-Cross-seed robustness and statistical aggregation belong to Issue #12.
+Cross-seed robustness and statistical aggregation are in [statistics.md](statistics.md).
 
 ## 12. Per-person fields (`people`)
 

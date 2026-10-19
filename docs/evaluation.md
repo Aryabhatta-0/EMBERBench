@@ -6,7 +6,7 @@ episodes** and how their results are matched. The code is in
 [`tests/test_evaluation.py`](../tests/test_evaluation.py).
 
 Out of scope here: model-provider adapters, win rates, confidence intervals and
-other aggregate statistics (Issue #12), procedural scenario generation,
+other aggregate statistics (see [statistics.md](statistics.md)), procedural scenario generation,
 leaderboards, hidden scenarios and a composite score.
 
 ## 1. Common random numbers
@@ -265,7 +265,7 @@ The function returns a `PairingReport`:
 | `missing_from_b` | scheduled keys that `b` does not have |
 
 An episode that neither artifact has is in both missing lists. The report holds
-no scores, win rates or statistics; those belong to Issue #12 and will use only
+no scores, win rates or statistics. [statistics.md](statistics.md) defines the paired statistics; they use only
 `paired` episodes.
 
 ## 8. Example
