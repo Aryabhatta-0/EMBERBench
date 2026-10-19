@@ -140,6 +140,9 @@ Limit: this is an interface contract for in-process Python policies, not a
 sandbox. Python code can inspect its caller's stack. A real model adapter must
 send only the serialized observation to the model.
 
+For per-episode agents, action validation, optional execution accounting and
+the canonical serialized observation, see [model-interface.md](model-interface.md).
+
 ## 5. The per-model result artifact
 
 `run_evaluation` writes one JSON artifact per model run. It is canonical JSON

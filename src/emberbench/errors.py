@@ -35,3 +35,11 @@ class EvaluationError(EmberBenchError):
 
 class StatisticsInputError(EvaluationError):
     """An evaluation result cannot be summarized: it fails authentication against its suite."""
+
+
+class ModelOutputError(InvalidActionError):
+    """A decision model returned an action set that the model interface rejects."""
+
+
+class ObservationFormatError(EmberBenchError):
+    """A serialized observation is malformed, not canonical or of another observation version."""
