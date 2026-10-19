@@ -34,7 +34,8 @@ from .scenario import (  # noqa: E402
 )
 from .simulator import Simulator, run_episode  # noqa: E402
 from .state import PersonState, PersonStatus, SimState, TerminationReason, render  # noqa: E402
-from .metrics import METRICS_VERSION, EpisodeMetrics, compute_episode_metrics  # noqa: E402
+from .metrics import METRICS_VERSION, EpisodeMetrics, compute_episode_metrics, validate_run_record  # noqa: E402
+from .crowd import CROWD_DIAGNOSTICS_VERSION, CrowdDiagnostics, compute_crowd_diagnostics  # noqa: E402
 from .suite import ScenarioFamily, Suite, SuiteEntry, SuiteManifest, load_suite  # noqa: E402
 from .evaluation import (  # noqa: E402
     EVALUATION_MANIFEST_VERSION,
@@ -58,6 +59,7 @@ from .evaluation import (  # noqa: E402
 
 __all__ = [
     "ALLOWED_ACTIONS",
+    "CROWD_DIAGNOSTICS_VERSION",
     "EVALUATION_MANIFEST_VERSION",
     "EVALUATION_RESULT_VERSION",
     "METRICS_VERSION",
@@ -68,6 +70,7 @@ __all__ = [
     "Casualty",
     "CasualtyCause",
     "Cell",
+    "CrowdDiagnostics",
     "EmberBenchError",
     "EnterFirePolicy",
     "EpisodeKey",
@@ -111,6 +114,7 @@ __all__ = [
     "TerminationConfig",
     "TerminationReason",
     "build_evaluation_manifest",
+    "compute_crowd_diagnostics",
     "compute_episode_metrics",
     "load_evaluation_manifest",
     "load_evaluation_result",
@@ -125,5 +129,6 @@ __all__ = [
     "save_evaluation_result",
     "save_scenario",
     "verify_manifest",
+    "validate_run_record",
     "verify_record",
 ]

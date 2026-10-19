@@ -508,6 +508,21 @@ def _authenticate(scenario: Scenario, record: RunRecord) -> None:
         raise _fail(f"record failed simulator replay verification: {exc}") from exc
 
 
+def validate_run_record(scenario: Scenario, record: RunRecord) -> None:
+    """Run all three validation stages. Raise :class:`MetricsInputError` on the first failure.
+
+    Every evaluator-side analysis (metrics, crowd diagnostics) calls this
+    before it reads the record.
+    """
+    if not isinstance(scenario, Scenario):
+        raise TypeError("scenario must be a Scenario")
+    if not isinstance(record, RunRecord):
+        raise TypeError("record must be a RunRecord")
+    _check_compatibility(scenario, record)
+    _check_record(scenario, record)
+    _authenticate(scenario, record)
+
+
 # --------------------------------------------------------------------------- geometry
 
 
@@ -566,13 +581,7 @@ def compute_episode_metrics(scenario: Scenario, record: RunRecord) -> EpisodeMet
     reach termination, or is not reproduced exactly by a simulator replay.
     Neither argument is mutated.
     """
-    if not isinstance(scenario, Scenario):
-        raise TypeError("scenario must be a Scenario")
-    if not isinstance(record, RunRecord):
-        raise TypeError("record must be a RunRecord")
-    _check_compatibility(scenario, record)
-    _check_record(scenario, record)
-    _authenticate(scenario, record)
+    validate_run_record(scenario, record)
 
     final = record.final_state
     termination_reason = final.termination_reason
