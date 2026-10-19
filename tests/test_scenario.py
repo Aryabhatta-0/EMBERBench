@@ -10,7 +10,8 @@ from emberbench.scenario import FireConfig, FireModelName
 
 
 def base_doc() -> dict[str, Any]:
-    return json.loads((FIXTURE_DIR / "one_person_one_exit.json").read_text())
+    doc: dict[str, Any] = json.loads((FIXTURE_DIR / "one_person_one_exit.json").read_text())
+    return doc
 
 
 @pytest.mark.parametrize("name", FIXTURE_NAMES)

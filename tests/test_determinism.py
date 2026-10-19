@@ -133,7 +133,7 @@ from conftest import FIXTURE_NAMES, fixture_scenario, greedy_exit_policy
 from emberbench import run_episode
 for name in FIXTURE_NAMES:
     s = fixture_scenario(name)
-    print(name, run_episode(s, greedy_exit_policy(s)).digest())
+    print(name, run_episode(s, greedy_exit_policy).digest())
 """
 
 
@@ -147,7 +147,7 @@ def test_results_identical_across_processes_and_hash_seeds() -> None:
         outputs.append(result.stdout)
     assert outputs[0] == outputs[1] == outputs[2]
     local = "".join(
-        f"{n} {run_episode(fixture_scenario(n), greedy_exit_policy(fixture_scenario(n))).digest()}\n"
+        f"{n} {run_episode(fixture_scenario(n), greedy_exit_policy).digest()}\n"
         for n in FIXTURE_NAMES
     )
     assert outputs[0].replace("\r\n", "\n") == local
@@ -169,5 +169,5 @@ GOLDEN_DIGESTS: dict[str, str] = {
 @pytest.mark.parametrize("name", FIXTURE_NAMES)
 def test_golden_trajectories(name: str) -> None:
     scenario = fixture_scenario(name)
-    digest = run_episode(scenario, greedy_exit_policy(scenario)).digest()
+    digest = run_episode(scenario, greedy_exit_policy).digest()
     assert digest == GOLDEN_DIGESTS[name], f"{name}: {digest}"

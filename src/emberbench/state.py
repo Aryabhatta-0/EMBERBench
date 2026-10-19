@@ -1,9 +1,13 @@
-"""Immutable simulator state snapshots and the agent-facing observation."""
+"""Immutable simulator state snapshots.
+
+``SimState`` is evaluator-private: it holds the RNG stream positions and the
+``trapped`` diagnostic. Models see :class:`emberbench.observation.Observation`.
+"""
 
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, Protocol
 
 from .grid import CELL_GLYPHS, Cell, Pos
 from .scenario import Scenario
@@ -41,38 +45,12 @@ def _sorted_people(people: tuple[PersonState, ...]) -> tuple[PersonState, ...]:
 
 
 @dataclass(frozen=True)
-class Observation:
-    """What a decision-maker sees before acting (phase 1).
-
-    The static map (grid, obstacles, exits) comes from the public
-    :class:`Scenario`. The RNG state is never exposed, so a policy cannot
-    predict stochastic fire.
-    """
-
-    step: int
-    people: tuple[PersonState, ...]
-    burning: frozenset[Pos]
-    trapped: frozenset[str]
-
-    @property
-    def active(self) -> tuple[PersonState, ...]:
-        return tuple(p for p in self.people if p.status is PersonStatus.ACTIVE)
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "step": self.step,
-            "people": [p.to_dict() for p in self.people],
-            "burning": [p.to_list() for p in sorted(self.burning)],
-            "trapped": sorted(self.trapped),
-        }
-
-
-@dataclass(frozen=True)
 class SimState:
-    """A full snapshot of simulator state after a step. It contains no hidden state.
+    """A full, evaluator-private snapshot of simulator state after a step.
 
     ``rng_state`` holds the position of every simulator-owned RNG stream, so
     the snapshot fully determines the future given the scenario and actions.
+    For that reason a ``SimState`` must never reach a decision model.
     """
 
     step: int
@@ -104,9 +82,6 @@ class SimState:
     def ids_with_status(self, status: PersonStatus) -> tuple[str, ...]:
         return tuple(p.id for p in self.people if p.status is status)
 
-    def observation(self) -> Observation:
-        return Observation(step=self.step, people=self.people, burning=self.burning, trapped=self.trapped)
-
     def to_dict(self) -> dict[str, Any]:
         return {
             "step": self.step,
@@ -132,7 +107,17 @@ class SimState:
         )
 
 
-def cell_at(scenario: Scenario, state: SimState | Observation, pos: Pos) -> Cell:
+class _Snapshot(Protocol):
+    """Anything with people and burning cells: a ``SimState`` or an ``Observation``."""
+
+    @property
+    def people(self) -> tuple[PersonState, ...]: ...
+
+    @property
+    def burning(self) -> frozenset[Pos]: ...
+
+
+def cell_at(scenario: Scenario, state: _Snapshot, pos: Pos) -> Cell:
     """Classify a cell. Precedence: wall, then fire, then person, then exit, then empty."""
     if pos in scenario.walls:
         return Cell.WALL
@@ -145,7 +130,7 @@ def cell_at(scenario: Scenario, state: SimState | Observation, pos: Pos) -> Cell
     return Cell.EMPTY
 
 
-def render(scenario: Scenario, state: SimState | Observation) -> str:
+def render(scenario: Scenario, state: _Snapshot) -> str:
     """ASCII view for debugging: ``#`` wall, ``F`` fire, ``P`` person, ``E`` exit, ``.`` empty."""
     rows = []
     for r in range(scenario.height):

@@ -1,6 +1,8 @@
 # Simulation contract (simulator version 0.1.0)
 
 This document is normative. If the code and this document disagree, it is a bug.
+The V1 fairness contract, the model-visible observation and the rationale for
+each frozen rule are in [v1-fairness-spec.md](v1-fairness-spec.md).
 A change to any rule that changes output for the same inputs must bump
 `SIMULATOR_VERSION` in `src/emberbench/__init__.py`.
 
@@ -16,7 +18,9 @@ A change to any rule that changes output for the same inputs must bump
 A `SimState` snapshot contains: `step`, every person (`id`, `position`, `status`),
 the burning cells, the trapped set, the RNG stream positions, `terminated` and
 `termination_reason`. Snapshots are frozen dataclasses. Two equal snapshots
-serialise to identical canonical JSON.
+serialise to identical canonical JSON. A `SimState` is evaluator-private. A
+decision model sees only the `Observation` (see
+[v1-fairness-spec.md](v1-fairness-spec.md#4-observation-contract-version-10)).
 
 The person status is one of `active`, `evacuated` or `casualty`. A resolved
 person stays in the record with its last position, but it does not occupy a
@@ -31,7 +35,7 @@ Each `Simulator.step(actions)` runs these phases in this order:
 
 | # | Phase | Rule |
 |---|-------|------|
-| 1 | Observation | `observe()` returns the pre-step `Observation`: step, people, burning cells and trapped set. It never includes RNG state. |
+| 1 | Observation | `observe()` returns the pre-step model-visible `Observation`: step, static map, people, burning cells and allowed actions. It never includes the seed, RNG state, hidden scenario metadata or the trapped set. |
 | 2 | Actions | The mapping must have exactly one entry per **active** person. Values are `stay`/`north`/`south`/`east`/`west` (or `Action`). Anything else raises `InvalidActionError`, and the state does not change. |
 | 3 | Movement validation | `stay` gives `stayed`. A move off the grid gives `blocked_boundary`. A move into an obstacle gives `blocked_wall`. A move into a burning cell gives `blocked_fire` if `movement.enter_fire = "blocked"`. Otherwise the move continues. |
 | 4 | Collision resolution | See [Collisions](#collisions). |
@@ -122,13 +126,16 @@ V1 models:
   float with `p`. It uses no other floating-point arithmetic.
 - The stream positions are part of `SimState` (for audit and resume). They are
   not part of `Observation`.
+- The fire stream is exogenous: the fire model never sees people or actions.
+  For the same scenario and seed, every action sequence gives the same fire
+  trajectory on the steps that the runs share.
 
 ## Trapping
 
 `trapped` is the set of active people with no path to a non-burning exit. A
 path may cross any cell that is not a wall and not burning. Other people are
-ignored. This is a diagnostic for later metrics. It does not change the
-person's status or end the run.
+ignored. This is an evaluator diagnostic for later metrics. It is not in the
+`Observation`. It does not change the person's status or end the run.
 
 ## Replay
 
