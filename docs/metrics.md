@@ -21,8 +21,9 @@ leaderboards are out of scope here (see Issue #12).
    metric counts every person.
 4. **Proxies are named as proxies.** The fire-exposure and replanning fields
    describe observable events. They do not measure risk or model intent.
-5. **Fail closed.** Inputs that do not belong together, or a malformed
-   record, raise `MetricsInputError`. No partial result is returned.
+5. **Fail closed.** Inputs that do not belong together, a malformed record,
+   or a record that the simulator could not have produced raise
+   `MetricsInputError`. No partial result is returned.
 6. **Exact arithmetic.** Every ratio is computed as an exact
    `fractions.Fraction` and converted to `float` once. A value is the
    correctly rounded float of an exact rational, on every platform.
@@ -39,8 +40,11 @@ leaderboards are out of scope here (see Issue #12).
 | `RunRecord.steps[t]` | actions, movement outcomes, ignitions, evacuations, casualties and snapshot `s_t` |
 | `RunRecord.final_state` | terminal status of each person, terminal trapped set, termination reason |
 
-`compute_episode_metrics` raises `MetricsInputError` when any of these
-checks fails:
+`compute_episode_metrics` validates its inputs in three stages, in this
+order. All stages always run; there is no option to skip one. It raises
+`MetricsInputError` when any check fails.
+
+**Stage 1 and 2: compatibility and structural validation.**
 
 - **Compatibility.** `simulator_version` equals `SIMULATOR_VERSION`,
   `observation_version` equals `OBSERVATION_VERSION`, and `schema_version`
@@ -63,9 +67,19 @@ checks fails:
   `T = max_steps`. A record with no steps, or one that does not reach
   termination, is rejected: metrics need a complete episode.
 
-These checks prove internal consistency. They do not re-run the simulator.
-To prove that a record is the exact simulator output for its action log,
-call `verify_record(scenario, record)` first.
+These checks give precise diagnostics and confirm every assumption the
+metrics rely on. On their own they only prove internal consistency.
+
+**Stage 3: simulator replay authentication.** `compute_episode_metrics`
+then calls `verify_record(scenario, record)`. It replays the recorded action
+log from the recorded seed and requires a byte-identical record. A
+`ReplayMismatchError` becomes a `MetricsInputError` whose message starts
+with `record failed simulator replay verification:`; the original error is
+kept as `__cause__`. This stage rejects records that pass every structural
+check but are impossible under the simulator, for example a `blocked_wall`
+outcome for a move into an open cell, or an ignition that the configured
+fire model and RNG stream would not produce. Callers do not need to call
+`verify_record` themselves.
 
 ## 3. Notation
 
@@ -335,6 +349,7 @@ One `PersonMetrics` per scenario person, sorted by person ID:
 | Person walled off from every exit | `static_exit_distance = null`; the person can never evacuate |
 | Episode ends with `all_resolved` before `H` | non-evacuees are still censored at `H`, not `T` |
 | Record not terminated, empty, or from another scenario or version | `MetricsInputError` |
+| Record consistent but not reproduced by a replay | `MetricsInputError` (`record failed simulator replay verification: ...`) |
 
 ## 14. Serialisation
 

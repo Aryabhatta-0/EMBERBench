@@ -22,7 +22,8 @@ The benchmark looks at the quality of sequential decisions under a changing haza
 Per-episode raw metrics (evacuated, casualties, stranded, timing, congestion,
 path efficiency, a fire-exposure proxy, exit use and replanning proxies) are
 computed from the `Scenario` and the `RunRecord` with `compute_episode_metrics`.
-See [docs/metrics.md](docs/metrics.md). There is no single score: raw metrics
+It scores only records that pass structural validation and a full simulator
+replay (`verify_record`). See [docs/metrics.md](docs/metrics.md). There is no single score: raw metrics
 are canonical, and safety always comes before speed.
 
 ## Fairness principle

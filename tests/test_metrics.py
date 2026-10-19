@@ -12,12 +12,14 @@ import pytest
 from conftest import FIXTURE_NAMES, fixture_scenario, greedy_exit_policy, layout
 from emberbench import (
     METRICS_VERSION,
+    Action,
     CasualtyCause,
     FireConfig,
     MetricsInputError,
     MoveOutcome,
     PersonStatus,
     Pos,
+    ReplayMismatchError,
     RunRecord,
     Scenario,
     Simulator,
@@ -36,6 +38,7 @@ from emberbench.metrics import (
     ReplanningProxies,
     SafetyMetrics,
     TimeMetrics,
+    _check_record,
     static_exit_distances,
 )
 from emberbench.state import PersonState
@@ -667,6 +670,64 @@ def test_rejects_malformed_records(tamper: Callable[[RunRecord], RunRecord], mes
     scenario, record = _complete_record()
     with pytest.raises(MetricsInputError, match=message):
         compute_episode_metrics(scenario, tamper(record))
+
+
+# --------------------------------------------------------------------------- forged but plausible records
+#
+# These records pass every structural check, so only a simulator replay can
+# tell that they are impossible. Each test proves both halves.
+
+
+def _forge_wall_block() -> tuple[Scenario, RunRecord]:
+    """Pa really stays at step 1. The forgery claims Pa tried east and hit a wall at the open cell (0,1)."""
+    scenario = layout(["a..E"])
+    record = run(scenario, [{"Pa": "stay"}, {"Pa": "east"}, {"Pa": "east"}, {"Pa": "east"}])
+    step = record.steps[0]
+    move = dataclasses.replace(step.movements[0], action=Action.EAST, target=Pos(0, 1), outcome=MoveOutcome.BLOCKED_WALL)
+    forged = dataclasses.replace(step, actions=(("Pa", Action.EAST),), movements=(move,))
+    return scenario, dataclasses.replace(record, steps=(forged, *record.steps[1:]))
+
+
+def _forge_ignition() -> tuple[Scenario, RunRecord]:
+    """The fire at (2,0) cannot spread before step 1000. The forgery ignites its neighbour (2,1) at step 1."""
+    scenario = layout(["a..E", "....", "F..."], fire=NO_FIRE_EVER)
+    record = run(scenario, [{"Pa": "east"}] * 3)
+    fake = Pos(2, 1)
+    steps = []
+    for step in record.steps:
+        state = dataclasses.replace(step.state, burning=step.state.burning | {fake})
+        steps.append(dataclasses.replace(step, state=state, ignited=(fake,) if step.step == 1 else step.ignited))
+    return scenario, dataclasses.replace(record, steps=tuple(steps))
+
+
+def test_forged_wall_block_passes_structure_but_fails_replay() -> None:
+    scenario, forged = _forge_wall_block()
+    assert Pos(0, 1) not in scenario.walls  # the "wall" is an open cell
+    _check_record(scenario, forged)  # structurally plausible: no error
+    with pytest.raises(MetricsInputError, match="record failed simulator replay verification") as excinfo:
+        compute_episode_metrics(scenario, forged)
+    assert isinstance(excinfo.value.__cause__, ReplayMismatchError)
+    assert "step 1" in str(excinfo.value)
+
+
+def test_forged_ignition_passes_structure_but_fails_replay() -> None:
+    scenario, forged = _forge_ignition()
+    assert scenario.fire.spread_interval == 1000  # the deterministic model cannot ignite anything at step 1
+    _check_record(scenario, forged)  # new, non-wall, monotone fire: structurally plausible
+    with pytest.raises(MetricsInputError, match="record failed simulator replay verification") as excinfo:
+        compute_episode_metrics(scenario, forged)
+    assert isinstance(excinfo.value.__cause__, ReplayMismatchError)
+    assert "step 1" in str(excinfo.value)
+
+
+def test_authentic_records_still_score() -> None:
+    # The honest versions of both forgeries are accepted.
+    for rows, fire, script in [
+        (["a..E"], FireConfig(), [{"Pa": "stay"}] + [{"Pa": "east"}] * 3),
+        (["a..E", "....", "F..."], NO_FIRE_EVER, [{"Pa": "east"}] * 3),
+    ]:
+        scenario = layout(rows, fire=fire)
+        assert compute_episode_metrics(scenario, run(scenario, script)).safety.evacuated == 1
 
 
 # --------------------------------------------------------------------------- purity and reconciliation

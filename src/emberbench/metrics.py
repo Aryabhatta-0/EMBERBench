@@ -10,8 +10,9 @@ Rules for this module:
 - **Raw metrics are canonical.** Every field is a count, a step number, a
   distance or a ratio of named counts. There is no composite score.
 - **Fail closed.** A record that does not belong to the scenario, comes from
-  another simulator, observation or schema version, or breaks a record
-  invariant raises :class:`MetricsInputError`. Nothing is scored.
+  another simulator, observation or schema version, breaks a record
+  invariant, or fails simulator replay raises :class:`MetricsInputError`.
+  Nothing is scored.
 - **Exact arithmetic.** Ratios are computed with :class:`fractions.Fraction`
   and converted to ``float`` once, so each value is the correctly rounded
   float of an exact rational. Results do not depend on platform or
@@ -19,10 +20,14 @@ Rules for this module:
 - **Proxies are named as proxies.** The fire-exposure and replanning fields
   describe observable events only. They do not claim to measure model intent.
 
-The structural checks here confirm that the record is internally consistent
-with the scenario. They do not re-run the simulator. To prove that a record is
-authentic (that it is the exact output of the simulator), call
-:func:`emberbench.verify_record` first.
+Validation runs in three stages, all mandatory:
+
+1. compatibility: versions, ``scenario_id`` and ``scenario_hash``;
+2. structural checks: precise diagnostics for each record invariant that
+   the metrics rely on;
+3. authentication: :func:`emberbench.verify_record` replays the action log
+   and requires a byte-identical record. This rejects records that are
+   internally consistent but that the simulator could not have produced.
 """
 
 from collections import deque
@@ -32,11 +37,12 @@ from fractions import Fraction
 from typing import Any
 
 from . import SIMULATOR_VERSION
-from .errors import MetricsInputError
+from .errors import MetricsInputError, ReplayMismatchError
 from .events import CasualtyCause, RunRecord
 from .grid import Action, Pos, in_bounds, neighbours
 from .movement import MoveOutcome
 from .observation import OBSERVATION_VERSION
+from .replay import verify_record
 from .scenario import SUPPORTED_SCHEMA_VERSIONS, Scenario
 from .simulator import compute_trapped
 from .state import PersonState, PersonStatus, SimState, TerminationReason
@@ -494,6 +500,14 @@ def _check_record(scenario: Scenario, record: RunRecord) -> None:
         raise _fail("record does not reach termination; metrics need a complete episode")
 
 
+def _authenticate(scenario: Scenario, record: RunRecord) -> None:
+    """Replay the action log and require the exact recorded trajectory."""
+    try:
+        verify_record(scenario, record)
+    except ReplayMismatchError as exc:
+        raise _fail(f"record failed simulator replay verification: {exc}") from exc
+
+
 # --------------------------------------------------------------------------- geometry
 
 
@@ -548,8 +562,9 @@ def compute_episode_metrics(scenario: Scenario, record: RunRecord) -> EpisodeMet
     """Compute every raw metric for one complete episode.
 
     Raises :class:`MetricsInputError` if the record does not belong to
-    ``scenario``, comes from an incompatible version, is malformed or does
-    not reach termination. Neither argument is mutated.
+    ``scenario``, comes from an incompatible version, is malformed, does not
+    reach termination, or is not reproduced exactly by a simulator replay.
+    Neither argument is mutated.
     """
     if not isinstance(scenario, Scenario):
         raise TypeError("scenario must be a Scenario")
@@ -557,6 +572,7 @@ def compute_episode_metrics(scenario: Scenario, record: RunRecord) -> EpisodeMet
         raise TypeError("record must be a RunRecord")
     _check_compatibility(scenario, record)
     _check_record(scenario, record)
+    _authenticate(scenario, record)
 
     final = record.final_state
     termination_reason = final.termination_reason
