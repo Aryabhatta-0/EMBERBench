@@ -75,7 +75,9 @@ Prints every contract version of this build: `cli_version`,
 `action_schema_version`, `metrics_version`, `statistics_version`,
 `generator_version`, `generator_config_version`,
 `generation_manifest_version`, `evaluation_manifest_version`,
-`evaluation_result_version` and `crowd_diagnostics_version`. No field depends
+`evaluation_result_version`, `crowd_diagnostics_version`,
+`baselines_version`, `integrity_protocol_version` and `benchmark_revision`
+(see `docs/baselines.md` and `docs/integrity.md`). No field depends
 on the environment (no paths, platform, interpreter or install location).
 
 ### `scenario validate FILE`

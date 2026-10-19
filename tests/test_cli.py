@@ -195,6 +195,9 @@ def test_version_json_lists_every_contract_version() -> None:
         "evaluation_manifest_version": emberbench.EVALUATION_MANIFEST_VERSION,
         "evaluation_result_version": emberbench.EVALUATION_RESULT_VERSION,
         "crowd_diagnostics_version": emberbench.CROWD_DIAGNOSTICS_VERSION,
+        "baselines_version": emberbench.BASELINES_VERSION,
+        "integrity_protocol_version": emberbench.INTEGRITY_PROTOCOL_VERSION,
+        "benchmark_revision": emberbench.BENCHMARK_REVISION,
     }
 
 
@@ -210,7 +213,10 @@ def test_the_cli_changes_no_library_version() -> None:
         emberbench.GENERATOR_VERSION,
         emberbench.EVALUATION_MANIFEST_VERSION,
         emberbench.EVALUATION_RESULT_VERSION,
-    ) == ("0.2.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0.0", "1.0", "1.0")
+        emberbench.BASELINES_VERSION,
+        emberbench.INTEGRITY_PROTOCOL_VERSION,
+        emberbench.BENCHMARK_REVISION,
+    ) == ("0.2.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0.0", "1.0", "1.0", "1.0", "1.0", "1")
 
 
 def test_version_human_mode() -> None:
