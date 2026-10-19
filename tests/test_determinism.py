@@ -9,6 +9,7 @@ import pytest
 
 from conftest import FIXTURE_NAMES, fixture_scenario, greedy_exit_policy
 from emberbench import (
+    OBSERVATION_VERSION,
     Action,
     ReplayMismatchError,
     RunRecord,
@@ -103,8 +104,25 @@ def test_tampered_records_are_detected() -> None:
     with pytest.raises(ReplayMismatchError, match="simulator"):
         verify_record(scenario, RunRecord.from_dict(data))
 
+    data = original.to_dict()
+    data["observation_version"] = "0.9"
+    with pytest.raises(ReplayMismatchError, match="observation version"):
+        verify_record(scenario, RunRecord.from_dict(data))
+
     with pytest.raises(ReplayMismatchError, match="scenario hash"):
         verify_record(fixture_scenario("one_person_one_exit"), original)
+
+
+def test_run_record_header_binds_the_observation_contract() -> None:
+    record = run_scripted("stochastic_room")
+    assert record.observation_version == OBSERVATION_VERSION
+    assert list(record.to_dict())[:3] == ["simulator_version", "observation_version", "schema_version"]
+    assert '"observation_version":"' + OBSERVATION_VERSION + '"' in record.to_json()
+    assert RunRecord.from_json(record.to_json()) == record
+    old_format = record.to_dict()
+    del old_format["observation_version"]
+    with pytest.raises(ValueError, match="observation_version"):
+        RunRecord.from_dict(old_format)
 
 
 def test_replay_rejects_actions_after_termination() -> None:
@@ -133,7 +151,7 @@ from conftest import FIXTURE_NAMES, fixture_scenario, greedy_exit_policy
 from emberbench import run_episode
 for name in FIXTURE_NAMES:
     s = fixture_scenario(name)
-    print(name, run_episode(s, greedy_exit_policy(s)).digest())
+    print(name, run_episode(s, greedy_exit_policy).digest())
 """
 
 
@@ -147,27 +165,32 @@ def test_results_identical_across_processes_and_hash_seeds() -> None:
         outputs.append(result.stdout)
     assert outputs[0] == outputs[1] == outputs[2]
     local = "".join(
-        f"{n} {run_episode(fixture_scenario(n), greedy_exit_policy(fixture_scenario(n))).digest()}\n"
+        f"{n} {run_episode(fixture_scenario(n), greedy_exit_policy).digest()}\n"
         for n in FIXTURE_NAMES
     )
     assert outputs[0].replace("\r\n", "\n") == local
 
 
-# Golden digests pin the exact rules of SIMULATOR_VERSION 0.1.0. If a change
+# Golden digests pin the exact rules of SIMULATOR_VERSION 0.2.0. If a change
 # alters any of these, the simulator output changed: bump SIMULATOR_VERSION
 # and update the digests on purpose.
+#
+# History: 0.1.0 -> 0.2.0 added "observation_version" to the RunRecord header
+# and changed "simulator_version". The dynamics did not change: with the new
+# key removed and the version set back to "0.1.0", every record hashes to its
+# 0.1.0 digest.
 GOLDEN_DIGESTS: dict[str, str] = {
-    "blocked_shortest_route": "bab407562a001ae043c5c4e250dec1fba50afa45253a7ed00fd411543156de26",
-    "fire_threatening_exit": "f6720d533dbcf63eb7d5cd10bd3e7760274909bc263a77d334fd102dc54fb576",
-    "multiple_exits": "8713a01cfd931063761a8a5458b292b9ab28a928507b4de8a89c91802db105b5",
-    "narrow_corridor": "c59376c210d4a2da90bdbf31576851de5be480f5c8e4e9c33be35f1936905903",
-    "one_person_one_exit": "d5168c37c8f68b62042da581d777300368d1a75f59f873fba03e42051b0624d4",
-    "stochastic_room": "5c0af28522023771eddc84aa6ebfe4e20c938a99ee9a9c6de64e457f62c66305",
+    "blocked_shortest_route": "af2b6e241b1f13bfd41af0d7f54373d8e3e9e0566dc906b935e7d7baea17bdbe",
+    "fire_threatening_exit": "d394b40c60da27c8f43963ff9f2a6e855705b593aa808c6fa09af8cc9dbe9878",
+    "multiple_exits": "adb60f12ea5b3d5bda0b485b22a1bc4387bcd596730977dfe47d1af78213ab28",
+    "narrow_corridor": "ab5657d632eb6c3982be5538240785a32ac3831501fe193af8a5a83b82115cf4",
+    "one_person_one_exit": "a91d691f64731ee2d5b5184b95d1313bbd294d6fbd06d44ac91bea2f95a3c990",
+    "stochastic_room": "9ee082d50fc30fb2f6c8617c8d55053ff30af958c66eb6eb22f28fb2db6e3a84",
 }
 
 
 @pytest.mark.parametrize("name", FIXTURE_NAMES)
 def test_golden_trajectories(name: str) -> None:
     scenario = fixture_scenario(name)
-    digest = run_episode(scenario, greedy_exit_policy(scenario)).digest()
+    digest = run_episode(scenario, greedy_exit_policy).digest()
     assert digest == GOLDEN_DIGESTS[name], f"{name}: {digest}"

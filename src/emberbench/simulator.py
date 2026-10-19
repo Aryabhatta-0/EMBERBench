@@ -2,7 +2,8 @@
 
 Each call to :meth:`Simulator.step` runs these phases, in this fixed order:
 
-1. Observation: the policy sees ``observe()``, a snapshot of the state before the step.
+1. Observation: the policy sees ``observe()``, the model-visible view of the state
+   before the step. It never contains the seed or RNG state.
 2. Actions: the submitted mapping is validated (exactly one action per active person).
 3. Movement validation: boundary, wall and (policy-dependent) fire checks.
 4. Collision and congestion resolution: occupied cells, lowest-ID conflicts, chains and cycles.
@@ -27,9 +28,10 @@ from .events import Casualty, CasualtyCause, Evacuation, RunRecord, StepRecord
 from .fire import FireTerrain, build_fire_model
 from .grid import Pos, neighbours
 from .movement import parse_actions, resolve_movements
+from .observation import OBSERVATION_VERSION, MapView, Observation, RulesView
 from .rng import SplitMix64, derive_stream_seed, validate_seed
 from .scenario import Scenario
-from .state import Observation, PersonState, PersonStatus, SimState, TerminationReason
+from .state import PersonState, PersonStatus, SimState, TerminationReason
 
 FIRE_STREAM = "fire"
 
@@ -41,8 +43,8 @@ def compute_trapped(scenario: Scenario, people: tuple[PersonState, ...], burning
 
     A path may cross any cell that is not a wall and not burning. Other
     people are ignored, because congestion is temporary and walls and fire
-    are not. This is a diagnostic only. Being trapped does not end a
-    person's run.
+    are not. This is an evaluator diagnostic only. It is not part of the
+    observation, and being trapped does not end a person's run.
     """
     walls = scenario.walls
     frontier = deque(sorted(p for p in scenario.exit_positions if p not in burning))
@@ -62,6 +64,10 @@ class Simulator:
     All randomness comes from simulator-owned streams derived from the seed.
     Two simulators built from equal scenarios and seeds, and stepped with
     equal actions, produce byte-identical records.
+
+    The simulator is evaluator-side. A harness gives a decision model only
+    :meth:`observe`, never the simulator, its ``seed``, ``state``,
+    ``scenario`` or ``record()``.
     """
 
     def __init__(self, scenario: Scenario, *, seed: int | None = None) -> None:
@@ -74,6 +80,8 @@ class Simulator:
         self._fire_rng = SplitMix64(derive_stream_seed(self._seed, FIRE_STREAM))
         self._exit_ids = scenario.exit_positions
         self._scenario_hash = scenario.content_hash()
+        self._map = MapView.from_scenario(scenario)
+        self._rules = RulesView.from_scenario(scenario)
 
         people = tuple(PersonState(p.id, p.position, PersonStatus.ACTIVE) for p in scenario.people)
         burning = frozenset(scenario.ignitions)
@@ -106,12 +114,13 @@ class Simulator:
         return self._state.terminated
 
     def observe(self) -> Observation:
-        """Phase 1: the agent-facing view of the current state."""
-        return self._state.observation()
+        """Phase 1: the model-visible view of the current state (see ``observation.py``)."""
+        return Observation.from_state(self._map, self._rules, self._state)
 
     def record(self) -> RunRecord:
         return RunRecord(
             simulator_version=SIMULATOR_VERSION,
+            observation_version=OBSERVATION_VERSION,
             schema_version=self._scenario.schema_version,
             scenario_id=self._scenario.scenario_id,
             scenario_hash=self._scenario_hash,

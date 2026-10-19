@@ -5,10 +5,10 @@ A model controls the people in a 2D grid building. Fire spreads through the buil
 the model must decide each timestep how every person moves. The benchmark measures how
 well the model's decisions get people out through the exits before the fire reaches them.
 
-> **Status: Phase 1.** This repository contains the benchmark contract and the
-> deterministic simulation core only. Model integrations, LLM APIs, a UI, procedural
-> map generation, leaderboards, metrics and human-behaviour models are out of scope
-> for this phase.
+> **Status: Phase 2.** This repository contains the benchmark contract, the
+> deterministic simulation core and the frozen V1 fairness and semantics
+> specification. Model integrations, LLM APIs, a UI, procedural map generation,
+> leaderboards, metrics and human-behaviour models are out of scope for now.
 
 ## What EMBERBench measures
 
@@ -25,21 +25,32 @@ belong to a later phase. This phase records every event those metrics need (see
 
 ## Fairness principle
 
-Every compared model gets **exactly the same inputs**:
+Every compared model runs on **exactly the same episode**:
 
-- map, obstacles and exits,
-- initial population, with stable person IDs,
-- ignition points,
-- simulator rules and configuration,
-- random seed, and therefore the same stochastic outcomes for the same actions.
+- the same scenario: map, obstacles, exits, initial population (with stable
+  person IDs), ignition points and hazard configuration,
+- the same simulator version and rules,
+- the same evaluator seed schedule, and therefore the same exogenous fire process.
 
-Model outputs are the only thing that differs between two runs. The simulator does
-not give any model hidden information. In particular, the RNG state is never part of
-the observation, so a model cannot predict stochastic fire.
+The evaluator seed is for reproducibility and matched evaluation only. **A model
+never receives the seed**, the RNG state, future random draws or hidden scenario
+metadata. A model receives only the model-visible `Observation`: the current
+step, the static map, the episode rules (fire model and parameters, fire-entry
+policy, conflict rule, step limit), the people, the burning cells and the
+allowed actions. V1 evaluates decisions under known rules; only the
+evaluator randomness is hidden.
+
+Fire is exogenous in V1: actions do not change it. For the same scenario and
+seed, every model faces the same fire trajectory, so a difference in outcome
+comes from the decisions only. Model outputs are the only thing that differs
+between two matched runs.
+
+The normative contract is in [docs/v1-fairness-spec.md](docs/v1-fairness-spec.md).
 
 ## Deterministic scenario + seed evaluation
 
-A **(scenario, seed)** pair fully defines a benchmark episode:
+A **(scenario, seed)** pair fully defines a benchmark episode. The seed belongs to
+the evaluator, not to the model:
 
 - All randomness comes from simulator-owned [SplitMix64](src/emberbench/rng.py)
   streams. Each stream is derived from the seed and a subsystem label (for example
@@ -49,7 +60,8 @@ A **(scenario, seed)** pair fully defines a benchmark episode:
 - The same scenario, seed and action sequence produce **byte-identical** canonical
   JSON run records.
 - `verify_record()` replays a stored run and rejects any mismatch. It also rejects a
-  different scenario hash or a different `SIMULATOR_VERSION`.
+  different scenario hash, a different `SIMULATOR_VERSION` or a different
+  `OBSERVATION_VERSION`.
 
 ### Development scenarios are not the test set
 
@@ -72,7 +84,9 @@ scenarios, so that models cannot be tuned to it.
 | Termination | `all_resolved` (nobody is active) or `max_steps`. |
 
 The full rules are in [docs/simulation-contract.md](docs/simulation-contract.md). The
-scenario file format is in [docs/scenario-schema.md](docs/scenario-schema.md).
+frozen V1 decisions and their rationale are in
+[docs/v1-fairness-spec.md](docs/v1-fairness-spec.md). The scenario file format is in
+[docs/scenario-schema.md](docs/scenario-schema.md).
 
 ### Deterministic phase order (per timestep)
 
@@ -95,7 +109,8 @@ src/emberbench/
   rng.py        simulation-owned SplitMix64 streams, seed derivation
   fire.py       FireModel protocol, deterministic and stochastic spread
   movement.py   action parsing, movement validation, collision resolution
-  state.py      immutable SimState snapshots, agent-facing Observation, render()
+  state.py      immutable, evaluator-private SimState snapshots, render()
+  observation.py the versioned model-visible Observation, MapView and RulesView
   simulator.py  Simulator: runs the 9 phases, run_episode()
   events.py     StepRecord / RunRecord, the replay and audit log
   replay.py     replay() and verify_record()
@@ -106,8 +121,9 @@ src/emberbench/
 The concepts stay separate. The **scenario** is static input. The **simulator** owns
 the mutable run and produces immutable **state** snapshots. **Fire dynamics** and
 **movement resolution** are pure functions of their inputs (and of the passed RNG
-stream). **Events** record what happened. **Metrics** (a later phase) can be computed
-from `RunRecord` alone.
+stream). **Events** record what happened. **Metrics** (a later phase) use the
+`Scenario` and the `RunRecord` together. Some metrics need the static map or the
+configuration from the scenario, so not every metric can come from `RunRecord` alone.
 
 ### Minimal use
 
@@ -117,7 +133,7 @@ from emberbench import Simulator, load_scenario
 scenario = load_scenario("tests/fixtures/scenarios/one_person_one_exit.json")
 sim = Simulator(scenario)            # or Simulator(scenario, seed=123)
 while not sim.done:
-    obs = sim.observe()              # phase 1
+    obs = sim.observe()              # phase 1: the only thing a model may see
     sim.step({p.id: "east" for p in obs.active})
 record = sim.record()                # replayable, canonical RunRecord
 print(record.final_state.termination_reason, record.digest())
@@ -127,7 +143,8 @@ print(record.final_state.termination_reason, record.digest())
 
 A `RunRecord` holds everything needed to replay and audit a run:
 
-- `simulator_version`, `schema_version`, `scenario_id`, `scenario_hash`, `seed`
+- `simulator_version`, `observation_version`, `schema_version`, `scenario_id`,
+  `scenario_hash`, `seed`
 - `initial_state`
 - for each step: the submitted `actions`, the resolved `movements` (intent, final
   cell and outcome such as `moved` or `blocked_conflict`), the `ignited` cells,
@@ -157,6 +174,8 @@ python -m mypy
 The suite covers deterministic replay, two independent simulator instances,
 cross-process `PYTHONHASHSEED` independence, serialisation round trips, walls blocking
 movement and fire, exit behaviour, explicit rejection of invalid scenarios and
-actions, collision rules, termination, ID stability, and golden trajectory digests.
+actions, collision rules, termination, ID stability, golden trajectory digests,
+every frozen V1 rule, the observation contract (no seed, RNG state or hidden
+metadata) and the fire trajectory invariance across different actions.
 Any change to simulator output fails the golden test until you bump
 `SIMULATOR_VERSION` on purpose.

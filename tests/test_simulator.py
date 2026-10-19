@@ -33,7 +33,7 @@ def test_one_person_one_exit_evacuates_on_arrival() -> None:
 
 def test_exit_throughput_is_one_person_per_exit_per_step() -> None:
     s = fixture_scenario("narrow_corridor")
-    record = run_episode(s, greedy_exit_policy(s))
+    record = run_episode(s, greedy_exit_policy)
     per_step = [len(step.evacuations) for step in record.steps]
     assert max(per_step) == 1
     assert sorted(e.person_id for st in record.steps for e in st.evacuations) == ["P1", "P2", "P3", "P4"]
@@ -111,7 +111,7 @@ def test_all_resolved_takes_precedence_over_max_steps() -> None:
 
 
 def test_ids_remain_stable_through_a_run(any_fixture) -> None:  # type: ignore[no-untyped-def]
-    record = run_episode(any_fixture, greedy_exit_policy(any_fixture))
+    record = run_episode(any_fixture, greedy_exit_policy)
     expected = [p.id for p in any_fixture.people]
     assert [p.id for p in record.initial_state.people] == expected
     for step in record.steps:
@@ -127,7 +127,7 @@ def test_fixture_outcomes_with_baseline_policy() -> None:
     outcomes = {}
     for name in ("one_person_one_exit", "blocked_shortest_route", "multiple_exits", "narrow_corridor", "fire_threatening_exit"):
         s = fixture_scenario(name)
-        final = run_episode(s, greedy_exit_policy(s)).final_state
+        final = run_episode(s, greedy_exit_policy).final_state
         outcomes[name] = (final.step, final.ids_with_status(PersonStatus.CASUALTY))
     assert outcomes == {
         "one_person_one_exit": (4, ()),

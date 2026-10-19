@@ -1,5 +1,5 @@
 from collections import deque
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +36,10 @@ def layout(
     from emberbench import ExitSpec, PersonSpec
 
     rows = list(rows)
-    obstacles, exits, people, ignitions = [], [], [], []
+    obstacles: list[Pos] = []
+    exits: list[ExitSpec] = []
+    people: list[PersonSpec] = []
+    ignitions: list[Pos] = []
     for r, line in enumerate(rows):
         for c, ch in enumerate(line):
             p = Pos(r, c)
@@ -71,30 +74,30 @@ _STEP_TO_ACTION = {
 }
 
 
-def greedy_exit_policy(scenario: Scenario) -> Callable[[Observation], dict[str, Action]]:
-    """Test-only baseline: step along a shortest fire-free path to the nearest usable exit."""
+def greedy_exit_policy(obs: Observation) -> dict[str, Action]:
+    """Test-only baseline: step along a shortest fire-free path to the nearest usable exit.
 
-    def policy(obs: Observation) -> dict[str, Action]:
-        blocked = scenario.walls | obs.burning
-        dist: dict[Pos, int] = {}
-        queue = deque(sorted(p for p in scenario.exit_positions if p not in obs.burning))
-        for p in queue:
-            dist[p] = 0
-        while queue:
-            cell = queue.popleft()
-            for nb in neighbours(cell, scenario.width, scenario.height):
-                if nb not in dist and nb not in blocked:
-                    dist[nb] = dist[cell] + 1
-                    queue.append(nb)
-        actions = {}
-        for person in obs.active:
-            best = Action.STAY
-            here = dist.get(person.position)
-            for nb in neighbours(person.position, scenario.width, scenario.height):
-                if nb in dist and (here is None or dist[nb] < here):
-                    if best is Action.STAY or dist[nb] < dist[person.position.offset(*best.delta)]:
-                        best = _STEP_TO_ACTION[(nb.row - person.position.row, nb.col - person.position.col)]
-            actions[person.id] = best
-        return actions
-
-    return policy
+    It reads only the model-visible observation, like a real decision model.
+    """
+    width, height = obs.map.width, obs.map.height
+    blocked = obs.map.walls | obs.burning
+    dist: dict[Pos, int] = {}
+    queue = deque(sorted(p for p in obs.map.exit_positions if p not in obs.burning))
+    for p in queue:
+        dist[p] = 0
+    while queue:
+        cell = queue.popleft()
+        for nb in neighbours(cell, width, height):
+            if nb not in dist and nb not in blocked:
+                dist[nb] = dist[cell] + 1
+                queue.append(nb)
+    actions = {}
+    for person in obs.active:
+        best = Action.STAY
+        here = dist.get(person.position)
+        for nb in neighbours(person.position, width, height):
+            if nb in dist and (here is None or dist[nb] < here):
+                if best is Action.STAY or dist[nb] < dist[person.position.offset(*best.delta)]:
+                    best = _STEP_TO_ACTION[(nb.row - person.position.row, nb.col - person.position.col)]
+        actions[person.id] = best
+    return actions

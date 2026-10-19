@@ -38,7 +38,7 @@ default. Numbers must be finite. Integers must be JSON integers (`1`, not
 | `movement.conflict_resolution` | `"lowest_id_wins"` | The only V1 rule. It is stated explicitly. |
 | `movement.enter_fire` | `"blocked"` \| `"casualty"` | What happens when someone moves into a burning cell. |
 | `termination.max_steps` | int, 1 to 100000 | Step limit. |
-| `seed` | int, 0 to 2^64 − 1 | Default run seed. `Simulator(scenario, seed=...)` can override it, and the record stores the seed used. |
+| `seed` | int, 0 to 2^64 − 1 | Default run seed. `Simulator(scenario, seed=...)` can override it, and the record stores the seed used. Evaluator-private: never shown to a model (see `v1-fairness-spec.md`). |
 
 ## Canonical form and identity
 

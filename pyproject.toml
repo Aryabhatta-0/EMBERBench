@@ -26,4 +26,5 @@ addopts = "-ra"
 
 [tool.mypy]
 strict = true
-files = ["src"]
+files = ["src", "tests"]
+mypy_path = ["src", "tests"]
