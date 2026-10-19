@@ -33,6 +33,10 @@ class EvaluationError(EmberBenchError):
     """An evaluation manifest or result artifact is malformed, inconsistent or incompatible."""
 
 
+class StatisticsInputError(EvaluationError):
+    """An evaluation result cannot be summarized: it fails authentication against its suite."""
+
+
 class ModelOutputError(InvalidActionError):
     """A decision model returned an action set that the model interface rejects."""
 
