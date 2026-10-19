@@ -35,7 +35,10 @@ Every compared model runs on **exactly the same episode**:
 The evaluator seed is for reproducibility and matched evaluation only. **A model
 never receives the seed**, the RNG state, future random draws or hidden scenario
 metadata. A model receives only the model-visible `Observation`: the current
-step, the static map, the people, the burning cells and the allowed actions.
+step, the static map, the episode rules (fire model and parameters, fire-entry
+policy, conflict rule, step limit), the people, the burning cells and the
+allowed actions. V1 evaluates decisions under known rules; only the
+evaluator randomness is hidden.
 
 Fire is exogenous in V1: actions do not change it. For the same scenario and
 seed, every model faces the same fire trajectory, so a difference in outcome
@@ -57,7 +60,8 @@ the evaluator, not to the model:
 - The same scenario, seed and action sequence produce **byte-identical** canonical
   JSON run records.
 - `verify_record()` replays a stored run and rejects any mismatch. It also rejects a
-  different scenario hash or a different `SIMULATOR_VERSION`.
+  different scenario hash, a different `SIMULATOR_VERSION` or a different
+  `OBSERVATION_VERSION`.
 
 ### Development scenarios are not the test set
 
@@ -106,7 +110,7 @@ src/emberbench/
   fire.py       FireModel protocol, deterministic and stochastic spread
   movement.py   action parsing, movement validation, collision resolution
   state.py      immutable, evaluator-private SimState snapshots, render()
-  observation.py the versioned model-visible Observation and MapView
+  observation.py the versioned model-visible Observation, MapView and RulesView
   simulator.py  Simulator: runs the 9 phases, run_episode()
   events.py     StepRecord / RunRecord, the replay and audit log
   replay.py     replay() and verify_record()
@@ -139,7 +143,8 @@ print(record.final_state.termination_reason, record.digest())
 
 A `RunRecord` holds everything needed to replay and audit a run:
 
-- `simulator_version`, `schema_version`, `scenario_id`, `scenario_hash`, `seed`
+- `simulator_version`, `observation_version`, `schema_version`, `scenario_id`,
+  `scenario_hash`, `seed`
 - `initial_state`
 - for each step: the submitted `actions`, the resolved `movements` (intent, final
   cell and outcome such as `moved` or `blocked_conflict`), the `ignited` cells,

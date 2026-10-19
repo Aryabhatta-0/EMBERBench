@@ -28,7 +28,7 @@ from .events import Casualty, CasualtyCause, Evacuation, RunRecord, StepRecord
 from .fire import FireTerrain, build_fire_model
 from .grid import Pos, neighbours
 from .movement import parse_actions, resolve_movements
-from .observation import MapView, Observation
+from .observation import OBSERVATION_VERSION, MapView, Observation, RulesView
 from .rng import SplitMix64, derive_stream_seed, validate_seed
 from .scenario import Scenario
 from .state import PersonState, PersonStatus, SimState, TerminationReason
@@ -81,6 +81,7 @@ class Simulator:
         self._exit_ids = scenario.exit_positions
         self._scenario_hash = scenario.content_hash()
         self._map = MapView.from_scenario(scenario)
+        self._rules = RulesView.from_scenario(scenario)
 
         people = tuple(PersonState(p.id, p.position, PersonStatus.ACTIVE) for p in scenario.people)
         burning = frozenset(scenario.ignitions)
@@ -114,11 +115,12 @@ class Simulator:
 
     def observe(self) -> Observation:
         """Phase 1: the model-visible view of the current state (see ``observation.py``)."""
-        return Observation.from_state(self._map, self._state)
+        return Observation.from_state(self._map, self._rules, self._state)
 
     def record(self) -> RunRecord:
         return RunRecord(
             simulator_version=SIMULATOR_VERSION,
+            observation_version=OBSERVATION_VERSION,
             schema_version=self._scenario.schema_version,
             scenario_id=self._scenario.scenario_id,
             scenario_hash=self._scenario_hash,

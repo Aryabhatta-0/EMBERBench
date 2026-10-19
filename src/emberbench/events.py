@@ -92,9 +92,15 @@ class StepRecord:
 
 @dataclass(frozen=True)
 class RunRecord:
-    """A complete, replayable trajectory for one scenario and seed."""
+    """A complete, replayable trajectory for one scenario and seed.
+
+    The header binds the record to the simulator semantics
+    (``simulator_version``), the model-visible observation contract
+    (``observation_version``) and the exact scenario (``scenario_hash``).
+    """
 
     simulator_version: str
+    observation_version: str
     schema_version: str
     scenario_id: str
     scenario_hash: str
@@ -113,6 +119,7 @@ class RunRecord:
     def to_dict(self) -> dict[str, Any]:
         return {
             "simulator_version": self.simulator_version,
+            "observation_version": self.observation_version,
             "schema_version": self.schema_version,
             "scenario_id": self.scenario_id,
             "scenario_hash": self.scenario_hash,
@@ -129,8 +136,11 @@ class RunRecord:
 
     @classmethod
     def from_dict(cls, d: Mapping[str, Any]) -> "RunRecord":
+        if "observation_version" not in d:
+            raise ValueError("run record has no observation_version; it was made before simulator 0.2.0")
         return cls(
             simulator_version=d["simulator_version"],
+            observation_version=d["observation_version"],
             schema_version=d["schema_version"],
             scenario_id=d["scenario_id"],
             scenario_hash=d["scenario_hash"],

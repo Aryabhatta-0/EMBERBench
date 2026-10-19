@@ -17,20 +17,28 @@ from emberbench import (
     ALLOWED_ACTIONS,
     OBSERVATION_VERSION,
     Action,
+    EnterFirePolicy,
     ExitSpec,
     FireConfig,
     FireModelName,
     MapView,
+    MovementConfig,
     Observation,
     PersonState,
     PersonStatus,
     Pos,
+    RulesView,
+    RunRecord,
     Scenario,
+    SimState,
     Simulator,
+    StepRecord,
+    TerminationConfig,
     run_episode,
 )
 from emberbench.fire import FireTerrain, build_fire_model
 from emberbench.rng import SplitMix64, derive_stream_seed
+from emberbench.scenario import ConflictResolution
 from emberbench.simulator import FIRE_STREAM
 
 # A distinctive 64-bit seed: its decimal form cannot appear in an observation by chance.
@@ -81,11 +89,18 @@ def observations(scenario: Scenario, policy: Policy, *, seed: int | None = None)
 
 
 def walk(value: object) -> Iterator[object]:
-    """Yield every object reachable from ``value`` through dataclass fields and containers."""
+    """Yield every object reachable from ``value`` through instance attributes and containers.
+
+    It reads ``vars()``, not only the declared fields, so an attribute that is
+    set outside the dataclass definition is found too. Strings, numbers and
+    enum members (which are strings in this package) are leaves.
+    """
     yield value
-    if dataclasses.is_dataclass(value) and not isinstance(value, type):
-        for f in dataclasses.fields(value):
-            yield from walk(getattr(value, f.name))
+    if isinstance(value, (str, int, float, type(None))):
+        return
+    if hasattr(value, "__dict__") and not isinstance(value, type):
+        for item in vars(value).values():
+            yield from walk(item)
     elif isinstance(value, (tuple, frozenset, list)):
         for item in value:
             yield from walk(item)
@@ -95,20 +110,66 @@ def walk(value: object) -> Iterator[object]:
 
 
 def test_observation_fields_are_exactly_the_declared_contract() -> None:
-    assert [f.name for f in dataclasses.fields(Observation)] == ["step", "map", "people", "burning", "allowed_actions"]
+    assert [f.name for f in dataclasses.fields(Observation)] == ["step", "map", "rules", "people", "burning", "allowed_actions"]
     assert [f.name for f in dataclasses.fields(MapView)] == ["width", "height", "obstacles", "exits"]
+    assert [f.name for f in dataclasses.fields(RulesView)] == [
+        "fire_model",
+        "spread_interval",
+        "spread_probability",
+        "exits_flammable",
+        "enter_fire",
+        "conflict_resolution",
+        "max_steps",
+    ]
     assert [f.name for f in dataclasses.fields(PersonState)] == ["id", "position", "status"]
     assert [f.name for f in dataclasses.fields(ExitSpec)] == ["id", "position"]
     obs = Simulator(secret_scenario()).observe()
-    assert list(obs.to_dict()) == ["observation_version", "step", "map", "people", "burning", "allowed_actions"]
+    assert list(obs.to_dict()) == ["observation_version", "step", "map", "rules", "people", "burning", "allowed_actions"]
+    assert list(obs.to_dict()["rules"]) == [f.name for f in dataclasses.fields(RulesView)]
     assert obs.to_dict()["observation_version"] == OBSERVATION_VERSION == "1.0"
 
 
-def test_observation_object_graph_holds_only_public_value_types() -> None:
-    allowed = {Observation, MapView, ExitSpec, PersonState, PersonStatus, Action, Pos, tuple, frozenset, int, str}
-    for obs in observations(secret_scenario(), random_policy(1)):
+PUBLIC_VALUE_TYPES = {
+    Observation,
+    MapView,
+    RulesView,
+    ExitSpec,
+    PersonState,
+    PersonStatus,
+    Action,
+    Pos,
+    FireModelName,
+    EnterFirePolicy,
+    ConflictResolution,
+    tuple,
+    frozenset,
+    int,
+    float,
+    bool,
+    str,
+    type(None),
+}
+PRIVATE_TYPES = (
+    Scenario,
+    Simulator,
+    SimState,
+    StepRecord,
+    RunRecord,
+    SplitMix64,
+    FireTerrain,
+    FireConfig,
+    MovementConfig,
+    TerminationConfig,
+)
+
+
+@pytest.mark.parametrize("scenario_name", ["secret", "one_person_one_exit"])
+def test_observation_object_graph_holds_only_public_value_types(scenario_name: str) -> None:
+    scenario = secret_scenario() if scenario_name == "secret" else fixture_scenario(scenario_name)
+    for obs in observations(scenario, random_policy(1)):
         for node in walk(obs):
-            assert type(node) in allowed, f"observation exposes a {type(node).__name__}"
+            assert not isinstance(node, PRIVATE_TYPES), f"observation references a {type(node).__name__}"
+            assert type(node) in PUBLIC_VALUE_TYPES, f"observation exposes a {type(node).__name__}"
 
 
 def test_observation_never_contains_seed_rng_state_or_hidden_metadata() -> None:
@@ -141,6 +202,67 @@ def test_observation_is_independent_of_seed_and_hidden_metadata() -> None:
     assert a.state.rng_state != b.state.rng_state
     assert a.observe() == b.observe()
     assert a.observe().to_dict() == b.observe().to_dict()
+
+
+BASE_FIRE = FireConfig(model=FireModelName.STOCHASTIC, spread_probability=0.5)
+RULE_VARIANTS: dict[str, dict[str, Any]] = {
+    "fire_model": {"fire": FireConfig(model=FireModelName.DETERMINISTIC)},
+    "spread_interval": {"fire": dataclasses.replace(BASE_FIRE, spread_interval=2)},
+    "spread_probability": {"fire": dataclasses.replace(BASE_FIRE, spread_probability=0.25)},
+    "exits_flammable": {"fire": dataclasses.replace(BASE_FIRE, exits_flammable=False)},
+    "enter_fire": {"movement": MovementConfig(enter_fire=EnterFirePolicy.BLOCKED)},
+    "max_steps": {"termination": TerminationConfig(max_steps=7)},
+}
+
+
+def rule_scenario(name: str) -> Scenario:
+    """``secret`` (stochastic base rules), one variant of it, or a fixture."""
+    if name == "secret":
+        return secret_scenario()
+    if name in RULE_VARIANTS:
+        return dataclasses.replace(secret_scenario(), **RULE_VARIANTS[name])
+    return fixture_scenario(name)
+
+
+@pytest.mark.parametrize("rule", sorted(RULE_VARIANTS))
+def test_scenarios_that_differ_only_in_a_public_rule_give_different_observations(rule: str) -> None:
+    a, b = Simulator(rule_scenario("secret")).observe(), Simulator(rule_scenario(rule)).observe()
+    assert a != b
+    assert a.to_dict() != b.to_dict()
+    changed = [name for name, value in a.rules.to_dict().items() if b.rules.to_dict()[name] != value]
+    assert changed == (["fire_model", "spread_probability"] if rule == "fire_model" else [rule])
+    assert dataclasses.replace(a, rules=b.rules) == b  # the rules are the only difference
+
+
+def test_conflict_resolution_is_public_although_v1_has_one_value() -> None:
+    assert list(ConflictResolution) == [ConflictResolution.LOWEST_ID_WINS]
+    rules = Simulator(secret_scenario()).observe().to_dict()["rules"]
+    assert rules["conflict_resolution"] == "lowest_id_wins"
+
+
+@pytest.mark.parametrize("scenario_name", ["secret", *sorted(RULE_VARIANTS), "stochastic_room", "one_person_one_exit"])
+def test_every_public_rule_matches_the_scenario_config(scenario_name: str) -> None:
+    scenario = rule_scenario(scenario_name)
+    sim = Simulator(scenario)
+    first = sim.observe()
+    sim.step(stay_policy(first))
+    for obs in (first, sim.observe()):
+        rules = obs.rules
+        assert rules.fire_model is scenario.fire.model
+        assert rules.spread_interval == scenario.fire.spread_interval
+        assert rules.spread_probability == scenario.fire.spread_probability
+        assert (rules.spread_probability is None) == (scenario.fire.model is FireModelName.DETERMINISTIC)
+        assert rules.exits_flammable is scenario.fire.exits_flammable
+        assert rules.enter_fire is scenario.movement.enter_fire
+        assert rules.conflict_resolution is scenario.movement.conflict_resolution
+        assert rules.max_steps == scenario.termination.max_steps
+
+
+def test_rules_view_is_a_detached_copy() -> None:
+    rules = RulesView.from_scenario(secret_scenario())
+    assert not any(isinstance(node, PRIVATE_TYPES) for node in walk(rules))
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        rules.max_steps = 1  # type: ignore[misc]
 
 
 def test_trapped_diagnostic_is_evaluator_private() -> None:
@@ -183,6 +305,8 @@ def test_observation_is_immutable() -> None:
         obs.step = 5  # type: ignore[misc]
     with pytest.raises(dataclasses.FrozenInstanceError):
         obs.map.width = 1  # type: ignore[misc]
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        obs.rules.max_steps = 1  # type: ignore[misc]
 
 
 # --------------------------------------------------------------------------- matched evaluation

@@ -1,4 +1,4 @@
-# Simulation contract (simulator version 0.1.0)
+# Simulation contract (simulator version 0.2.0)
 
 This document is normative. If the code and this document disagree, it is a bug.
 The V1 fairness contract, the model-visible observation and the rationale for
@@ -35,7 +35,7 @@ Each `Simulator.step(actions)` runs these phases in this order:
 
 | # | Phase | Rule |
 |---|-------|------|
-| 1 | Observation | `observe()` returns the pre-step model-visible `Observation`: step, static map, people, burning cells and allowed actions. It never includes the seed, RNG state, hidden scenario metadata or the trapped set. |
+| 1 | Observation | `observe()` returns the pre-step model-visible `Observation`: step, static map, episode rules, people, burning cells and allowed actions. It never includes the seed, RNG state, hidden scenario metadata or the trapped set. |
 | 2 | Actions | The mapping must have exactly one entry per **active** person. Values are `stay`/`north`/`south`/`east`/`west` (or `Action`). Anything else raises `InvalidActionError`, and the state does not change. |
 | 3 | Movement validation | `stay` gives `stayed`. A move off the grid gives `blocked_boundary`. A move into an obstacle gives `blocked_wall`. A move into a burning cell gives `blocked_fire` if `movement.enter_fire = "blocked"`. Otherwise the move continues. |
 | 4 | Collision resolution | See [Collisions](#collisions). |
@@ -139,9 +139,9 @@ ignored. This is an evaluator diagnostic for later metrics. It is not in the
 
 ## Replay
 
-`RunRecord` stores the header (`simulator_version`, `schema_version`,
-`scenario_id`, `scenario_hash`, `seed`), the initial state, and for each step
+`RunRecord` stores the header (`simulator_version`, `observation_version`,
+`schema_version`, `scenario_id`, `scenario_hash`, `seed`), the initial state, and for each step
 the actions, resolved movements, ignitions, evacuations, casualties and the
-post-step state. `verify_record(scenario, record)` checks the version and the
-scenario hash. It then replays the recorded actions and requires a byte-identical
+post-step state. `verify_record(scenario, record)` checks the simulator version, the
+observation version and the scenario hash. It then replays the recorded actions and requires a byte-identical
 canonical encoding. It reports the first step that diverges.

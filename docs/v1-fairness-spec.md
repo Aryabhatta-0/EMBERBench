@@ -6,11 +6,16 @@ and SHOULD have their RFC 2119 meaning.
 
 | Contract | Version | Defined in |
 | --- | --- | --- |
-| Simulator semantics | `SIMULATOR_VERSION = "0.1.0"` | `src/emberbench/__init__.py`, [simulation-contract.md](simulation-contract.md) |
+| Simulator semantics and run record format | `SIMULATOR_VERSION = "0.2.0"` | `src/emberbench/__init__.py`, [simulation-contract.md](simulation-contract.md) |
 | Scenario schema | `SCHEMA_VERSION = "1.0"` | `src/emberbench/scenario.py`, [scenario-schema.md](scenario-schema.md) |
 | Model-visible observation | `OBSERVATION_VERSION = "1.0"` | `src/emberbench/observation.py`, this document |
 
 If the code and this document disagree, it is a bug.
+
+**V1 in one sentence.** A model sees the full current state and knows the
+episode dynamics (the rules). The evaluator's randomness (the seed, the RNG
+state and every future draw) stays hidden. V1 evaluates decisions under known
+rules, not inference of hidden rules.
 
 ## 1. Fairness contract
 
@@ -27,7 +32,8 @@ Every compared model MUST run on exactly the same:
 
 The only input that differs between two matched runs is the sequence of
 actions that the models submit. A `RunRecord` header (`simulator_version`,
-`scenario_hash`, `seed`) identifies the matched episode.
+`observation_version`, `scenario_hash`, `seed`) identifies the matched episode
+and the observation contract the model received.
 
 ### 1.2 Evaluator-private and model-visible state
 
@@ -42,13 +48,15 @@ A decision model MUST NOT receive any of it, in any form, before or during a run
 | RNG stream positions and stream seeds | `SimState.rng_state` |
 | Future random draws | the fire stream (`SplitMix64`) |
 | Scenario ID, description, content hash, schema version | `Scenario`, `RunRecord` header |
-| Hazard, movement and termination configuration | `Scenario.fire`, `Scenario.movement`, `Scenario.termination` |
 | `trapped` diagnostic | `SimState.trapped` |
 | The full state, the step log and the run record | `SimState`, `StepRecord`, `RunRecord` |
 | The `Scenario` and `Simulator` objects | evaluator side |
 
 **Model-visible state.** A decision model receives only the `Observation`
-returned by `Simulator.observe()`. Section 4 defines its fields.
+returned by `Simulator.observe()`. Section 4 defines its fields. It has the
+full current state (map, people, fire) and the episode rules (`RulesView`):
+every action-relevant rule that a scenario can vary. The rules are copied
+from the scenario, so the model never holds a `Scenario` reference.
 
 The harness boundary is `Simulator.observe()` and `Simulator.step(actions)`.
 A harness MUST give a model only `Observation` objects (or their
@@ -111,9 +119,12 @@ depend on actions, it MUST NOT share a stream with the fire.
 ## 3. Frozen V1 rules
 
 Each rule has a short rationale and the tests that pin it. V1 keeps the
-Phase 1 behaviour for every rule. No rule changed in Phase 2, so the
-simulator output for the same inputs is unchanged (the golden digests in
-`tests/test_determinism.py` still pass).
+Phase 1 behaviour for every rule. No rule changed in Phase 2: the simulator
+dynamics are the same as in `0.1.0`. `SIMULATOR_VERSION` is `0.2.0` only
+because the `RunRecord` header gained `observation_version` (see section 6).
+
+Every rule that a scenario can vary is in `Observation.rules`. The model
+knows the rules it plays under.
 
 ### R1. Collision tie-break: lowest person ID wins
 
@@ -123,7 +134,7 @@ other mover gets `blocked_conflict`. The decision uses intent only. A loser is
 not re-awarded the cell if the winner fails later.
 
 *Rationale.* The rule is deterministic, simple and visible to the model (IDs
-are in the observation). It is identical for every model on a scenario. A
+are in the observation, and `rules.conflict_resolution` names the rule). It is identical for every model on a scenario. A
 random tie-break would need RNG draws whose count depends on the actions. That
 would either couple the fire stream to the actions (section 2) or add a second
 stream with no benefit for fairness. The known bias (low IDs win) is the same
@@ -286,11 +297,14 @@ outcome, because a trapped person cannot evacuate.
 
 ## 4. Observation contract (version 1.0)
 
-`Simulator.observe()` returns an `Observation`. V1 is fully observable: the
-observation shows every burning cell. The observation holds no reference to
-the scenario, the simulator or any RNG. Its object graph contains only these
-types: `Observation`, `MapView`, `ExitSpec`, `PersonState`, `PersonStatus`,
-`Action`, `Pos`, tuples, frozensets, integers and strings.
+`Simulator.observe()` returns an `Observation`. In V1 the current state is
+fully observable (the observation shows every burning cell) and the episode
+dynamics are known (`rules`). The observation holds no reference to the
+scenario, the simulator or any RNG. Its object graph contains only these
+types: `Observation`, `MapView`, `RulesView`, `ExitSpec`, `PersonState`,
+`PersonStatus`, `Action`, `Pos`, `FireModelName`, `EnterFirePolicy`,
+`ConflictResolution`, tuples, frozensets, integers, floats, booleans, strings
+and `None`.
 
 | Field | Type | Meaning |
 | --- | --- | --- |
@@ -298,26 +312,55 @@ types: `Observation`, `MapView`, `ExitSpec`, `PersonState`, `PersonStatus`,
 | `map.width`, `map.height` | `int` | Grid size. |
 | `map.obstacles` | `tuple[Pos, ...]` | Wall cells, row-major. |
 | `map.exits` | `tuple[ExitSpec, ...]` | Exit ID and position, sorted by ID. |
+| `rules` | `RulesView` | The episode dynamics. See the next table. |
 | `people` | `tuple[PersonState, ...]` | Every person: `id`, `position`, `status` (`active`, `evacuated`, `casualty`), sorted by ID. |
 | `burning` | `frozenset[Pos]` | Every burning cell now. |
 | `allowed_actions` | `tuple[Action, ...]` | `stay`, `north`, `south`, `east`, `west`. Every active person may submit any of them every step. |
+
+`RulesView` holds every action-relevant rule that a scenario can vary. Each
+value is copied from the scenario when the simulator is built:
+
+| Field | Type | Copied from |
+| --- | --- | --- |
+| `fire_model` | `FireModelName` | `fire.model` (`deterministic` or `stochastic`) |
+| `spread_interval` | `int` | `fire.spread_interval` |
+| `spread_probability` | `float \| None` | `fire.spread_probability`. `None` (JSON `null`) unless the model is `stochastic`. |
+| `exits_flammable` | `bool` | `fire.exits_flammable` |
+| `enter_fire` | `EnterFirePolicy` | `movement.enter_fire` (`blocked` or `casualty`) |
+| `conflict_resolution` | `ConflictResolution` | `movement.conflict_resolution` (V1: `lowest_id_wins` only) |
+| `max_steps` | `int` | `termination.max_steps` |
+
+The spread probability is a parameter of the hazard distribution. It is not
+evaluator randomness: it tells the model how likely spread is, but not which
+draws will succeed.
 
 `Observation.to_dict()` gives the serialised form, with the extra key
 `observation_version`. The action contract is unchanged: `step(actions)`
 needs exactly one action from `allowed_actions` for each active person. A move
 that cannot happen is legal and resolves to a `blocked_*` outcome.
 
-The observation does **not** contain: the seed, RNG state, scenario ID,
-description, content hash, the fire, movement or termination configuration,
-`max_steps`, or `trapped`.
+The observation does **not** contain: the seed, RNG state, stream seeds,
+future draws, scenario ID, description, content hash, schema version, or
+`trapped`.
 
 A change to the fields or the meaning of the observation MUST bump
 `OBSERVATION_VERSION`.
 
-*Tests:* `tests/test_fairness.py`. The tests check the exact field list, the
-object graph types, the absence of the seed, RNG values and hidden metadata in
-the observation and its JSON form, and that observations are identical for
-different seeds and different hidden metadata.
+*Tests:* `tests/test_fairness.py`. The tests check:
+
+- the exact field lists of `Observation`, `MapView` and `RulesView`, and of
+  the serialised form,
+- that the object graph (walked through every instance attribute, not only
+  the declared fields) holds only the public types above, and never a
+  `Scenario`, `Simulator`, `SimState`, `StepRecord`, `RunRecord`, RNG or
+  configuration object,
+- that the seed, stream seeds, RNG positions and hidden metadata are absent
+  from the observation and its JSON form,
+- that observations are identical for different seeds and different hidden
+  metadata,
+- that two scenarios that differ only in one public rule give different
+  observations, and that the rules are the only difference,
+- that every `RulesView` value equals the scenario configuration.
 
 ## 5. Metrics input
 
@@ -328,7 +371,14 @@ size) and the configuration (for example `max_steps`) are in the `Scenario`.
 The `scenario_hash` in the record binds the two together. Not every metric can
 be computed from a `RunRecord` alone.
 
-## 6. Change control
+## 6. Provenance and change control
+
+Every `RunRecord` header stores `simulator_version`, `observation_version`,
+`schema_version`, `scenario_id`, `scenario_hash` and `seed`. A new record
+always stores the active `OBSERVATION_VERSION`. `verify_record` rejects a
+record with a different `simulator_version` or `observation_version`, or a
+different scenario hash, with an explicit `ReplayMismatchError`.
+`RunRecord.from_dict` rejects a record that has no `observation_version`.
 
 - A change that changes simulator output (any `RunRecord` byte) for the same
   scenario, seed and actions MUST bump `SIMULATOR_VERSION`. The golden digest
@@ -338,12 +388,9 @@ be computed from a `RunRecord` alone.
 - A change to the scenario file format MUST bump `SCHEMA_VERSION`.
 - A documentation-only clarification of visibility does not need a bump.
 
-## 7. Open questions for later phases
+**History.**
 
-- **Rules visibility.** V1 does not show `max_steps`, `enter_fire`,
-  `exits_flammable`, `spread_interval` or the fire model to the model. All
-  models are equal, so this is fair. A later observation version could show
-  them as public rules of the episode.
-- **Observation version in the record.** `RunRecord` does not record
-  `OBSERVATION_VERSION`. Adding it changes the record format and needs a
-  `SIMULATOR_VERSION` bump. The evaluation infrastructure phase should decide.
+| `SIMULATOR_VERSION` | Change |
+| --- | --- |
+| `0.1.0` | Phase 1 deterministic core. |
+| `0.2.0` | The `RunRecord` header gained `observation_version`. The dynamics did not change. With that key removed and the version set back to `0.1.0`, every golden record hashes to its `0.1.0` digest. `OBSERVATION_VERSION` stays `1.0`, because V1 was not released before this change. |

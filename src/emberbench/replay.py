@@ -6,6 +6,7 @@ from typing import Any
 from . import SIMULATOR_VERSION
 from .errors import InvalidActionError, ReplayMismatchError
 from .events import RunRecord
+from .observation import OBSERVATION_VERSION
 from .scenario import Scenario
 from .simulator import Simulator
 
@@ -25,6 +26,10 @@ def verify_record(scenario: Scenario, record: RunRecord) -> None:
     if record.simulator_version != SIMULATOR_VERSION:
         raise ReplayMismatchError(
             f"record made by simulator {record.simulator_version!r}, this is {SIMULATOR_VERSION!r}"
+        )
+    if record.observation_version != OBSERVATION_VERSION:
+        raise ReplayMismatchError(
+            f"record made under observation version {record.observation_version!r}, this is {OBSERVATION_VERSION!r}"
         )
     if record.scenario_hash != scenario.content_hash():
         raise ReplayMismatchError("scenario hash does not match the record")
