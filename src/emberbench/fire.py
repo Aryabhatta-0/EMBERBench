@@ -13,6 +13,13 @@ Contract every model must honour:
 * Randomness comes only from the ``rng`` argument. The model must use the
   stream in a deterministic order (canonical row-major cell order).
 * The model is pure apart from advancing ``rng``. It keeps no hidden state.
+* The model never sees people or actions, so the fire is the same for every
+  action sequence under the same scenario and seed.
+
+V1 has no delayed ignitions after step 0, no wind or directional spread, no
+burn-out, no smoke, no material-specific flammability and no fire that
+depends on people. These are future-version features; see
+``docs/simulation-contract.md``, "Not in V1".
 """
 
 from dataclasses import dataclass
@@ -95,6 +102,11 @@ class StochasticSpread:
     go in canonical order: candidate cell first, then source cell. A candidate
     ignites if any of its edges succeeds. All draws are taken (no
     short-circuit), so the stream position depends only on the fire geometry.
+
+    A candidate with ``k`` burning neighbours therefore ignites with
+    probability ``1 - (1 - p)**k``. A spread step advances ``rng`` by exactly
+    the number of (candidate, burning neighbour) edges; any other step does
+    not advance it. This holds for every ``p``, including 0 and 1.
     """
 
     probability: float
