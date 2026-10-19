@@ -38,6 +38,13 @@ cells, a row-major table of congestion hotspots, per-exit throughput and a
 static nearest-exit demand proxy. They observe the frozen V1 crowd rules and
 do not model human behaviour. See [docs/crowd-diagnostics.md](docs/crowd-diagnostics.md).
 
+Five deterministic, non-LLM reference baselines (random legal, nearest-exit
+greedy, static shortest-path, fire-aware shortest-path and congestion-aware
+routing) run through the same model interface as any evaluated model and see
+only the observation. Reference baselines are anchors, not benchmark winners.
+A separate, privileged escape bound gives an evaluator-side upper bound on
+evacuations. See [docs/baselines.md](docs/baselines.md).
+
 ## Fairness principle
 
 Every compared model runs on **exactly the same episode**:
@@ -116,6 +123,20 @@ model runs, and `load_generated_suite()` verifies it and returns a normal
 `Suite` for `build_evaluation_manifest()` and `run_evaluation()`. The seed is
 never stored. See [docs/procedural-generation.md](docs/procedural-generation.md).
 
+### Hidden-test integrity
+
+`emberbench.integrity` defines the held-out protocol: which assets are public
+and which stay with the evaluator, an evaluator workspace outside the
+repository, a provider-neutral `SubmissionIdentity`, and an immutable
+`EvaluationProvenance` record that pins the versions, the frozen suite, the
+evaluation manifest hash, the submission and the result digest by SHA-256. It
+holds no seeds and no timestamps. Signatures are optional and external.
+`verify_evaluation_provenance()` re-derives every pin and fails closed.
+Post-submission generation binds the generator seed to a frozen submission
+roster. `emberbench.leakguard` keeps held-out material out of the repository,
+the wheel and the sdist. Hashes prove content identity, not authorship. See
+[docs/integrity.md](docs/integrity.md).
+
 ## V1 scope
 
 | Area | V1 behaviour |
@@ -183,8 +204,12 @@ src/emberbench/
   replay.py     replay() and verify_record()
   metrics.py    compute_episode_metrics(): auditable raw per-episode metrics
   crowd.py      compute_crowd_diagnostics(): congestion, hotspots, exit load signals
+  baselines.py  fair reference baseline agents and their registry
+  oracle.py     PRIVILEGED evaluator-side escape bound (not a model)
   suite.py      scenario suite manifests: strict parsing, load_suite() verification
   evaluation.py evaluation manifests, run_evaluation() with resume, pair_results()
+  integrity.py  held-out protocol: asset classes, submission identity, provenance, verification
+  leakguard.py  path allowlist and leak checks for the repository, wheel and sdist
   canonical.py  canonical JSON and SHA-256 hashing
   cli.py        the `emberbench` command line (also `python -m emberbench`)
   errors.py     explicit exception types
@@ -262,6 +287,10 @@ python -m pytest
 
 ```bash
 python -m mypy
+```
+
+```bash
+python tools/check_public_assets.py
 ```
 
 The suite covers deterministic replay, two independent simulator instances,

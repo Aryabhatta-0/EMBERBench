@@ -14,7 +14,8 @@ dependencies = []
 emberbench = "emberbench.cli:main"
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "mypy>=1.10", "setuptools>=69"]
+# build and setuptools: the leak-guard and CLI wheel tests and CI build the wheel and sdist without network isolation.
+dev = ["pytest>=8", "mypy>=1.10", "build>=1", "setuptools>=69"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
