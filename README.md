@@ -38,6 +38,13 @@ cells, a row-major table of congestion hotspots, per-exit throughput and a
 static nearest-exit demand proxy. They observe the frozen V1 crowd rules and
 do not model human behaviour. See [docs/crowd-diagnostics.md](docs/crowd-diagnostics.md).
 
+Five deterministic, non-LLM reference baselines (random legal, nearest-exit
+greedy, static shortest-path, fire-aware shortest-path and congestion-aware
+routing) run through the same model interface as any evaluated model and see
+only the observation. Reference baselines are anchors, not benchmark winners.
+A separate, privileged escape bound gives an evaluator-side upper bound on
+evacuations. See [docs/baselines.md](docs/baselines.md).
+
 ## Fairness principle
 
 Every compared model runs on **exactly the same episode**:
@@ -197,6 +204,8 @@ src/emberbench/
   replay.py     replay() and verify_record()
   metrics.py    compute_episode_metrics(): auditable raw per-episode metrics
   crowd.py      compute_crowd_diagnostics(): congestion, hotspots, exit load signals
+  baselines.py  fair reference baseline agents and their registry
+  oracle.py     PRIVILEGED evaluator-side escape bound (not a model)
   suite.py      scenario suite manifests: strict parsing, load_suite() verification
   evaluation.py evaluation manifests, run_evaluation() with resume, pair_results()
   integrity.py  held-out protocol: asset classes, submission identity, provenance, verification

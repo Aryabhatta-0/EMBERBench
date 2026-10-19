@@ -5,6 +5,7 @@
 SIMULATOR_VERSION = "0.2.0"
 
 from .errors import (  # noqa: E402
+    BaselineError,
     EmberBenchError,
     EvaluationError,
     GenerationError,
@@ -106,6 +107,13 @@ from .statistics import (  # noqa: E402
     aggregate_result,
     compare_results,
 )
+from .baselines import (  # noqa: E402
+    BASELINE_IDS,
+    BASELINES_VERSION,
+    BaselineSpec,
+    baseline_factory,
+    get_baseline,
+)
 
 from .integrity import (  # noqa: E402
     BENCHMARK_REVISION,
@@ -134,6 +142,8 @@ __all__ = [
     "ALLOWED_ACTIONS",
     "BENCHMARK_REVISION",
     "CROWD_DIAGNOSTICS_VERSION",
+    "BASELINES_VERSION",
+    "BASELINE_IDS",
     "EVALUATION_MANIFEST_VERSION",
     "EVALUATION_RESULT_VERSION",
     "GENERATION_MANIFEST_VERSION",
@@ -155,6 +165,8 @@ __all__ = [
     "AssetClass",
     "Casualty",
     "CasualtyCause",
+    "BaselineError",
+    "BaselineSpec",
     "Cell",
     "CrowdDiagnostics",
     "EmberBenchError",
@@ -232,11 +244,13 @@ __all__ = [
     "benchmark_versions",
     "build_evaluation_provenance",
     "build_evaluation_manifest",
+    "baseline_factory",
     "compare_results",
     "compute_crowd_diagnostics",
     "compute_episode_metrics",
     "freeze_generated_suite",
     "generate_suite",
+    "get_baseline",
     "deserialize_actions",
     "deserialize_observation",
     "load_evaluation_manifest",

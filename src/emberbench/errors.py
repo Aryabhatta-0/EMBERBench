@@ -41,6 +41,10 @@ class GenerationError(EmberBenchError):
     """A generator config is invalid or unsatisfiable, or a frozen generated suite does not verify."""
 
 
+class BaselineError(EmberBenchError):
+    """A reference baseline ID or configuration is unknown or invalid."""
+
+
 class ModelOutputError(InvalidActionError):
     """A decision model returned an action set that the model interface rejects."""
 

@@ -16,7 +16,8 @@ does not change the simulator rules, the `Observation` fields, the evaluation
 manifest, paired seed semantics or the result artifact. No version is bumped.
 
 Out of scope here: provider integrations (OpenAI, Anthropic, Gemini and others),
-agent frameworks, RL libraries and production baseline agents (Issue #10).
+agent frameworks and RL libraries. The reference baseline agents (Issue #10)
+use this interface unchanged; see [baselines.md](baselines.md).
 
 ## 1. Model-visible input
 
