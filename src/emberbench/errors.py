@@ -31,3 +31,7 @@ class SuiteValidationError(EmberBenchError):
 
 class EvaluationError(EmberBenchError):
     """An evaluation manifest or result artifact is malformed, inconsistent or incompatible."""
+
+
+class GenerationError(EmberBenchError):
+    """A generator config is invalid or unsatisfiable, or a frozen generated suite does not verify."""

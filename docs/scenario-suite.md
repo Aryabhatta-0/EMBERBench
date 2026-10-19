@@ -47,7 +47,7 @@ and checks every pinned field against the file.
 | Key | Meaning |
 | --- | --- |
 | `suite_id`, `suite_version` | Suite identity. `suite_version` is `MAJOR.MINOR.PATCH`. |
-| `visibility` | Always `public`. |
+| `visibility` | `public` for this suite. Generated unseen suites use `generated` (see [procedural-generation.md](procedural-generation.md)). |
 | `seed_role` | Always `development`. See [Seeds](#seeds). |
 | `schema_version` | Scenario schema of every entry. |
 | `scenarios[]` | One entry per scenario, sorted by `scenario_id`. |

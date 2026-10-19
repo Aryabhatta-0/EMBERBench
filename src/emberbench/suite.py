@@ -46,9 +46,11 @@ class ScenarioFamily(StrEnum):
 
 
 class Visibility(StrEnum):
-    # V1 has only the public suite. Hidden evaluation sets are never stored
-    # in this repository or package.
+    # The repository holds only the public suite. A ``generated`` suite is
+    # produced by ``emberbench.generator`` from an evaluator-private seed and
+    # frozen outside the repository; it is never stored in the package.
     PUBLIC = "public"
+    GENERATED = "generated"
 
 
 class SeedRole(StrEnum):
