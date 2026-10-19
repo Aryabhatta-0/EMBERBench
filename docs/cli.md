@@ -292,11 +292,17 @@ An output path that is the same file as an input is refused, even with
 - An existing output file is never replaced unless `--force` is given.
   `evaluation run` has no `--force`: an existing result can only be resumed.
 - Parent directories are never created. A missing parent is exit 6.
-- The output is written to a temporary file in the same directory, flushed,
-  fsynced and then moved into place. Without `--force` the final step is a
-  hard link, which fails if the file appeared in the meantime, so a
-  concurrent writer is never overwritten either. If the filesystem has no
-  hard links, the CLI checks again and then renames.
+- The output is written to a temporary file in the same directory, flushed
+  and fsynced. With `--force` the temporary file is then renamed over the
+  output (`os.replace`). Without `--force` it is hard-linked to the output
+  path. The link fails if the file exists, so a file that another process
+  creates in the meantime is never replaced either.
+- If the filesystem has no hard links, the CLI creates the output with
+  `O_CREAT | O_EXCL` (this also fails if the file exists), writes the bytes,
+  flushes and fsyncs. On such a filesystem the output is visible while it
+  is written. If that write fails, the CLI removes the file, but only if it
+  is still the file that the CLI created. There is never a check-then-replace
+  step.
 - On any failure, no output file and no temporary file are left behind
   (`evaluation run` checkpoints are the documented exception above).
 - Inputs are validated and the output path is checked before an agent is

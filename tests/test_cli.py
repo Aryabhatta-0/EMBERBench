@@ -487,6 +487,111 @@ def test_a_failed_write_leaves_no_partial_artifact(small: Path, tmp_path: Path, 
     assert list(tmp_path.iterdir()) == []
 
 
+# Hard links unsupported: the no-force path must fall back to an exclusive create, never check-then-replace.
+
+
+def _no_hard_links(monkeypatch: pytest.MonkeyPatch, before_fail: Any = None) -> list[str]:
+    """Make ``os.link`` fail as on a filesystem without hard links. ``before_fail`` runs first (a racing writer)."""
+    calls: list[str] = []
+
+    def link(src: str, dst: str) -> None:
+        calls.append(str(dst))
+        if before_fail is not None:
+            before_fail(Path(dst))
+        raise OSError(1, "Operation not permitted")
+
+    monkeypatch.setattr(os, "link", link)
+    return calls
+
+
+def _forbid_replace(monkeypatch: pytest.MonkeyPatch) -> None:
+    def replace(src: Any, dst: Any) -> None:
+        raise AssertionError("os.replace must not be used without --force")
+
+    monkeypatch.setattr(os, "replace", replace)
+
+
+def test_fallback_writes_an_absent_destination(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = _no_hard_links(monkeypatch)
+    _forbid_replace(monkeypatch)
+    target = tmp_path / "a.json"
+    cli.write_output(target, b"data\n", force=False)
+    assert calls == [str(target)]
+    assert target.read_bytes() == b"data\n"
+    assert [p.name for p in tmp_path.iterdir()] == ["a.json"]
+
+
+def test_fallback_never_changes_an_existing_destination(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _no_hard_links(monkeypatch)
+    _forbid_replace(monkeypatch)
+    target = tmp_path / "a.json"
+    target.write_bytes(b"keep")
+    with pytest.raises(cli.CliError) as info:
+        cli.write_output(target, b"data\n", force=False)
+    assert info.value.code == ExitCode.OUTPUT
+    assert info.value.message == f"{target}: already exists; pass --force to replace it"
+    assert target.read_bytes() == b"keep"
+    assert [p.name for p in tmp_path.iterdir()] == ["a.json"]
+
+
+def test_fallback_preserves_a_destination_that_appears_concurrently(small: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def racing_writer(dst: Path) -> None:
+        dst.write_bytes(b"adversary")
+
+    _no_hard_links(monkeypatch, racing_writer)
+    _forbid_replace(monkeypatch)
+    out = tmp_path / "m.json"
+    o = invoke("evaluation", "manifest", "--suite", small, "--seed", "1", "--out", out, "--json")
+    assert o.code == ExitCode.OUTPUT
+    assert o.error() == {"exit_code": 6, "kind": "output", "message": f"{out}: already exists; pass --force to replace it"}
+    assert out.read_bytes() == b"adversary"
+    assert [p.name for p in tmp_path.iterdir()] == ["m.json"]
+
+
+def test_a_failed_fallback_write_removes_only_its_own_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _no_hard_links(monkeypatch)
+    real_fsync = os.fsync
+    calls = 0
+
+    def fsync(fd: int) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:  # the first fsync is the temporary file, the second the exclusively created output
+            raise OSError(28, "No space left on device")
+        real_fsync(fd)
+
+    monkeypatch.setattr(os, "fsync", fsync)
+    target = tmp_path / "a.json"
+    with pytest.raises(OSError):
+        cli.write_output(target, b"data\n", force=False)
+    assert calls == 2
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_cleanup_never_removes_a_file_that_replaced_ours(tmp_path: Path) -> None:
+    target = tmp_path / "a.json"
+    target.write_bytes(b"ours")
+    created = os.stat(target)
+    other = tmp_path / "other"
+    other.write_bytes(b"adversary")
+    os.replace(other, target)
+    cli._remove_if_created(target, created)
+    assert target.read_bytes() == b"adversary"
+    cli._remove_if_created(target, os.stat(target))
+    assert not target.exists()
+    cli._remove_if_created(target, created)  # already gone: no error
+
+
+def test_force_still_replaces_without_hard_links(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = _no_hard_links(monkeypatch)
+    target = tmp_path / "a.json"
+    target.write_bytes(b"old")
+    cli.write_output(target, b"new\n", force=True)
+    assert calls == []  # --force renames; it never links or creates exclusively
+    assert target.read_bytes() == b"new\n"
+    assert [p.name for p in tmp_path.iterdir()] == ["a.json"]
+
+
 # --------------------------------------------------------------------------- single episodes and replay
 
 

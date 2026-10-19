@@ -236,12 +236,55 @@ def _check_output(path: str, *, force: bool, inputs: Sequence[str] = ()) -> Path
     return out
 
 
+def _exists_error(path: Path) -> CliError:
+    return _conflict(f"{path}: already exists; pass --force to replace it")
+
+
+def _remove_if_created(path: Path, created: os.stat_result) -> None:
+    """Unlink ``path`` only if it is still the file this process created (same device and inode)."""
+    with contextlib.suppress(FileNotFoundError):
+        current = os.stat(path)
+        if (current.st_dev, current.st_ino) == (created.st_dev, created.st_ino):
+            os.unlink(path)
+
+
+def _write_exclusive(path: Path, data: bytes) -> None:
+    """Create ``path`` with ``O_EXCL`` and write ``data`` into it. An existing file is never opened.
+
+    The fallback for filesystems without hard links. If the write fails, the
+    file this call created is removed; a file that replaced it is left alone.
+    """
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0)
+    try:
+        fd = os.open(path, flags, 0o666)
+    except FileExistsError:
+        raise _exists_error(path) from None
+    try:
+        created = os.fstat(fd)
+    except BaseException:
+        os.close(fd)
+        with contextlib.suppress(FileNotFoundError):
+            os.unlink(path)  # nothing else can have replaced it yet: it is still open and was just made
+        raise
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+    except BaseException:
+        _remove_if_created(path, created)
+        raise
+
+
 def write_output(path: Path, data: bytes, *, force: bool) -> None:
     """Write ``data`` to a temporary file beside ``path``, then move it into place.
 
-    Without ``force`` the final step is a hard link, which fails if ``path``
-    appeared in the meantime, so an existing file is never replaced. A
-    failure at any point leaves no partial ``path`` and no temporary file.
+    With ``force`` the temporary file is renamed over ``path``. Without
+    ``force`` it is hard-linked to ``path``, which fails if ``path`` exists,
+    so an existing file is never replaced, even one that appears while this
+    runs. On a filesystem without hard links, ``path`` is created exclusively
+    (``O_EXCL``) and written; there is no check-then-replace step. A failure
+    at any point leaves no partial ``path`` and no temporary file.
     """
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     try:
@@ -255,18 +298,12 @@ def write_output(path: Path, data: bytes, *, force: bool) -> None:
         try:
             os.link(tmp, path)
         except FileExistsError:
-            raise _conflict(f"{path}: already exists; pass --force to replace it") from None
+            raise _exists_error(path) from None
         except OSError:
-            # The filesystem has no hard links. Fall back to check-then-rename.
-            if path.exists():
-                raise _conflict(f"{path}: already exists; pass --force to replace it") from None
-            os.replace(tmp, path)
-            return
-        os.unlink(tmp)
-    except BaseException:
+            _write_exclusive(path, data)  # no hard links here
+    finally:
         with contextlib.suppress(FileNotFoundError):
             os.unlink(tmp)
-        raise
 
 
 def _artifact_bytes(canonical: str) -> bytes:
