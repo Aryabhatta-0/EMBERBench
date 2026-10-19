@@ -5,10 +5,10 @@ A model controls the people in a 2D grid building. Fire spreads through the buil
 the model must decide each timestep how every person moves. The benchmark measures how
 well the model's decisions get people out through the exits before the fire reaches them.
 
-> **Status: Phase 2.** This repository contains the benchmark contract, the
-> deterministic simulation core and the frozen V1 fairness and semantics
-> specification. Model integrations, LLM APIs, a UI, procedural map generation,
-> leaderboards, metrics and human-behaviour models are out of scope for now.
+> **Status: Phase 3.** This repository contains the benchmark contract, the
+> deterministic simulation core, the frozen V1 fairness and semantics
+> specification and auditable per-episode metrics. Model integrations, LLM APIs, a UI, procedural map generation,
+> leaderboards, a composite score, cross-seed aggregation and human-behaviour models are out of scope for now.
 
 ## What EMBERBench measures
 
@@ -19,9 +19,11 @@ The benchmark looks at the quality of sequential decisions under a changing haza
 - managing congestion at corridors and exits,
 - reacting when the fire makes an exit unusable.
 
-Scoring metrics (for example evacuated fraction, casualties and time to evacuate)
-belong to a later phase. This phase records every event those metrics need (see
-[Replay and events](#replay-and-events)).
+Per-episode raw metrics (evacuated, casualties, stranded, timing, congestion,
+path efficiency, a fire-exposure proxy, exit use and replanning proxies) are
+computed from the `Scenario` and the `RunRecord` with `compute_episode_metrics`.
+See [docs/metrics.md](docs/metrics.md). There is no single score: raw metrics
+are canonical, and safety always comes before speed.
 
 ## Fairness principle
 
@@ -114,6 +116,7 @@ src/emberbench/
   simulator.py  Simulator: runs the 9 phases, run_episode()
   events.py     StepRecord / RunRecord, the replay and audit log
   replay.py     replay() and verify_record()
+  metrics.py    compute_episode_metrics(): auditable raw per-episode metrics
   canonical.py  canonical JSON and SHA-256 hashing
   errors.py     explicit exception types
 ```
@@ -121,7 +124,7 @@ src/emberbench/
 The concepts stay separate. The **scenario** is static input. The **simulator** owns
 the mutable run and produces immutable **state** snapshots. **Fire dynamics** and
 **movement resolution** are pure functions of their inputs (and of the passed RNG
-stream). **Events** record what happened. **Metrics** (a later phase) use the
+stream). **Events** record what happened. **Metrics** (`metrics.py`) use the
 `Scenario` and the `RunRecord` together. Some metrics need the static map or the
 configuration from the scenario, so not every metric can come from `RunRecord` alone.
 

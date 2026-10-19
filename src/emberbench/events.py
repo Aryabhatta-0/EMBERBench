@@ -1,8 +1,7 @@
 """Per-step event records and the full run record used for replay and audit.
 
-Metrics are out of scope for this phase. These records hold every event a
-later metrics module needs: per-person outcomes, timings, exits used, blocked
-moves and fire growth.
+These records hold every event the metrics module (``metrics.py``) needs:
+per-person outcomes, timings, exits used, blocked moves and fire growth.
 """
 
 import json
