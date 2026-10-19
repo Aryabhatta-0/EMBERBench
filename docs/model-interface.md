@@ -57,6 +57,17 @@ itself. Keeping all of it outside the interface keeps paired comparisons fair.
 - each value an `Action` member or its string value (`"north"`), which is what
   the simulator accepts, and a member of `observation.allowed_actions`.
 
+The static types say the same thing:
+
+```python
+ActionValue = Action | str                  # Action.NORTH or "north"
+ActionOutput = Mapping[str, ActionValue]    # person ID -> action value
+```
+
+`Agent.act`, `PolicyAgent.act`, `validate_actions` and `serialize_actions` use
+these types. The static type does not weaken the runtime check: a string that
+is not an action value (`"up"`, `"NORTH"`) is still rejected.
+
 A move that cannot happen (into a wall, out of the grid, into an occupied
 cell) is still a legal action. The simulator resolves it to a `blocked_*`
 outcome. The interface does not judge the quality of an action.
@@ -65,7 +76,7 @@ outcome. The interface does not judge the quality of an action.
 
 ```python
 class Agent(Protocol):
-    def act(self, observation: Observation) -> Mapping[str, Action]: ...
+    def act(self, observation: Observation) -> ActionOutput: ...
 
 AgentFactory = Callable[[], Agent]          # called once per episode, no arguments
 ```
@@ -79,7 +90,8 @@ AgentFactory = Callable[[], Agent]          # called once per episode, no argume
 | `agent_policy(agent)`               | binds one agent to one episode; returns a simulator `Policy`     |
 | `agent_policy_factory(factory)`     | a `run_evaluation` policy factory that builds a new agent per episode |
 | `ExecutionMetadata`, `StepExecution`, `ReportsExecution` | optional accounting (section 7) |
-| `serialize_observation`, `deserialize_observation`, `observation_from_dict` | canonical text (section 8) |
+| `serialize_observation`, `deserialize_observation`, `observation_from_dict` | canonical observation text (section 8) |
+| `ACTION_SCHEMA_VERSION`, `serialize_actions`, `deserialize_actions` | canonical action payload (section 9) |
 
 The three adapter shapes map onto these types:
 
@@ -88,9 +100,10 @@ The three adapter shapes map onto these types:
 - **Stateful per-episode agent:** a class with `act`, built by the factory, for
   example `agent_policy_factory(MyPlanner)`.
 - **Future external or remote adapter:** a class with `act` that sends
-  `serialize_observation(observation)` to the model, parses the reply into an
-  action mapping and optionally implements `last_execution()`. Remote calls,
-  retries and timeouts live inside the adapter. The core stays synchronous.
+  `serialize_observation(observation)` to the model, parses the reply with
+  `deserialize_actions(observation, reply)` and optionally implements
+  `last_execution()`. Remote calls, retries and timeouts live inside the
+  adapter (section 6.1). The core stays synchronous.
 
 ## 4. Episode lifecycle
 
@@ -109,8 +122,13 @@ Rules that make this hold:
 - A policy from `agent_policy` accepts the steps of one episode only. An
   observation with an unexpected step number (a second episode, or a skipped
   step) raises `EvaluationError`.
-- `agent_policy_factory` raises `EvaluationError` if the factory returns the
-  agent of the previous episode again, or an object without a callable `act`.
+- `agent_policy_factory` raises `EvaluationError` if the factory returns an
+  object without a callable `act`, or **any** agent that it returned for an
+  earlier episode (A -> A and A -> B -> A are both rejected). Reuse is detected
+  by identity, not equality: the factory keeps a strong reference to every
+  agent it returned, so each `id()` stays unique for its lifetime. Prior agents
+  are therefore kept alive until the factory is dropped; correctness comes
+  first. Use one `agent_policy_factory(...)` per evaluation run.
 
 ## 5. State isolation
 
@@ -125,8 +143,13 @@ The tests prove:
 - `test_new_stateful_agent_per_episode`: one distinct agent per episode, each
   factory call has no arguments, and each agent sees its episode's steps
   exactly once from step 0.
-- `test_reused_agent_is_rejected`: a factory that returns a shared agent stops
-  the run at the second episode.
+- `test_reuse_of_any_earlier_agent_is_rejected`: A -> A, A -> B -> A and
+  A -> B -> C -> B each stop the run at the reused agent, before it sees a step.
+- `test_distinct_agents_are_accepted`: A -> B -> C is accepted, and agents that
+  compare equal but are distinct objects run normally.
+- `test_resume_builds_agents_only_for_missing_episodes`: after an interruption,
+  resume builds agents only for the episodes that are not in the artifact, and
+  the final artifact is byte-identical to an uninterrupted run.
 - `test_agent_receives_only_the_observation`: under a distinctive 64-bit seed,
   every `act` call has exactly one positional argument of type `Observation`.
   Every object inside it is a known observation type. Its serialized form holds
@@ -155,7 +178,7 @@ defaulted or retried by the interface.
 | action not in `allowed_actions`          | `ModelOutputError`                             |
 | malformed return value (not a mapping, non-string keys) | `ModelOutputError`              |
 | exception raised by the model            | the same exception object, unchanged           |
-| factory returns a non-agent or the previous agent | `EvaluationError`                     |
+| factory returns a non-agent or any earlier agent | `EvaluationError`                      |
 | step out of order for a bound agent      | `EvaluationError`                              |
 
 `ModelOutputError` is a subclass of `InvalidActionError`. Its message is
@@ -170,6 +193,24 @@ with the rejected output, and the artifact keeps only the episodes completed
 before the failure. A deterministic model under the same manifest gives the same failure and the
 same artifact bytes on every run. A failed episode is not recorded as a
 result: a model that fails must be fixed and the run resumed.
+
+### 6.1 Timeouts
+
+The core has no timeout mechanism. The rule is:
+
+- A provider or remote adapter enforces its own timeout inside `act`.
+- On expiry it raises (for example `TimeoutError`). The exception propagates
+  through `Agent.act` and `run_evaluation` unchanged. It is not wrapped,
+  retried or converted into an action.
+- The simulator is not stepped for that observation.
+- The current episode is not committed to the artifact.
+- The episodes completed before it stay in the artifact. A later
+  `run_evaluation` call with `resume=True` runs only the missing episodes, each
+  with a new agent.
+
+`test_adapter_timeout_propagates_and_the_episode_is_not_committed` checks
+each point, and that the resumed artifact is byte-identical to an
+uninterrupted run.
 
 ## 7. Optional execution accounting
 
@@ -242,10 +283,52 @@ The tests prove that the serialized form:
   description,
 - does not change when a person is trapped.
 
-## 9. Versioning
+## 9. Action payload
+
+`serialize_actions(observation, output)` returns the canonical external form of
+one step of model output, for a future external adapter:
+
+```json
+{"action_schema_version":"1.0","actions":{"Pa":"east","Pb":"stay"},"step":3}
+```
+
+| Key                     | Content                                                   |
+| ----------------------- | --------------------------------------------------------- |
+| `action_schema_version` | `ACTION_SCHEMA_VERSION`, currently `"1.0"`                |
+| `step`                  | the step of the observation the actions answer            |
+| `actions`               | person ID -> action string, for exactly the active people |
+
+The text is canonical JSON: sorted keys (so person IDs are sorted), no
+whitespace, ASCII only. The output is checked with `validate_actions` before it
+is serialized.
+
+`deserialize_actions(observation, text)` parses a payload for that observation
+and returns `dict[str, Action]`. It raises `ModelOutputError` (message
+`step <n>: ...`) unless all of these hold:
+
+- the text is valid JSON with exactly the three keys above,
+- `action_schema_version` is the supported version string,
+- `step` is an integer equal to `observation.step`,
+- `actions` is an object of string actions for exactly the active people,
+  each in `observation.allowed_actions`,
+- the text is byte-identical to its canonical form (no extra whitespace, other
+  key order, duplicate keys or trailing newline).
+
+The payload holds no seed, RNG state, scenario data, accounting or other
+evaluator metadata. It is an exchange format only: run records and evaluation
+artifacts are unchanged and do not store it.
+
+## 10. Versioning
 
 This interface wraps existing contracts and changes none of them.
-`SIMULATOR_VERSION`, `OBSERVATION_VERSION`, `SCHEMA_VERSION`, the evaluation
-manifest and result versions, and all scenario and suite hashes are unchanged.
-The serialized observation carries `observation_version`. A change to the
-observation fields must bump that version, and old text is then rejected.
+`SIMULATOR_VERSION`, `OBSERVATION_VERSION`, `SCHEMA_VERSION`,
+`METRICS_VERSION`, the evaluation manifest and result versions, and all
+scenario and suite hashes are unchanged (`test_no_contract_version_changes`).
+
+The two external formats are versioned independently:
+
+- The serialized observation carries `observation_version` (`"1.0"`). A change
+  to the observation fields must bump it, and old text is then rejected.
+- The action payload carries `action_schema_version` (`ACTION_SCHEMA_VERSION`,
+  `"1.0"`). A change to the payload must bump it, and old payloads are then
+  rejected.

@@ -12,8 +12,17 @@ import pytest
 
 from conftest import greedy_exit_policy, layout
 from emberbench import (
+    ACTION_SCHEMA_VERSION,
+    CROWD_DIAGNOSTICS_VERSION,
+    EVALUATION_MANIFEST_VERSION,
+    EVALUATION_RESULT_VERSION,
+    METRICS_VERSION,
     OBSERVATION_VERSION,
+    SCHEMA_VERSION,
+    SIMULATOR_VERSION,
     Action,
+    ActionOutput,
+    ActionValue,
     Agent,
     EvaluationError,
     EvaluationManifest,
@@ -31,15 +40,17 @@ from emberbench import (
     agent_policy,
     agent_policy_factory,
     build_evaluation_manifest,
+    deserialize_actions,
     deserialize_observation,
     load_evaluation_result,
     load_suite,
     observation_from_dict,
     run_evaluation,
+    serialize_actions,
     serialize_observation,
     validate_actions,
 )
-from emberbench.agent import EXIT_KEYS, MAP_KEYS, OBSERVATION_KEYS, PERSON_KEYS, RULES_KEYS
+from emberbench.agent import ACTION_PAYLOAD_KEYS, EXIT_KEYS, MAP_KEYS, OBSERVATION_KEYS, PERSON_KEYS, RULES_KEYS
 from emberbench.canonical import canonical_json
 from emberbench.simulator import Policy
 from test_evaluation import _ALLOWED_TYPES, _CONTAINERS, SEEDS, SMALL_IDS, STOCHASTIC_ID, _walk, stay_policy, subset
@@ -265,12 +276,113 @@ def test_new_stateful_agent_per_episode(small: Suite, manifest: EvaluationManife
         assert agent.steps == list(range(len(episode.record.steps)))
 
 
-def test_reused_agent_is_rejected(small: Suite, manifest: EvaluationManifest, tmp_path: Path) -> None:
-    shared = CountingAgent()
-    path = tmp_path / "shared.json"
-    with pytest.raises(EvaluationError, match="agent of the previous episode"):
-        run_evaluation(small, manifest, "shared", agent_policy_factory(lambda: shared), path)
+def _returning(agents: list[Agent]) -> Callable[[], Agent]:
+    """An agent factory that returns the given objects in order."""
+    queue = iter(agents)
+    return lambda: next(queue)
+
+
+@pytest.mark.parametrize(("order", "completed"), [("AA", [0]), ("ABA", [0, 1]), ("ABCB", [0, 1, 2])])
+def test_reuse_of_any_earlier_agent_is_rejected(
+    order: str, completed: list[int], small: Suite, manifest: EvaluationManifest, tmp_path: Path
+) -> None:
+    pool = {name: CountingAgent() for name in set(order)}
+    path = tmp_path / "reuse.json"
+    with pytest.raises(EvaluationError, match="agent of an earlier episode"):
+        run_evaluation(small, manifest, "reuse", agent_policy_factory(_returning([pool[n] for n in order])), path)
+    assert sorted(load_evaluation_result(path, small).completed_indices) == completed
+    # The reused agent was rejected before it saw a step of the new episode.
+    assert pool[order[-1]].steps == list(range(len(pool[order[-1]].steps)))
+
+
+def test_distinct_agents_are_accepted(small: Suite, manifest: EvaluationManifest, plain_artifacts: dict[str, bytes], tmp_path: Path) -> None:
+    a, b, c = CountingAgent(), CountingAgent(), CountingAgent()
+    factory = agent_policy_factory(_returning([a, b, c]))
+    assert [callable(factory()) for _ in range(3)] == [True, True, True]  # A -> B -> C
+
+    class AlwaysEqual(CountingAgent):
+        def __eq__(self, other: object) -> bool:
+            return True
+
+        def __hash__(self) -> int:
+            return 0
+
+    # Reuse is detected by identity, never by equality: equal but distinct agents run.
+    run = agent_policy_factory(_returning([AlwaysEqual() for _ in manifest.episodes]))
+    assert _artifact(small, manifest, "greedy", run, tmp_path / "eq.json") == plain_artifacts["greedy"]
+
+
+def test_resume_builds_agents_only_for_missing_episodes(
+    small: Suite, manifest: EvaluationManifest, plain_artifacts: dict[str, bytes], tmp_path: Path
+) -> None:
+    path = tmp_path / "run.json"
+    first: list[CountingAgent] = []
+
+    def crashing() -> Agent:
+        if len(first) == 2:
+            raise Boom("interrupted")
+        first.append(CountingAgent())
+        return first[-1]
+
+    with pytest.raises(Boom):
+        run_evaluation(small, manifest, "greedy", agent_policy_factory(crashing), path)
+    assert sorted(load_evaluation_result(path, small).completed_indices) == [0, 1]
+
+    resumed: list[CountingAgent] = []
+
+    def counting() -> Agent:
+        resumed.append(CountingAgent())
+        return resumed[-1]
+
+    final = run_evaluation(small, manifest, "greedy", agent_policy_factory(counting), path)
+    assert len(first) == 2 and len(resumed) == 2  # only episodes 2 and 3 built agents
+    for agent, episode in zip(resumed, final.episodes[2:], strict=True):
+        assert agent.steps == list(range(len(episode.record.steps)))
+    assert path.read_bytes() == plain_artifacts["greedy"]
+
+
+def test_adapter_timeout_propagates_and_the_episode_is_not_committed(
+    small: Suite, manifest: EvaluationManifest, plain_artifacts: dict[str, bytes], tmp_path: Path
+) -> None:
+    timeout = TimeoutError("provider did not answer within 30 s")
+
+    class TimingOut(CountingAgent):
+        """A remote adapter that enforces its own timeout and raises on expiry."""
+
+        def __init__(self, episode: int) -> None:
+            super().__init__()
+            self.episode = episode
+
+        def act(self, observation: Observation) -> dict[str, Action]:
+            if self.episode == 1 and observation.step == 2:
+                raise timeout
+            return super().act(observation)
+
+    # Simulator level: the step that timed out is never applied.
+    policy = agent_policy(TimingOut(1))
+    sim = Simulator(small.scenarios[0])
+    for _ in range(2):
+        sim.step(policy(sim.observe()))
+    before = sim.state
+    with pytest.raises(TimeoutError):
+        sim.step(policy(sim.observe()))
+    assert sim.state is before and len(sim.record().steps) == 2
+
+    built: list[TimingOut] = []
+
+    def factory() -> Agent:
+        built.append(TimingOut(len(built)))
+        return built[-1]
+
+    path = tmp_path / "timeout.json"
+    with pytest.raises(TimeoutError) as caught:
+        run_evaluation(small, manifest, "greedy", agent_policy_factory(factory), path)
+    assert caught.value is timeout  # unchanged, not wrapped
+    assert built[1].steps == [0, 1]
+    # Episode 1 is not committed. Episode 0 is kept and the run resumes from episode 1.
     assert sorted(load_evaluation_result(path, small).completed_indices) == [0]
+    run_evaluation(small, manifest, "greedy", agent_policy_factory(greedy_agent), path)
+    assert path.read_bytes() == plain_artifacts["greedy"]
 
 
 def test_bound_policy_accepts_one_episode_only() -> None:
@@ -579,3 +691,129 @@ def test_non_canonical_text_is_rejected(public: Suite) -> None:
         deserialize_observation(text.encode())  # type: ignore[arg-type]
     with pytest.raises(TypeError):
         serialize_observation(data)
+
+
+# --------------------------------------------------------------------------- action typing
+
+
+class MixedAgent:
+    """Returns Action members and action strings: both are valid ActionValues."""
+
+    def act(self, observation: Observation) -> ActionOutput:
+        out: dict[str, ActionValue] = {}
+        for i, p in enumerate(observation.active):
+            out[p.id] = Action.STAY if i % 2 else "stay"
+        return out
+
+
+def test_action_output_type_matches_runtime_acceptance(small: Suite) -> None:
+    agent: Agent = MixedAgent()  # checked by mypy --strict
+    assert isinstance(agent, Agent)
+    obs = Simulator(small.scenarios[0]).observe()
+    raw = agent.act(obs)
+    assert {type(v) for v in raw.values()} == {Action, str} or len(raw) == 1
+    assert validate_actions(obs, raw) == {p.id: Action.STAY for p in obs.active}
+    assert agent_policy(agent)(obs) == {p.id: Action.STAY for p in obs.active}
+
+
+# --------------------------------------------------------------------------- action payload
+
+
+def test_action_payload_is_canonical_and_versioned() -> None:
+    _, obs = evacuated_state()
+    text = serialize_actions(obs, {"Pb": "north"})
+    assert text == '{"action_schema_version":"1.0","actions":{"Pb":"north"},"step":1}'
+    assert deserialize_actions(obs, text) == {"Pb": Action.NORTH}
+    assert serialize_actions(obs, {"Pb": Action.NORTH}) == text
+    assert ACTION_SCHEMA_VERSION == "1.0" and OBSERVATION_VERSION == "1.0"
+
+
+def test_action_payload_sorts_person_ids_and_round_trips(public: Suite) -> None:
+    scenario = public.get("v1-pub-02-single-exit-dense")
+    for obs in _observations(scenario)[:-1]:
+        actions = greedy_exit_policy(obs)
+        backwards = dict(reversed(list(actions.items())))
+        text = serialize_actions(obs, backwards)
+        assert text == serialize_actions(obs, actions)
+        data = json.loads(text)
+        assert list(data["actions"]) == sorted(p.id for p in obs.active) and len(data["actions"]) > 1 or len(obs.active) <= 1
+        assert deserialize_actions(obs, text) == validate_actions(obs, actions)
+        # Only the declared keys and the active person IDs: no evaluator-private metadata.
+        assert _keys(data) == ACTION_PAYLOAD_KEYS | {p.id for p in obs.active}
+
+
+@pytest.mark.parametrize("name", sorted(BAD_OUTPUTS))
+def test_action_payload_cannot_be_built_from_invalid_output(name: str) -> None:
+    _, obs = evacuated_state()
+    with pytest.raises(ModelOutputError, match=r"^step 1: "):
+        serialize_actions(obs, BAD_OUTPUTS[name])
+
+
+BAD_PAYLOADS: dict[str, Any] = {
+    "missing_actions": {"action_schema_version": "1.0", "step": 1},
+    "missing_version": {"actions": {"Pb": "stay"}, "step": 1},
+    "missing_step": {"action_schema_version": "1.0", "actions": {"Pb": "stay"}},
+    "extra_seed": {"action_schema_version": "1.0", "actions": {"Pb": "stay"}, "step": 1, "seed": 7},
+    "extra_metadata": {"action_schema_version": "1.0", "actions": {"Pb": "stay"}, "step": 1, "model": "x"},
+    "other_version": {"action_schema_version": "2.0", "actions": {"Pb": "stay"}, "step": 1},
+    "float_version": {"action_schema_version": 1.0, "actions": {"Pb": "stay"}, "step": 1},
+    "wrong_step": {"action_schema_version": "1.0", "actions": {"Pb": "stay"}, "step": 2},
+    "earlier_step": {"action_schema_version": "1.0", "actions": {"Pb": "stay"}, "step": 0},
+    "bool_step": {"action_schema_version": "1.0", "actions": {"Pb": "stay"}, "step": True},
+    "string_step": {"action_schema_version": "1.0", "actions": {"Pb": "stay"}, "step": "1"},
+    "actions_list": {"action_schema_version": "1.0", "actions": [["Pb", "stay"]], "step": 1},
+    "integer_action": {"action_schema_version": "1.0", "actions": {"Pb": 0}, "step": 1},
+    "missing_person": {"action_schema_version": "1.0", "actions": {}, "step": 1},
+    "unknown_person": {"action_schema_version": "1.0", "actions": {"Pb": "stay", "Pz": "stay"}, "step": 1},
+    "inactive_person": {"action_schema_version": "1.0", "actions": {"Pa": "stay", "Pb": "stay"}, "step": 1},
+    "invalid_action": {"action_schema_version": "1.0", "actions": {"Pb": "up"}, "step": 1},
+    "top_level_list": [{"action_schema_version": "1.0", "actions": {"Pb": "stay"}, "step": 1}],
+}
+
+
+@pytest.mark.parametrize("name", sorted(BAD_PAYLOADS))
+def test_malformed_action_payloads_are_rejected(name: str) -> None:
+    _, obs = evacuated_state()
+    text = canonical_json(BAD_PAYLOADS[name])
+    with pytest.raises(ModelOutputError, match=r"^step 1: ") as first:
+        deserialize_actions(obs, text)
+    with pytest.raises(ModelOutputError) as second:
+        deserialize_actions(obs, text)
+    assert str(first.value) == str(second.value)
+
+
+def test_action_payload_checks_allowed_actions() -> None:
+    _, obs = evacuated_state()
+    restricted = dataclasses.replace(obs, allowed_actions=(Action.STAY,))
+    text = serialize_actions(obs, {"Pb": "north"})
+    with pytest.raises(ModelOutputError, match="allowed_actions"):
+        deserialize_actions(restricted, text)
+
+
+def test_non_canonical_action_payloads_are_rejected() -> None:
+    _, obs = evacuated_state()
+    text = serialize_actions(obs, {"Pb": "north"})
+    data = json.loads(text)
+    variants = [
+        json.dumps(data, sort_keys=True),  # spaces
+        json.dumps(data, indent=2, sort_keys=True),
+        json.dumps({"step": 1, "actions": {"Pb": "north"}, "action_schema_version": "1.0"}, separators=(",", ":")),
+        text + "\n",
+        '{"action_schema_version":"1.0","actions":{"Pb":"stay","Pb":"north"},"step":1}',  # duplicate key
+    ]
+    for variant in variants:
+        assert variant != text
+        with pytest.raises(ModelOutputError, match="not in canonical form"):
+            deserialize_actions(obs, variant)
+    with pytest.raises(ModelOutputError, match="not valid JSON"):
+        deserialize_actions(obs, text[:-1])
+    with pytest.raises(ModelOutputError, match="must be str"):
+        deserialize_actions(obs, text.encode())  # type: ignore[arg-type]
+
+
+# --------------------------------------------------------------------------- versions
+
+
+def test_no_contract_version_changes() -> None:
+    assert (SIMULATOR_VERSION, OBSERVATION_VERSION, SCHEMA_VERSION, METRICS_VERSION) == ("0.2.0", "1.0", "1.0", "1.0")
+    assert (EVALUATION_MANIFEST_VERSION, EVALUATION_RESULT_VERSION, CROWD_DIAGNOSTICS_VERSION) == ("1.0", "1.0", "1.0")

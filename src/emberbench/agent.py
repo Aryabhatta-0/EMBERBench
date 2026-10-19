@@ -23,6 +23,8 @@ reach the simulator, the run record or the result artifact.
 
 :func:`serialize_observation` gives the canonical JSON text of an observation
 for a future external adapter. It holds only the model-visible fields.
+:func:`serialize_actions` and :func:`deserialize_actions` give the canonical
+action payload, versioned by :data:`ACTION_SCHEMA_VERSION`.
 
 The core has no runtime dependencies and no async or network API. See
 ``docs/model-interface.md``.
@@ -47,6 +49,14 @@ from .state import PersonState, PersonStatus
 
 # --------------------------------------------------------------------------- interface
 
+# Independent of OBSERVATION_VERSION. Bump it when the external action payload changes.
+ACTION_SCHEMA_VERSION = "1.0"
+
+# What the simulator accepts for one person: an Action member or its string value ("north").
+ActionValue = Action | str
+# One step of model output: person ID -> action value, for exactly the active people.
+ActionOutput = Mapping[str, ActionValue]
+
 
 @runtime_checkable
 class Agent(Protocol):
@@ -59,7 +69,7 @@ class Agent(Protocol):
     simulator accepts.
     """
 
-    def act(self, observation: Observation) -> Mapping[str, Action]: ...
+    def act(self, observation: Observation) -> ActionOutput: ...
 
 
 # Called once per episode with no arguments. It must return a new agent.
@@ -79,18 +89,20 @@ class PolicyAgent:
             raise TypeError("policy must be a callable that maps an Observation to an action mapping")
         self._policy = policy
 
-    def act(self, observation: Observation) -> Mapping[str, Any]:
+    def act(self, observation: Observation) -> ActionOutput:
         return self._policy(observation)
 
 
 # --------------------------------------------------------------------------- validation
 
 
-def validate_actions(observation: Observation, actions: Any) -> dict[str, Action]:
+def validate_actions(observation: Observation, actions: ActionOutput) -> dict[str, Action]:
     """Check model output against ``observation`` with the simulator's action rules.
 
     The output must be a mapping with exactly one valid action for every
     active person: no missing, unknown or inactive IDs, no other values.
+    The value is checked at runtime whatever its static type, so untrusted
+    output (for example parsed JSON) may be passed as it is.
     Returns a new ``dict`` in person-ID order. Raises :class:`ModelOutputError`.
     Nothing is repaired, dropped or defaulted.
     """
@@ -247,19 +259,22 @@ def agent_policy_factory(
 
     Every call builds a new agent with ``agent_factory()`` (no arguments) and
     binds it to one episode with :func:`agent_policy`. A factory that returns
-    the agent of the previous episode again raises :class:`EvaluationError`.
+    any agent it returned before (compared by identity) raises
+    :class:`EvaluationError`. Use one returned factory per evaluation run.
     """
     if not callable(agent_factory):
         raise TypeError("agent_factory must be a zero-argument callable that returns a new agent")
-    previous: list[Agent] = []  # only the agent of the last episode, to detect reuse
+    # Every agent returned so far, by id(). The strong references keep each id
+    # unique for the life of this factory, so an id match is an identity match.
+    seen: dict[int, Agent] = {}
 
     def factory() -> Policy:
         agent = agent_factory()
         if not isinstance(agent, Agent) or not callable(agent.act):
             raise EvaluationError(f"agent_factory returned {type(agent).__name__}, not an agent with an act(observation) method")
-        if previous and agent is previous[0]:
-            raise EvaluationError("agent_factory returned the agent of the previous episode; it must build a new agent")
-        previous[:] = [agent]
+        if id(agent) in seen:
+            raise EvaluationError("agent_factory returned an agent of an earlier episode; it must build a new agent per episode")
+        seen[id(agent)] = agent
         return agent_policy(agent, on_step=on_step, clock=clock)
 
     return factory
@@ -416,3 +431,57 @@ def observation_from_dict(data: Any) -> Observation:
         burning=frozenset(burning),
         allowed_actions=tuple(allowed),
     )
+
+
+# --------------------------------------------------------------------------- action payload
+
+ACTION_PAYLOAD_KEYS = frozenset({"action_schema_version", "step", "actions"})
+
+
+def serialize_actions(observation: Observation, actions: ActionOutput) -> str:
+    """The canonical JSON action payload for ``observation``.
+
+    ``{"action_schema_version": "1.0", "actions": {person_id: action}, "step": n}``
+    with sorted keys (so person IDs are sorted), no whitespace and ASCII only.
+    ``actions`` is validated with :func:`validate_actions` first.
+    """
+    parsed = validate_actions(observation, actions)
+    return canonical_json(
+        {
+            "action_schema_version": ACTION_SCHEMA_VERSION,
+            "step": observation.step,
+            "actions": {pid: action.value for pid, action in parsed.items()},
+        }
+    )
+
+
+def deserialize_actions(observation: Observation, text: str) -> dict[str, Action]:
+    """Strictly parse an action payload for ``observation``. Raises :class:`ModelOutputError`.
+
+    The payload must have exactly the declared keys, the supported schema
+    version, the observation's step, string actions that pass
+    :func:`validate_actions`, and canonical text.
+    """
+    step = observation.step
+    if not isinstance(text, str):
+        raise ModelOutputError(f"step {step}: action payload must be str, got {type(text).__name__}")
+    try:
+        data = json.loads(text)
+    except ValueError as exc:
+        raise ModelOutputError(f"step {step}: action payload is not valid JSON: {exc}") from exc
+    if not isinstance(data, dict) or data.keys() != ACTION_PAYLOAD_KEYS:
+        keys = sorted(data) if isinstance(data, dict) else type(data).__name__
+        raise ModelOutputError(f"step {step}: action payload keys must be exactly {sorted(ACTION_PAYLOAD_KEYS)}, got {keys}")
+    if data["action_schema_version"] != ACTION_SCHEMA_VERSION:
+        raise ModelOutputError(
+            f"step {step}: unsupported action_schema_version {data['action_schema_version']!r}; expected {ACTION_SCHEMA_VERSION!r}"
+        )
+    if type(data["step"]) is not int or data["step"] != step:
+        raise ModelOutputError(f"step {step}: action payload is for step {data['step']!r}")
+    actions = data["actions"]
+    if not isinstance(actions, dict) or not all(isinstance(v, str) for v in actions.values()):
+        raise ModelOutputError(f"step {step}: actions must be an object of person id -> action string")
+    parsed = validate_actions(observation, actions)
+    if serialize_actions(observation, parsed) != text:
+        raise ModelOutputError(f"step {step}: action payload is not in canonical form")
+    return parsed

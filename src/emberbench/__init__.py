@@ -59,6 +59,9 @@ from .evaluation import (  # noqa: E402
     verify_manifest,
 )
 from .agent import (  # noqa: E402
+    ACTION_SCHEMA_VERSION,
+    ActionOutput,
+    ActionValue,
     Agent,
     AgentFactory,
     ExecutionMetadata,
@@ -67,13 +70,16 @@ from .agent import (  # noqa: E402
     StepExecution,
     agent_policy,
     agent_policy_factory,
+    deserialize_actions,
     deserialize_observation,
     observation_from_dict,
+    serialize_actions,
     serialize_observation,
     validate_actions,
 )
 
 __all__ = [
+    "ACTION_SCHEMA_VERSION",
     "ALLOWED_ACTIONS",
     "CROWD_DIAGNOSTICS_VERSION",
     "EVALUATION_MANIFEST_VERSION",
@@ -83,6 +89,8 @@ __all__ = [
     "SCHEMA_VERSION",
     "SIMULATOR_VERSION",
     "Action",
+    "ActionOutput",
+    "ActionValue",
     "Agent",
     "AgentFactory",
     "Casualty",
@@ -142,6 +150,7 @@ __all__ = [
     "build_evaluation_manifest",
     "compute_crowd_diagnostics",
     "compute_episode_metrics",
+    "deserialize_actions",
     "deserialize_observation",
     "load_evaluation_manifest",
     "load_evaluation_result",
@@ -156,6 +165,7 @@ __all__ = [
     "save_evaluation_manifest",
     "save_evaluation_result",
     "save_scenario",
+    "serialize_actions",
     "serialize_observation",
     "validate_actions",
     "verify_manifest",
