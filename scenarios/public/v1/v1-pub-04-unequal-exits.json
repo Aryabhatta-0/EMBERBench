@@ -1,0 +1,291 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "v1-pub-04-unequal-exits",
+  "description": "CANONICAL V1 PUBLIC SCENARIO. Multiple exits with unequal distance. Five people, two exits on opposite walls. Each person is much nearer to one exit than to the other. One slow fire source.",
+  "grid": {
+    "width": 20,
+    "height": 9
+  },
+  "obstacles": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      0,
+      4
+    ],
+    [
+      0,
+      5
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      7
+    ],
+    [
+      0,
+      8
+    ],
+    [
+      0,
+      9
+    ],
+    [
+      0,
+      10
+    ],
+    [
+      0,
+      11
+    ],
+    [
+      0,
+      12
+    ],
+    [
+      0,
+      13
+    ],
+    [
+      0,
+      14
+    ],
+    [
+      0,
+      15
+    ],
+    [
+      0,
+      16
+    ],
+    [
+      0,
+      17
+    ],
+    [
+      0,
+      18
+    ],
+    [
+      0,
+      19
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      19
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      2,
+      19
+    ],
+    [
+      3,
+      19
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      4,
+      19
+    ],
+    [
+      5,
+      0
+    ],
+    [
+      5,
+      19
+    ],
+    [
+      6,
+      0
+    ],
+    [
+      7,
+      0
+    ],
+    [
+      7,
+      19
+    ],
+    [
+      8,
+      0
+    ],
+    [
+      8,
+      1
+    ],
+    [
+      8,
+      2
+    ],
+    [
+      8,
+      3
+    ],
+    [
+      8,
+      4
+    ],
+    [
+      8,
+      5
+    ],
+    [
+      8,
+      6
+    ],
+    [
+      8,
+      7
+    ],
+    [
+      8,
+      8
+    ],
+    [
+      8,
+      9
+    ],
+    [
+      8,
+      10
+    ],
+    [
+      8,
+      11
+    ],
+    [
+      8,
+      12
+    ],
+    [
+      8,
+      13
+    ],
+    [
+      8,
+      14
+    ],
+    [
+      8,
+      15
+    ],
+    [
+      8,
+      16
+    ],
+    [
+      8,
+      17
+    ],
+    [
+      8,
+      18
+    ],
+    [
+      8,
+      19
+    ]
+  ],
+  "exits": [
+    {
+      "id": "E1",
+      "position": [
+        3,
+        0
+      ]
+    },
+    {
+      "id": "E2",
+      "position": [
+        6,
+        19
+      ]
+    }
+  ],
+  "people": [
+    {
+      "id": "P001",
+      "position": [
+        5,
+        14
+      ]
+    },
+    {
+      "id": "P002",
+      "position": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": "P003",
+      "position": [
+        3,
+        8
+      ]
+    },
+    {
+      "id": "P004",
+      "position": [
+        2,
+        15
+      ]
+    },
+    {
+      "id": "P005",
+      "position": [
+        5,
+        6
+      ]
+    }
+  ],
+  "ignitions": [
+    [
+      7,
+      10
+    ]
+  ],
+  "fire": {
+    "model": "deterministic",
+    "spread_interval": 3,
+    "exits_flammable": true
+  },
+  "movement": {
+    "conflict_resolution": "lowest_id_wins",
+    "enter_fire": "casualty"
+  },
+  "termination": {
+    "max_steps": 60
+  },
+  "seed": 0
+}

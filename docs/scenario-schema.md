@@ -62,3 +62,6 @@ benchmark scoring scenarios, and they are not the hidden evaluation set.
 | `narrow_corridor` | A one-wide queue, chain moves and exit throughput. |
 | `fire_threatening_exit` | Fire burns the near exit at step 1. The far exit stays usable. |
 | `stochastic_room` | Seeded stochastic spread with the `blocked` fire-entry policy. |
+
+The canonical public V1 scenarios are a separate set in `scenarios/public/v1/`.
+See [scenario-suite.md](scenario-suite.md).

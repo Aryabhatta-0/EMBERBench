@@ -1,0 +1,161 @@
+{
+  "suite_id": "emberbench-v1-public",
+  "suite_version": "1.0.0",
+  "visibility": "public",
+  "seed_role": "development",
+  "schema_version": "1.0",
+  "scenarios": [
+    {
+      "scenario_id": "v1-pub-01-single-exit-sparse",
+      "path": "v1-pub-01-single-exit-sparse.json",
+      "schema_version": "1.0",
+      "content_hash": "d70b5c78b24e3020ebd7c3b3ddd7cd6ccc5ec6232c051cd2aaea2d007b84e59e",
+      "primary_family": "single_exit_low_density",
+      "families": [
+        "single_exit_low_density"
+      ],
+      "population": 4,
+      "exit_count": 1,
+      "ignition_count": 1,
+      "fire_model": "deterministic",
+      "purpose": "Baseline: a few people in an open room with one exit and a distant, slow fire."
+    },
+    {
+      "scenario_id": "v1-pub-02-single-exit-dense",
+      "path": "v1-pub-02-single-exit-dense.json",
+      "schema_version": "1.0",
+      "content_hash": "8fc36c0b598f123e59cfd102feb2ed48276b3ee9da78e62f72853105b2bd7042",
+      "primary_family": "single_exit_high_density",
+      "families": [
+        "single_exit_high_density"
+      ],
+      "population": 36,
+      "exit_count": 1,
+      "ignition_count": 1,
+      "fire_model": "deterministic",
+      "purpose": "Congestion: a packed room drains through one exit at one person per step."
+    },
+    {
+      "scenario_id": "v1-pub-03-corridor-bottleneck",
+      "path": "v1-pub-03-corridor-bottleneck.json",
+      "schema_version": "1.0",
+      "content_hash": "0690eff35dba913fcdccef5d44eca0b360d4ece5b70be0e1616db61cc95e1b9a",
+      "primary_family": "narrow_corridor_bottleneck",
+      "families": [
+        "narrow_corridor_bottleneck"
+      ],
+      "population": 8,
+      "exit_count": 1,
+      "ignition_count": 1,
+      "fire_model": "deterministic",
+      "purpose": "Bottleneck: every route passes a one-cell-wide corridor while fire spreads from behind."
+    },
+    {
+      "scenario_id": "v1-pub-04-unequal-exits",
+      "path": "v1-pub-04-unequal-exits.json",
+      "schema_version": "1.0",
+      "content_hash": "f5b630f390b69cf758df56907037e032455ab0dff06f2a615bdaead2ec50b64e",
+      "primary_family": "multiple_exits_unequal_distance",
+      "families": [
+        "multiple_exits_unequal_distance"
+      ],
+      "population": 5,
+      "exit_count": 2,
+      "ignition_count": 1,
+      "fire_model": "deterministic",
+      "purpose": "Exit choice: two exits at clearly different path distances from each person."
+    },
+    {
+      "scenario_id": "v1-pub-05-central-ignition",
+      "path": "v1-pub-05-central-ignition.json",
+      "schema_version": "1.0",
+      "content_hash": "e1077d245b8c395403a1836578227479e2a32248a496fd301e68275186d0b937",
+      "primary_family": "central_ignition",
+      "families": [
+        "central_ignition"
+      ],
+      "population": 8,
+      "exit_count": 2,
+      "ignition_count": 1,
+      "fire_model": "deterministic",
+      "purpose": "Radial threat: one fire source at the room centre, people around it, exits on opposite walls."
+    },
+    {
+      "scenario_id": "v1-pub-06-threatened-exit",
+      "path": "v1-pub-06-threatened-exit.json",
+      "schema_version": "1.0",
+      "content_hash": "413bca35898f45a9b04446d513342e48d7389dff344520a41184531b593c3d34",
+      "primary_family": "threatened_nearest_exit",
+      "families": [
+        "threatened_nearest_exit"
+      ],
+      "population": 6,
+      "exit_count": 2,
+      "ignition_count": 1,
+      "fire_model": "deterministic",
+      "purpose": "Exit loss: fire starts beside the exit that is nearest for most people and burns it early."
+    },
+    {
+      "scenario_id": "v1-pub-07-multiple-ignitions",
+      "path": "v1-pub-07-multiple-ignitions.json",
+      "schema_version": "1.0",
+      "content_hash": "cab42b2e0ab0324575b55fd5feb17070e4b73b7002b2375e156beedc6ce4c954",
+      "primary_family": "multiple_ignitions",
+      "families": [
+        "multiple_ignitions"
+      ],
+      "population": 9,
+      "exit_count": 2,
+      "ignition_count": 3,
+      "fire_model": "deterministic",
+      "purpose": "Multiple fronts: three separate fire sources close the open floor between them."
+    },
+    {
+      "scenario_id": "v1-pub-08-maze-deceptive-exit",
+      "path": "v1-pub-08-maze-deceptive-exit.json",
+      "schema_version": "1.0",
+      "content_hash": "6aaf5079a9833ee862b3b07d7c300ef54b3bccba6e9f4f73e97e779d27a53445",
+      "primary_family": "maze_obstacle_routing",
+      "families": [
+        "deceptive_nearest_exit",
+        "maze_obstacle_routing"
+      ],
+      "population": 5,
+      "exit_count": 2,
+      "ignition_count": 1,
+      "fire_model": "deterministic",
+      "purpose": "Path vs straight-line distance: a walled maze where the straight-line-nearest exit is far by path."
+    },
+    {
+      "scenario_id": "v1-pub-09-crowd-100-split-flow",
+      "path": "v1-pub-09-crowd-100-split-flow.json",
+      "schema_version": "1.0",
+      "content_hash": "4cae3e2f63610053571e764305adec41f0820dc7ebd0dc658fc1760bbecf9964",
+      "primary_family": "crowd_100",
+      "families": [
+        "crowd_100",
+        "split_flow_across_exits"
+      ],
+      "population": 100,
+      "exit_count": 3,
+      "ignition_count": 1,
+      "fire_model": "deterministic",
+      "purpose": "Scale and flow allocation: 100 people, three exits, and most people nearest to the same exit."
+    },
+    {
+      "scenario_id": "v1-pub-10-route-invalidation",
+      "path": "v1-pub-10-route-invalidation.json",
+      "schema_version": "1.0",
+      "content_hash": "ee407099e5a8900e0d1d0fd7987e375aefda31d74bf31f74d6040e2f50e0ebef",
+      "primary_family": "route_invalidation_replanning",
+      "families": [
+        "route_invalidation_replanning"
+      ],
+      "population": 6,
+      "exit_count": 1,
+      "ignition_count": 1,
+      "fire_model": "stochastic",
+      "purpose": "Replanning: stochastic fire may cut the short corridor at an uncertain time; a longer route stays open."
+    }
+  ]
+}

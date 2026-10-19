@@ -74,6 +74,25 @@ benchmark scoring scenarios, and they are **not intended to become the final hid
 test set**. The scored evaluation set must be kept separate from development
 scenarios, so that models cannot be tuned to it.
 
+### Canonical V1 public suite
+
+[`scenarios/public/v1/`](scenarios/public/v1/) holds the fixed, public V1
+diagnostic suite (`emberbench-v1-public`, suite version `1.0.0`): ten scenarios
+that cover twelve diagnostic families, from a sparse single-exit room to a
+100-person crowd and a stochastic route invalidation. A manifest pins each
+scenario's content hash. `load_suite()` verifies the manifest against the files.
+The suite is public by design. It is not the hidden evaluation set, and its
+seeds are development defaults, not evaluator seeds. See
+[docs/scenario-suite.md](docs/scenario-suite.md).
+
+```python
+from emberbench import load_suite
+
+suite = load_suite("scenarios/public/v1")
+for scenario in suite.scenarios:
+    print(scenario.scenario_id, scenario.content_hash())
+```
+
 ## V1 scope
 
 | Area | V1 behaviour |
@@ -118,6 +137,7 @@ src/emberbench/
   events.py     StepRecord / RunRecord, the replay and audit log
   replay.py     replay() and verify_record()
   metrics.py    compute_episode_metrics(): auditable raw per-episode metrics
+  suite.py      scenario suite manifests: strict parsing, load_suite() verification
   canonical.py  canonical JSON and SHA-256 hashing
   errors.py     explicit exception types
 ```
@@ -180,6 +200,8 @@ cross-process `PYTHONHASHSEED` independence, serialisation round trips, walls bl
 movement and fire, exit behaviour, explicit rejection of invalid scenarios and
 actions, collision rules, termination, ID stability, golden trajectory digests,
 every frozen V1 rule, the observation contract (no seed, RNG state or hidden
-metadata) and the fire trajectory invariance across different actions.
+metadata), the fire trajectory invariance across different actions, and the
+canonical public suite (pinned hashes, strict manifest checks and per-scenario
+diagnostic properties).
 Any change to simulator output fails the golden test until you bump
 `SIMULATOR_VERSION` on purpose.
