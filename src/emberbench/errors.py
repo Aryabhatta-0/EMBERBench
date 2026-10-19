@@ -23,3 +23,7 @@ class ReplayMismatchError(EmberBenchError):
 
 class MetricsInputError(EmberBenchError):
     """A scenario and run record cannot be scored: they do not match, or the record is malformed."""
+
+
+class SuiteValidationError(EmberBenchError):
+    """A suite manifest is malformed, or it does not match the scenario files it lists."""

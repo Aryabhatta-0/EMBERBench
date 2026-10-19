@@ -1,0 +1,274 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "v1-pub-06-threatened-exit",
+  "description": "CANONICAL V1 PUBLIC SCENARIO. Threatened nearest exit. Fire starts next to the exit that is nearest for most people. Exits are flammable, so that exit is lost early. A far exit stays usable for much longer.",
+  "grid": {
+    "width": 17,
+    "height": 9
+  },
+  "obstacles": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      0,
+      4
+    ],
+    [
+      0,
+      5
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      7
+    ],
+    [
+      0,
+      8
+    ],
+    [
+      0,
+      9
+    ],
+    [
+      0,
+      10
+    ],
+    [
+      0,
+      11
+    ],
+    [
+      0,
+      12
+    ],
+    [
+      0,
+      13
+    ],
+    [
+      0,
+      14
+    ],
+    [
+      0,
+      15
+    ],
+    [
+      0,
+      16
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      16
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      2,
+      16
+    ],
+    [
+      3,
+      0
+    ],
+    [
+      3,
+      16
+    ],
+    [
+      5,
+      0
+    ],
+    [
+      5,
+      16
+    ],
+    [
+      6,
+      0
+    ],
+    [
+      6,
+      16
+    ],
+    [
+      7,
+      0
+    ],
+    [
+      7,
+      16
+    ],
+    [
+      8,
+      0
+    ],
+    [
+      8,
+      1
+    ],
+    [
+      8,
+      2
+    ],
+    [
+      8,
+      3
+    ],
+    [
+      8,
+      4
+    ],
+    [
+      8,
+      5
+    ],
+    [
+      8,
+      6
+    ],
+    [
+      8,
+      7
+    ],
+    [
+      8,
+      8
+    ],
+    [
+      8,
+      9
+    ],
+    [
+      8,
+      10
+    ],
+    [
+      8,
+      11
+    ],
+    [
+      8,
+      12
+    ],
+    [
+      8,
+      13
+    ],
+    [
+      8,
+      14
+    ],
+    [
+      8,
+      15
+    ],
+    [
+      8,
+      16
+    ]
+  ],
+  "exits": [
+    {
+      "id": "E1",
+      "position": [
+        4,
+        0
+      ]
+    },
+    {
+      "id": "E2",
+      "position": [
+        4,
+        16
+      ]
+    }
+  ],
+  "people": [
+    {
+      "id": "P001",
+      "position": [
+        5,
+        3
+      ]
+    },
+    {
+      "id": "P002",
+      "position": [
+        6,
+        10
+      ]
+    },
+    {
+      "id": "P003",
+      "position": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": "P004",
+      "position": [
+        4,
+        3
+      ]
+    },
+    {
+      "id": "P005",
+      "position": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": "P006",
+      "position": [
+        4,
+        7
+      ]
+    }
+  ],
+  "ignitions": [
+    [
+      2,
+      1
+    ]
+  ],
+  "fire": {
+    "model": "deterministic",
+    "spread_interval": 2,
+    "exits_flammable": true
+  },
+  "movement": {
+    "conflict_resolution": "lowest_id_wins",
+    "enter_fire": "casualty"
+  },
+  "termination": {
+    "max_steps": 50
+  },
+  "seed": 0
+}

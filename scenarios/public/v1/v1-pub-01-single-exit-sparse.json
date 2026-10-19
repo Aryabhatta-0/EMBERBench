@@ -1,0 +1,233 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "v1-pub-01-single-exit-sparse",
+  "description": "CANONICAL V1 PUBLIC SCENARIO. Single exit, low density. Four people in an open room with one exit and one slow fire source on the far side. Baseline navigation control.",
+  "grid": {
+    "width": 14,
+    "height": 9
+  },
+  "obstacles": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      0,
+      4
+    ],
+    [
+      0,
+      5
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      7
+    ],
+    [
+      0,
+      8
+    ],
+    [
+      0,
+      9
+    ],
+    [
+      0,
+      10
+    ],
+    [
+      0,
+      11
+    ],
+    [
+      0,
+      12
+    ],
+    [
+      0,
+      13
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      13
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      2,
+      13
+    ],
+    [
+      3,
+      0
+    ],
+    [
+      3,
+      13
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      5,
+      0
+    ],
+    [
+      5,
+      13
+    ],
+    [
+      6,
+      0
+    ],
+    [
+      6,
+      13
+    ],
+    [
+      7,
+      0
+    ],
+    [
+      7,
+      13
+    ],
+    [
+      8,
+      0
+    ],
+    [
+      8,
+      1
+    ],
+    [
+      8,
+      2
+    ],
+    [
+      8,
+      3
+    ],
+    [
+      8,
+      4
+    ],
+    [
+      8,
+      5
+    ],
+    [
+      8,
+      6
+    ],
+    [
+      8,
+      7
+    ],
+    [
+      8,
+      8
+    ],
+    [
+      8,
+      9
+    ],
+    [
+      8,
+      10
+    ],
+    [
+      8,
+      11
+    ],
+    [
+      8,
+      12
+    ],
+    [
+      8,
+      13
+    ]
+  ],
+  "exits": [
+    {
+      "id": "E1",
+      "position": [
+        4,
+        13
+      ]
+    }
+  ],
+  "people": [
+    {
+      "id": "P001",
+      "position": [
+        2,
+        3
+      ]
+    },
+    {
+      "id": "P002",
+      "position": [
+        6,
+        11
+      ]
+    },
+    {
+      "id": "P003",
+      "position": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": "P004",
+      "position": [
+        3,
+        9
+      ]
+    }
+  ],
+  "ignitions": [
+    [
+      3,
+      1
+    ]
+  ],
+  "fire": {
+    "model": "deterministic",
+    "spread_interval": 3,
+    "exits_flammable": true
+  },
+  "movement": {
+    "conflict_resolution": "lowest_id_wins",
+    "enter_fire": "casualty"
+  },
+  "termination": {
+    "max_steps": 60
+  },
+  "seed": 0
+}

@@ -1,0 +1,288 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "v1-pub-05-central-ignition",
+  "description": "CANONICAL V1 PUBLIC SCENARIO. Central ignition. One fire source at the centre of the room. Eight people stand around it. Two exits on opposite walls. People must move away from an expanding front and around it.",
+  "grid": {
+    "width": 15,
+    "height": 11
+  },
+  "obstacles": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      0,
+      4
+    ],
+    [
+      0,
+      5
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      7
+    ],
+    [
+      0,
+      8
+    ],
+    [
+      0,
+      9
+    ],
+    [
+      0,
+      10
+    ],
+    [
+      0,
+      11
+    ],
+    [
+      0,
+      12
+    ],
+    [
+      0,
+      13
+    ],
+    [
+      0,
+      14
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      14
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      2,
+      14
+    ],
+    [
+      3,
+      0
+    ],
+    [
+      3,
+      14
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      4,
+      14
+    ],
+    [
+      6,
+      0
+    ],
+    [
+      6,
+      14
+    ],
+    [
+      7,
+      0
+    ],
+    [
+      7,
+      14
+    ],
+    [
+      8,
+      0
+    ],
+    [
+      8,
+      14
+    ],
+    [
+      9,
+      0
+    ],
+    [
+      9,
+      14
+    ],
+    [
+      10,
+      0
+    ],
+    [
+      10,
+      1
+    ],
+    [
+      10,
+      2
+    ],
+    [
+      10,
+      3
+    ],
+    [
+      10,
+      4
+    ],
+    [
+      10,
+      5
+    ],
+    [
+      10,
+      6
+    ],
+    [
+      10,
+      7
+    ],
+    [
+      10,
+      8
+    ],
+    [
+      10,
+      9
+    ],
+    [
+      10,
+      10
+    ],
+    [
+      10,
+      11
+    ],
+    [
+      10,
+      12
+    ],
+    [
+      10,
+      13
+    ],
+    [
+      10,
+      14
+    ]
+  ],
+  "exits": [
+    {
+      "id": "E1",
+      "position": [
+        5,
+        0
+      ]
+    },
+    {
+      "id": "E2",
+      "position": [
+        5,
+        14
+      ]
+    }
+  ],
+  "people": [
+    {
+      "id": "P001",
+      "position": [
+        2,
+        7
+      ]
+    },
+    {
+      "id": "P002",
+      "position": [
+        3,
+        9
+      ]
+    },
+    {
+      "id": "P003",
+      "position": [
+        5,
+        11
+      ]
+    },
+    {
+      "id": "P004",
+      "position": [
+        7,
+        9
+      ]
+    },
+    {
+      "id": "P005",
+      "position": [
+        3,
+        5
+      ]
+    },
+    {
+      "id": "P006",
+      "position": [
+        7,
+        5
+      ]
+    },
+    {
+      "id": "P007",
+      "position": [
+        5,
+        3
+      ]
+    },
+    {
+      "id": "P008",
+      "position": [
+        8,
+        7
+      ]
+    }
+  ],
+  "ignitions": [
+    [
+      5,
+      7
+    ]
+  ],
+  "fire": {
+    "model": "deterministic",
+    "spread_interval": 2,
+    "exits_flammable": true
+  },
+  "movement": {
+    "conflict_resolution": "lowest_id_wins",
+    "enter_fire": "casualty"
+  },
+  "termination": {
+    "max_steps": 40
+  },
+  "seed": 0
+}

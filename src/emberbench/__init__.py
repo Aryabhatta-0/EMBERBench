@@ -11,6 +11,7 @@ from .errors import (  # noqa: E402
     ReplayMismatchError,
     ScenarioValidationError,
     SimulationError,
+    SuiteValidationError,
 )
 from .events import Casualty, CasualtyCause, Evacuation, RunRecord, StepRecord  # noqa: E402
 from .grid import Action, Cell, Pos  # noqa: E402
@@ -33,6 +34,7 @@ from .scenario import (  # noqa: E402
 from .simulator import Simulator, run_episode  # noqa: E402
 from .state import PersonState, PersonStatus, SimState, TerminationReason, render  # noqa: E402
 from .metrics import METRICS_VERSION, EpisodeMetrics, compute_episode_metrics  # noqa: E402
+from .suite import ScenarioFamily, Suite, SuiteEntry, SuiteManifest, load_suite  # noqa: E402
 
 __all__ = [
     "ALLOWED_ACTIONS",
@@ -66,15 +68,21 @@ __all__ = [
     "RulesView",
     "RunRecord",
     "Scenario",
+    "ScenarioFamily",
     "ScenarioValidationError",
     "SimState",
     "SimulationError",
     "Simulator",
     "StepRecord",
+    "Suite",
+    "SuiteEntry",
+    "SuiteManifest",
+    "SuiteValidationError",
     "TerminationConfig",
     "TerminationReason",
     "compute_episode_metrics",
     "load_scenario",
+    "load_suite",
     "render",
     "replay",
     "run_episode",
