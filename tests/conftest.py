@@ -66,6 +66,46 @@ def layout(
     )
 
 
+def crowd_stress_scenario(population: int, *, max_steps: int = 400, seed: int = 0) -> Scenario:
+    """A synthetic walled room with one exit in the middle of each wall and a dense block of people.
+
+    People fill a block 20 columns wide in row-major order and get the IDs
+    ``P000``, ``P001``, ... One ignition sits in the top-left corner and
+    spreads slowly. Used by the large-population stress tests only.
+    """
+    from emberbench import ExitSpec, FireConfig, PersonSpec, TerminationConfig
+
+    cols = 20
+    rows = -(-population // cols)
+    width, height = cols + 14, rows + 12
+    exits = (
+        ExitSpec("E1", Pos(0, width // 2)),
+        ExitSpec("E2", Pos(height // 2, width - 1)),
+        ExitSpec("E3", Pos(height - 1, width // 2)),
+        ExitSpec("E4", Pos(height // 2, 0)),
+    )
+    exit_cells = {e.position for e in exits}
+    border = [
+        Pos(r, c)
+        for r in range(height)
+        for c in range(width)
+        if (r in (0, height - 1) or c in (0, width - 1)) and Pos(r, c) not in exit_cells
+    ]
+    people = tuple(PersonSpec(f"P{i:03d}", Pos(6 + i // cols, 7 + i % cols)) for i in range(population))
+    return Scenario(
+        scenario_id=f"stress-{population}",
+        width=width,
+        height=height,
+        obstacles=tuple(border),
+        exits=exits,
+        people=people,
+        ignitions=(Pos(1, 1),),
+        seed=seed,
+        fire=FireConfig(spread_interval=8),
+        termination=TerminationConfig(max_steps=max_steps),
+    )
+
+
 _STEP_TO_ACTION = {
     (-1, 0): Action.NORTH,
     (1, 0): Action.SOUTH,

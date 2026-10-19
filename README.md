@@ -5,11 +5,12 @@ A model controls the people in a 2D grid building. Fire spreads through the buil
 the model must decide each timestep how every person moves. The benchmark measures how
 well the model's decisions get people out through the exits before the fire reaches them.
 
-> **Status: Phase 6.** This repository contains the benchmark contract, the
+> **Status: Phase 7.** This repository contains the benchmark contract, the
 > deterministic simulation core, the frozen V1 fairness and semantics
 > specification, the finalized matched stochastic hazard contract, auditable
-> per-episode metrics, the canonical V1 public scenario suite and resumable
-> paired evaluation on exact scenario + seed schedules. Wind, delayed
+> per-episode metrics, crowd coordination diagnostics, the canonical V1
+> public scenario suite and resumable paired evaluation on exact scenario +
+> seed schedules. Wind, delayed
 > ignitions, burn-out, smoke and material flammability are deferred to a
 > future benchmark version. Model integrations, LLM APIs, a UI, procedural map generation,
 > leaderboards, a composite score, cross-seed aggregation, win rates and
@@ -30,6 +31,12 @@ computed from the `Scenario` and the `RunRecord` with `compute_episode_metrics`.
 It scores only records that pass structural validation and a full simulator
 replay (`verify_record`). See [docs/metrics.md](docs/metrics.md). There is no single score: raw metrics
 are canonical, and safety always comes before speed.
+
+Crowd coordination diagnostics come from `compute_crowd_diagnostics` on the
+same authenticated inputs: per-step movement and block counts, contested
+cells, a row-major table of congestion hotspots, per-exit throughput and a
+static nearest-exit demand proxy. They observe the frozen V1 crowd rules and
+do not model human behaviour. See [docs/crowd-diagnostics.md](docs/crowd-diagnostics.md).
 
 ## Fairness principle
 
@@ -164,6 +171,7 @@ src/emberbench/
   events.py     StepRecord / RunRecord, the replay and audit log
   replay.py     replay() and verify_record()
   metrics.py    compute_episode_metrics(): auditable raw per-episode metrics
+  crowd.py      compute_crowd_diagnostics(): congestion, hotspots, exit load signals
   suite.py      scenario suite manifests: strict parsing, load_suite() verification
   evaluation.py evaluation manifests, run_evaluation() with resume, pair_results()
   canonical.py  canonical JSON and SHA-256 hashing
@@ -234,6 +242,9 @@ diagnostic properties), and paired evaluation (manifest hashing, seed privacy,
 fresh policies per episode, identical fire across models, resume and tamper
 rejection, exact pairing), and the stochastic hazard contract (exact ignition
 probability, one draw per frontier edge, matched fire across policies and
-pinned cross-platform golden fire traces).
+pinned cross-platform golden fire traces), and crowd diagnostics (the frozen
+queue and throughput rules, exact reconciliation with the run record and the
+metrics, hotspots in the public crowd scenarios, 50/100/200-person stress
+runs and golden diagnostic digests).
 Any change to simulator output fails the golden test until you bump
 `SIMULATOR_VERSION` on purpose.
