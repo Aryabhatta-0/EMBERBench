@@ -37,6 +37,10 @@ class StatisticsInputError(EvaluationError):
     """An evaluation result cannot be summarized: it fails authentication against its suite."""
 
 
+class GenerationError(EmberBenchError):
+    """A generator config is invalid or unsatisfiable, or a frozen generated suite does not verify."""
+
+
 class ModelOutputError(InvalidActionError):
     """A decision model returned an action set that the model interface rejects."""
 

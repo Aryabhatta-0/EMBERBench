@@ -105,6 +105,17 @@ for scenario in suite.scenarios:
     print(scenario.scenario_id, scenario.content_hash())
 ```
 
+### Procedural unseen scenarios
+
+`generate_suite()` builds unseen V1 scenarios from a public `GeneratorConfig`
+and an evaluator-private generator seed, with no ambient entropy. Every
+scenario must meet explicit generation constraints (route existence, passage
+width, route redundancy, densities, exit separation, ignition distances), or
+generation fails. `freeze_generated_suite()` writes the suite once, before any
+model runs, and `load_generated_suite()` verifies it and returns a normal
+`Suite` for `build_evaluation_manifest()` and `run_evaluation()`. The seed is
+never stored. See [docs/procedural-generation.md](docs/procedural-generation.md).
+
 ## V1 scope
 
 | Area | V1 behaviour |
