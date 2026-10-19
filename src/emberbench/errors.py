@@ -31,3 +31,11 @@ class SuiteValidationError(EmberBenchError):
 
 class EvaluationError(EmberBenchError):
     """An evaluation manifest or result artifact is malformed, inconsistent or incompatible."""
+
+
+class ModelOutputError(InvalidActionError):
+    """A decision model returned an action set that the model interface rejects."""
+
+
+class ObservationFormatError(EmberBenchError):
+    """A serialized observation is malformed, not canonical or of another observation version."""
