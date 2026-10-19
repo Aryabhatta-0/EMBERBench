@@ -7,7 +7,7 @@ episodes** and how their results are matched. The code is in
 
 Out of scope here: model-provider adapters, win rates, confidence intervals and
 other aggregate statistics (see [statistics.md](statistics.md)), procedural scenario generation,
-leaderboards, hidden scenarios and a composite score.
+held-out integrity and provenance (see [integrity.md](integrity.md)), leaderboards and a composite score.
 
 ## 1. Common random numbers
 
