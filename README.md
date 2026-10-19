@@ -5,9 +5,10 @@ A model controls the people in a 2D grid building. Fire spreads through the buil
 the model must decide each timestep how every person moves. The benchmark measures how
 well the model's decisions get people out through the exits before the fire reaches them.
 
-> **Status: Phase 3.** This repository contains the benchmark contract, the
+> **Status: Phase 4.** This repository contains the benchmark contract, the
 > deterministic simulation core, the frozen V1 fairness and semantics
-> specification and auditable per-episode metrics. Model integrations, LLM APIs, a UI, procedural map generation,
+> specification, auditable per-episode metrics and the canonical V1 public
+> scenario suite. Model integrations, LLM APIs, a UI, procedural map generation,
 > leaderboards, a composite score, cross-seed aggregation and human-behaviour models are out of scope for now.
 
 ## What EMBERBench measures
