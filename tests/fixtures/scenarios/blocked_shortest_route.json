@@ -1,0 +1,164 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "blocked_shortest_route",
+  "description": "TEST FIXTURE. The short top route to the exit is on fire; the longer bottom route is safe. Layout: ######### / #P..F...# / #.#####E# / #.......# / #########",
+  "grid": {
+    "width": 9,
+    "height": 5
+  },
+  "obstacles": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      0,
+      4
+    ],
+    [
+      0,
+      5
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      7
+    ],
+    [
+      0,
+      8
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      8
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      2,
+      2
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      2,
+      5
+    ],
+    [
+      2,
+      6
+    ],
+    [
+      2,
+      8
+    ],
+    [
+      3,
+      0
+    ],
+    [
+      3,
+      8
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      4,
+      1
+    ],
+    [
+      4,
+      2
+    ],
+    [
+      4,
+      3
+    ],
+    [
+      4,
+      4
+    ],
+    [
+      4,
+      5
+    ],
+    [
+      4,
+      6
+    ],
+    [
+      4,
+      7
+    ],
+    [
+      4,
+      8
+    ]
+  ],
+  "exits": [
+    {
+      "id": "E1",
+      "position": [
+        2,
+        7
+      ]
+    }
+  ],
+  "people": [
+    {
+      "id": "P1",
+      "position": [
+        1,
+        1
+      ]
+    }
+  ],
+  "ignitions": [
+    [
+      1,
+      4
+    ]
+  ],
+  "fire": {
+    "model": "deterministic",
+    "spread_interval": 4,
+    "exits_flammable": false
+  },
+  "movement": {
+    "conflict_resolution": "lowest_id_wins",
+    "enter_fire": "casualty"
+  },
+  "termination": {
+    "max_steps": 40
+  },
+  "seed": 2
+}

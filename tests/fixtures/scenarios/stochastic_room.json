@@ -1,0 +1,186 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "stochastic_room",
+  "description": "TEST FIXTURE. Open room with seeded stochastic fire spread; used for RNG determinism tests. Layout: ########### / #P.......P# / #....F....# / #.........E / #P.......P# / ###########",
+  "grid": {
+    "width": 11,
+    "height": 6
+  },
+  "obstacles": [
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      0,
+      4
+    ],
+    [
+      0,
+      5
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      0,
+      7
+    ],
+    [
+      0,
+      8
+    ],
+    [
+      0,
+      9
+    ],
+    [
+      0,
+      10
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      10
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      2,
+      10
+    ],
+    [
+      3,
+      0
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      4,
+      10
+    ],
+    [
+      5,
+      0
+    ],
+    [
+      5,
+      1
+    ],
+    [
+      5,
+      2
+    ],
+    [
+      5,
+      3
+    ],
+    [
+      5,
+      4
+    ],
+    [
+      5,
+      5
+    ],
+    [
+      5,
+      6
+    ],
+    [
+      5,
+      7
+    ],
+    [
+      5,
+      8
+    ],
+    [
+      5,
+      9
+    ],
+    [
+      5,
+      10
+    ]
+  ],
+  "exits": [
+    {
+      "id": "E1",
+      "position": [
+        3,
+        10
+      ]
+    }
+  ],
+  "people": [
+    {
+      "id": "P1",
+      "position": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "P2",
+      "position": [
+        1,
+        9
+      ]
+    },
+    {
+      "id": "P3",
+      "position": [
+        4,
+        1
+      ]
+    },
+    {
+      "id": "P4",
+      "position": [
+        4,
+        9
+      ]
+    }
+  ],
+  "ignitions": [
+    [
+      2,
+      5
+    ]
+  ],
+  "fire": {
+    "model": "stochastic",
+    "spread_interval": 1,
+    "exits_flammable": true,
+    "spread_probability": 0.35
+  },
+  "movement": {
+    "conflict_resolution": "lowest_id_wins",
+    "enter_fire": "blocked"
+  },
+  "termination": {
+    "max_steps": 40
+  },
+  "seed": 20261019
+}
