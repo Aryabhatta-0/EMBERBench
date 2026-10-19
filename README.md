@@ -5,16 +5,17 @@ A model controls the people in a 2D grid building. Fire spreads through the buil
 the model must decide each timestep how every person moves. The benchmark measures how
 well the model's decisions get people out through the exits before the fire reaches them.
 
-> **Status: Phase 7.** This repository contains the benchmark contract, the
+> **Status: Phase 9.** This repository contains the benchmark contract, the
 > deterministic simulation core, the frozen V1 fairness and semantics
 > specification, the finalized matched stochastic hazard contract, auditable
 > per-episode metrics, crowd coordination diagnostics, the canonical V1
-> public scenario suite and resumable paired evaluation on exact scenario +
-> seed schedules. Wind, delayed
+> public scenario suite, resumable paired evaluation on exact scenario +
+> seed schedules, the provider-independent model interface, deterministic
+> aggregate and paired statistics, the procedural unseen-scenario generator
+> and deterministic non-LLM reference baselines. Wind, delayed
 > ignitions, burn-out, smoke and material flammability are deferred to a
-> future benchmark version. Model integrations, LLM APIs, a UI, procedural map generation,
-> leaderboards, a composite score, cross-seed aggregation, win rates and
-> confidence intervals, and human-behaviour models are out of scope for now.
+> future benchmark version. LLM provider integrations, a UI, leaderboards, a
+> composite score and human-behaviour models are out of scope for now.
 
 ## What EMBERBench measures
 
@@ -37,6 +38,13 @@ same authenticated inputs: per-step movement and block counts, contested
 cells, a row-major table of congestion hotspots, per-exit throughput and a
 static nearest-exit demand proxy. They observe the frozen V1 crowd rules and
 do not model human behaviour. See [docs/crowd-diagnostics.md](docs/crowd-diagnostics.md).
+
+Five deterministic, non-LLM reference baselines (random legal, nearest-exit
+greedy, static shortest-path, fire-aware shortest-path and congestion-aware
+routing) run through the same model interface as any evaluated model and see
+only the observation. Reference baselines are anchors, not benchmark winners.
+A separate, privileged escape bound gives an evaluator-side upper bound on
+evacuations. See [docs/baselines.md](docs/baselines.md).
 
 ## Fairness principle
 
@@ -185,6 +193,8 @@ src/emberbench/
   crowd.py      compute_crowd_diagnostics(): congestion, hotspots, exit load signals
   suite.py      scenario suite manifests: strict parsing, load_suite() verification
   evaluation.py evaluation manifests, run_evaluation() with resume, pair_results()
+  baselines.py  fair reference baseline agents and their registry
+  oracle.py     PRIVILEGED evaluator-side escape bound (not a model)
   canonical.py  canonical JSON and SHA-256 hashing
   errors.py     explicit exception types
 ```

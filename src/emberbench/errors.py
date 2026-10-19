@@ -47,3 +47,7 @@ class ModelOutputError(InvalidActionError):
 
 class ObservationFormatError(EmberBenchError):
     """A serialized observation is malformed, not canonical or of another observation version."""
+
+
+class BaselineError(EmberBenchError):
+    """A reference baseline ID or configuration is unknown or invalid."""

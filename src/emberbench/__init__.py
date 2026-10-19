@@ -5,6 +5,7 @@
 SIMULATOR_VERSION = "0.2.0"
 
 from .errors import (  # noqa: E402
+    BaselineError,
     EmberBenchError,
     EvaluationError,
     GenerationError,
@@ -105,10 +106,19 @@ from .statistics import (  # noqa: E402
     aggregate_result,
     compare_results,
 )
+from .baselines import (  # noqa: E402
+    BASELINE_IDS,
+    BASELINES_VERSION,
+    BaselineSpec,
+    baseline_factory,
+    get_baseline,
+)
 
 __all__ = [
     "ACTION_SCHEMA_VERSION",
     "ALLOWED_ACTIONS",
+    "BASELINES_VERSION",
+    "BASELINE_IDS",
     "CROWD_DIAGNOSTICS_VERSION",
     "EVALUATION_MANIFEST_VERSION",
     "EVALUATION_RESULT_VERSION",
@@ -127,6 +137,8 @@ __all__ = [
     "Agent",
     "AgentFactory",
     "AggregateStatistics",
+    "BaselineError",
+    "BaselineSpec",
     "Casualty",
     "CasualtyCause",
     "Cell",
@@ -193,12 +205,14 @@ __all__ = [
     "agent_policy",
     "agent_policy_factory",
     "aggregate_result",
+    "baseline_factory",
     "build_evaluation_manifest",
     "compare_results",
     "compute_crowd_diagnostics",
     "compute_episode_metrics",
     "freeze_generated_suite",
     "generate_suite",
+    "get_baseline",
     "deserialize_actions",
     "deserialize_observation",
     "load_evaluation_manifest",
