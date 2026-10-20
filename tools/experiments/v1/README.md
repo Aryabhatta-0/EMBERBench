@@ -69,8 +69,10 @@ The output directory must be outside the repository. On Windows keep its path
 short: the environment pack adds about 70 characters below it, and paths are
 limited to 260 characters. A rerun with the same directory resumes:
 per-model results continue through `run_evaluation`, and every other output
-must be byte-identical, or the run stops. Nothing is overwritten. The runner
-opens no network connection.
+must be byte-identical, or the run stops. An existing result must also hold
+the canonical bytes of its authenticated content before it is resumed; a
+result that is valid but formatted differently stops the run and is not
+rewritten. Nothing is overwritten. The runner opens no network connection.
 
 ```bash
 python tools/experiments/v1/run_public_benchmark.py --out ../emberbench-pack-out --verify
@@ -80,7 +82,9 @@ python tools/experiments/v1/run_public_benchmark.py --out ../emberbench-pack-out
 against the frozen environment pack, recomputes every score report,
 comparison, diagnostic, reference, the index and the report from the
 authenticated inputs, and requires each file to be byte-identical. A missing,
-changed or extra file stops it with exit status 1.
+changed or extra file stops it with exit status 1. The expected files of
+`source-suite/` are the suite manifest and exactly the scenario files it
+lists.
 
 ## Performance
 

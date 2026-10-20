@@ -239,6 +239,46 @@ def test_verify_fails_closed_on_any_changed_or_extra_file(smoke_out: Path, tmp_p
         runner.verify_pack(protocol_mod.SMOKE, copy, log=_quiet)
 
 
+@pytest.mark.parametrize("extra", ["extra.json", "nested/extra.json"])
+def test_verify_fails_closed_on_an_extra_file_in_the_source_suite(smoke_out: Path, tmp_path: Path, extra: str) -> None:
+    copy = tmp_path / "copy"
+    shutil.copytree(smoke_out, copy)
+    source = copy / runner.SOURCE_SUITE_DIR
+    assert (source / "manifest.json").is_file()  # the smoke protocol writes its subset suite
+    (source / extra).parent.mkdir(parents=True, exist_ok=True)
+    (source / extra).write_text("{}\n", encoding="ascii")
+    # The expected file set comes from the suite manifest, not from the files found on disk.
+    expected = runner._expected_files(copy, _index(copy), runner.protocol_suite(protocol_mod.SMOKE))
+    assert source / extra not in expected
+    assert {p for p in source.rglob("*") if p.is_file()} - expected == {source / extra}
+    # load_suite rejects an unlisted entry of the suite directory; the pack's own check rejects any other extra file.
+    with pytest.raises((runner.PackError, EmberBenchError), match="no pack artifact accounts for|not listed in the manifest"):
+        runner.verify_pack(protocol_mod.SMOKE, copy, log=_quiet)
+
+
+def test_expected_files_are_exactly_the_files_of_a_clean_run(smoke_out: Path) -> None:
+    expected = runner._expected_files(smoke_out, _index(smoke_out), runner.protocol_suite(protocol_mod.SMOKE))
+    assert expected == {p for p in smoke_out.rglob("*") if p.is_file()}
+
+
+def test_resume_fails_closed_on_a_result_with_non_canonical_bytes(smoke_out: Path, tmp_path: Path) -> None:
+    copy = tmp_path / "copy"
+    shutil.copytree(smoke_out, copy)
+    path = sorted((copy / "results").iterdir())[0]
+    canonical_bytes = path.read_bytes()
+    # Same JSON content, other whitespace: the result still loads and authenticates by replay.
+    reformatted = (json.dumps(json.loads(canonical_bytes), indent=1, sort_keys=True) + "\n").encode("ascii")
+    assert reformatted != canonical_bytes
+    path.write_bytes(reformatted)
+    suite = load_environment_pack(copy / "environment-pack").suite
+    assert load_evaluation_result(path, suite).to_file_text().encode("ascii") == canonical_bytes
+    before = _files(copy)
+    with pytest.raises(runner.PackError, match="differs"):
+        runner.run_pack(protocol_mod.SMOKE, copy, log=_quiet)
+    assert path.read_bytes() == reformatted  # never rewritten or normalized
+    assert _files(copy) == before
+
+
 # --------------------------------------------------------------------------- one manifest, official scoring, authentic artifacts
 
 

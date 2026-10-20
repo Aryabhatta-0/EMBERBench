@@ -24,8 +24,10 @@ Rules:
 - Deterministic inputs: the suite and the candidate seeds are pinned in
   ``pack_protocol.py``; a suite or manifest hash mismatch stops the run.
 - Fail closed: any library error stops the run with exit status 1.
-- Resumable: per-model results are resumed by ``run_evaluation``; every other
-  output that already exists must be byte-identical to the recomputed bytes.
+- Resumable: per-model results are resumed by ``run_evaluation``; an existing
+  result must first hold the canonical bytes of its authenticated content.
+  Every other output that already exists must be byte-identical to the
+  recomputed bytes.
 - Never overwrites: an existing output with different bytes is an error.
 - ``DIR`` must be outside the repository, so outputs are never committed by
   accident and never land inside the Python package.
@@ -181,9 +183,17 @@ def protocol_manifest(protocol: pack_protocol.Protocol, suite: Suite) -> Evaluat
     return manifest
 
 
+def _writes_source_suite(suite: Suite) -> bool:
+    """True unless ``suite`` is the canonical public suite in the repository (then the pack freezes it in place)."""
+    return not (
+        suite.root.resolve() == (REPO_ROOT / pack_protocol.PUBLIC_SUITE_DIR).resolve()
+        and suite.manifest == load_suite(suite.root).manifest
+    )
+
+
 def _source_suite(suite: Suite, out: Path, write: Callable[..., str] = write_new_or_same) -> Suite:
     """The suite on disk, as the environment pack needs it. A subset is written to ``out/source-suite``."""
-    if suite.root.resolve() == (REPO_ROOT / pack_protocol.PUBLIC_SUITE_DIR).resolve() and suite.manifest == load_suite(suite.root).manifest:
+    if not _writes_source_suite(suite):
         return suite
     target = out / SOURCE_SUITE_DIR
     write(target / "manifest.json", suite.manifest.to_file_text())
@@ -306,7 +316,7 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
             raise PackError(f"{out}: no pack run to verify (index.json is missing)")
     else:
         out = _check_out_dir(out)
-    suite = protocol_suite(protocol)
+    requested = suite = protocol_suite(protocol)
     manifest = protocol_manifest(protocol, suite)
     pack = _environment_pack(protocol, suite, manifest, out, verify=verify)
     suite, manifest = pack.suite, pack.manifest  # every model runs the frozen pack
@@ -332,14 +342,18 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
             if not path.is_file():
                 raise PackError(f"{path}: result is missing")
         else:
+            if path.exists():
+                # A resumed result must already hold the canonical bytes, or
+                # run_evaluation would rewrite it and the index would digest
+                # other bytes than the file it found. Check before it runs.
+                check_same(path, load_evaluation_result(path, suite).to_file_text())
             path.parent.mkdir(exist_ok=True)
             log(f"run      {spec.model_id}")
             run_evaluation(suite, manifest, spec.model_id, agent_policy_factory(spec.factory), path, resume=True)
         result = load_evaluation_result(path, suite)  # authenticate every episode by replay
         if not result.is_complete or result.manifest_hash != manifest.manifest_hash():
             raise PackError(f"{path}: result is incomplete or belongs to another manifest")
-        if verify:
-            check_same(path, result.to_file_text())  # the canonical bytes that run_evaluation writes
+        check_same(path, result.to_file_text())  # the canonical bytes that run_evaluation writes and the index digests
         results[spec.model_id] = result
     timings["episodes"] = time.perf_counter() - t
 
@@ -385,7 +399,7 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
     report_text = pack_report.render_report(protocol, index, results, reports, comparisons, references)
     write(out / "REPORT.md", report_text, encoding="utf-8")
     if verify:
-        extra = sorted(str(p.relative_to(out)) for p in out.rglob("*") if p.is_file() and p not in _expected_files(out, index))
+        extra = sorted(str(p.relative_to(out)) for p in out.rglob("*") if p.is_file() and p not in _expected_files(out, index, requested))
         if extra:
             raise PackError(f"{out}: files that no pack artifact accounts for: {extra}")
     timings["total"] = time.perf_counter() - started
@@ -396,15 +410,21 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
     return index
 
 
-def _expected_files(out: Path, index: Mapping[str, Any]) -> set[Path]:
-    """Every file a pack run writes: the indexed artifacts, the per-model descriptors, the frozen pack and the subset suite."""
+def _expected_files(out: Path, index: Mapping[str, Any], suite: Suite) -> set[Path]:
+    """Every file a pack run writes: the indexed artifacts, the per-model descriptors, the frozen pack and the subset suite.
+
+    The subset suite is listed from the suite manifest (the manifest file and
+    exactly its scenario files), never from what is found on disk.
+    """
     files = {out / "index.json", out / "REPORT.md", out / "privileged" / "references.json"}
     for model in index["models"]:
         slug = pack_index.model_slug(model["model_id"])
         files |= {out / "models" / f"{slug}.json", out / model["result"]["file"], out / model["score_report"]["file"], out / model["diagnostics"]["file"]}
     files |= {out / c["file"] for c in index["paired_comparisons"]}
-    for tree in (PACK_DIR, SOURCE_SUITE_DIR):  # the pack verifies its own file list on load
-        files |= {p for p in (out / tree).rglob("*") if p.is_file()}
+    files |= {p for p in (out / PACK_DIR).rglob("*") if p.is_file()}  # load_environment_pack verifies this file list
+    if _writes_source_suite(suite):
+        files.add(out / SOURCE_SUITE_DIR / "manifest.json")
+        files |= {out / SOURCE_SUITE_DIR / entry.path for entry in suite.manifest.entries}
     return files
 
 
