@@ -92,6 +92,7 @@ def comparison_document(a: ScoreReport, b: ScoreReport, comparison: ScoreCompari
         raise ValueError("comparison does not belong to these reports")
     return {
         "artifact": "paired-score-comparison",
+        "label": pack_protocol.RUN_LABEL,
         "delta": "A - B",
         "scoring_version": a.scoring_version,
         "constants_digest": a.constants.digest(),

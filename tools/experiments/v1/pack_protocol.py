@@ -1,6 +1,6 @@
 """The committed public development protocol of the V1 evaluation pack.
 
-**PUBLIC DEVELOPMENT EVALUATION — NOT AN OFFICIAL HIDDEN-SUITE SCORE.** The
+**PUBLIC DEVELOPMENT EVALUATION — NOT A HIDDEN-SUITE LEADERBOARD.** The
 candidate seeds below are public development seeds chosen for this pack. They
 are not an evaluator's scored seed schedule, the suite is the public V1 suite,
 and no number this pack produces is a hidden-suite score.
@@ -19,7 +19,38 @@ from dataclasses import dataclass
 from pack_agents import ALWAYS_STAY_ID, COOPERATIVE_ID, FORECAST_ID
 
 PACK_VERSION = "2"
-RUN_LABEL = "PUBLIC DEVELOPMENT EVALUATION — NOT AN OFFICIAL HIDDEN-SUITE SCORE"
+RUN_LABEL = "PUBLIC DEVELOPMENT EVALUATION — NOT A HIDDEN-SUITE LEADERBOARD"
+
+# Provenance: every version that defines what a score means, as `benchmark_versions()` returns it on
+# the benchmark this pack was generated on (benchmark revision 2). The runner and the verifier fail
+# closed when any key or value differs: a new benchmark revision needs a new pack run, never a mix.
+BENCHMARK_REVISION = "2"
+BENCHMARK_VERSIONS: dict[str, str] = {
+    "action_schema": "1.0",
+    "admission_rules": "1.0",
+    "benchmark_revision": BENCHMARK_REVISION,
+    "calibration_panel": "1.0",
+    "composition": "1.0",
+    "crowd_diagnostics": "1.0",
+    "difficulty_rules": "1.0",
+    "environment_pack": "1.0",
+    "environment_world": "1.0",
+    "evaluation_manifest": "1.0",
+    "evaluation_result": "1.0",
+    "family_rules": "1.0",
+    "generation_manifest": "1.1",
+    "generator": "1.1.0",
+    "generator_config": "1.1",
+    "metrics": "1.0",
+    "observation": "1.0",
+    "recipe_catalog": "1.0",
+    "scenario_schema": "1.0",
+    "scoring": "1.0",
+    "selection_rules": "1.0",
+    "simulator": "0.2.0",
+    "statistics": "1.0",
+    "suite_freeze_record": "1.0",
+}
 
 # The canonical public suite, relative to the repository root.
 PUBLIC_SUITE_DIR = "scenarios/public/v1"

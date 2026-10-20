@@ -12,6 +12,7 @@ import importlib
 import json
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -21,10 +22,13 @@ import pytest
 
 from emberbench import (
     BASELINE_IDS,
+    BENCHMARK_REVISION,
     Agent,
+    EmberBenchError,
     FireModelName,
     Observation,
     agent_policy_factory,
+    benchmark_versions,
     build_evaluation_manifest,
     compare_scores,
     environment_world_digest,
@@ -40,7 +44,7 @@ from emberbench.leakguard import check_repository_paths, forbidden_reason
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PACK_DIR = REPO_ROOT / "tools" / "experiments" / "v1"
 GOLDEN_DIR = Path(__file__).parent / "fixtures" / "experiments" / "v1"
-LABEL = "PUBLIC DEVELOPMENT EVALUATION — NOT AN OFFICIAL HIDDEN-SUITE SCORE"
+LABEL = "PUBLIC DEVELOPMENT EVALUATION — NOT A HIDDEN-SUITE LEADERBOARD"
 
 # The canonical public suite and the pack's unique-world manifest. A change to
 # either is a benchmark change, not a pack change.
@@ -194,6 +198,45 @@ def test_index_pins_every_version_and_digest(smoke_out: Path) -> None:
     for model in index["models"]:
         assert model["config_digest"] and model["result"]["digest"] and model["score_report"]["digest"]
     assert all(p["digest"] for p in index["paired_comparisons"])
+
+
+def test_provenance_pins_benchmark_revision_2_and_every_current_version(smoke_out: Path) -> None:
+    pinned = protocol_mod.BENCHMARK_VERSIONS
+    assert protocol_mod.BENCHMARK_REVISION == BENCHMARK_REVISION == "2"
+    assert pinned == benchmark_versions()  # the pins match the benchmark on main, key for key
+    assert len(pinned) == 24 and pinned["benchmark_revision"] == "2"
+    for golden in ("smoke-index.json", "public-development-index.json"):
+        bench = json.loads((GOLDEN_DIR / golden).read_text(encoding="ascii"))["benchmark"]
+        assert bench["versions"] == pinned, golden
+    assert _index(smoke_out)["benchmark"]["versions"] == pinned
+
+
+def test_runner_fails_closed_on_a_benchmark_version_mismatch(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    changed = dict(protocol_mod.BENCHMARK_VERSIONS, scoring="9.9")
+    monkeypatch.setattr(protocol_mod, "BENCHMARK_VERSIONS", changed)
+    with pytest.raises(runner.PackError, match="scoring"):
+        runner.run_pack(protocol_mod.SMOKE, tmp_path / "out", log=_quiet)
+    assert not (tmp_path / "out").exists()
+
+
+def test_verify_authenticates_a_finished_run_without_writing(smoke_out: Path) -> None:
+    before = _files(smoke_out)
+    index = runner.verify_pack(protocol_mod.SMOKE, smoke_out, log=_quiet)
+    assert pack_index.canonical(index) + "\n" == (smoke_out / "index.json").read_text(encoding="ascii")
+    assert _files(smoke_out) == before
+
+
+@pytest.mark.parametrize("target", ["scores", "comparisons", "results", "index.json", "REPORT.md", "extra"])
+def test_verify_fails_closed_on_any_changed_or_extra_file(smoke_out: Path, tmp_path: Path, target: str) -> None:
+    copy = tmp_path / "copy"
+    shutil.copytree(smoke_out, copy)
+    if target == "extra":
+        (copy / "scores" / "unindexed.json").write_text("{}\n", encoding="ascii")
+    else:
+        path = copy / target if (copy / target).is_file() else sorted((copy / target).iterdir())[0]
+        path.write_bytes(path.read_bytes()[:-1] + b" \n")  # one byte added; the JSON content still parses
+    with pytest.raises((runner.PackError, EmberBenchError)):
+        runner.verify_pack(protocol_mod.SMOKE, copy, log=_quiet)
 
 
 # --------------------------------------------------------------------------- one manifest, official scoring, authentic artifacts
@@ -423,3 +466,4 @@ def test_full_public_run_reproduces_the_golden_index_and_report(tmp_path: Path) 
         GOLDEN_DIR / "public-development-index.json"
     ).read_text(encoding="ascii")
     assert (out / "REPORT.md").read_bytes() == (PACK_DIR / "REPORT.md").read_bytes()
+    runner.verify_pack(protocol_mod.PUBLIC, out, log=_quiet)

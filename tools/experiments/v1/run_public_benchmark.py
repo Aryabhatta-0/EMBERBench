@@ -1,4 +1,4 @@
-"""Run the V1 evaluation pack: PUBLIC DEVELOPMENT EVALUATION -- NOT AN OFFICIAL HIDDEN-SUITE SCORE.
+"""Run the V1 evaluation pack: PUBLIC DEVELOPMENT EVALUATION -- NOT A HIDDEN-SUITE LEADERBOARD.
 
 Usage::
 
@@ -37,7 +37,7 @@ import os
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -49,6 +49,7 @@ from emberbench import (
     Suite,
     agent_policy_factory,
     aggregate_result,
+    benchmark_versions,
     build_evaluation_manifest,
     build_unique_world_manifest,
     compare_scores,
@@ -117,6 +118,23 @@ def write_new_or_same(path: Path, text: str, *, encoding: str = "ascii") -> str:
     return "written"
 
 
+def check_same(path: Path, text: str, *, encoding: str = "ascii") -> str:
+    """Verification mode: ``path`` must exist with exactly the recomputed bytes. Nothing is written."""
+    if not path.is_file() or path.read_bytes() != text.encode(encoding):
+        raise PackError(f"{path}: missing or differs from the artifact recomputed from the authenticated inputs")
+    return "unchanged"
+
+
+def check_benchmark_versions() -> dict[str, str]:
+    """``benchmark_versions()`` of the running code; fail closed unless it equals the pinned revision exactly."""
+    versions = benchmark_versions()
+    pinned = pack_protocol.BENCHMARK_VERSIONS
+    if versions != pinned:
+        differ = sorted(k for k in versions.keys() | pinned.keys() if versions.get(k) != pinned.get(k))
+        raise PackError(f"benchmark versions differ from the pinned benchmark revision {pack_protocol.BENCHMARK_REVISION}: {differ}")
+    return versions
+
+
 def _check_out_dir(out: Path) -> Path:
     resolved = out.resolve()
     if resolved == REPO_ROOT or REPO_ROOT in resolved.parents:
@@ -163,28 +181,33 @@ def protocol_manifest(protocol: pack_protocol.Protocol, suite: Suite) -> Evaluat
     return manifest
 
 
-def _source_suite(suite: Suite, out: Path) -> Suite:
+def _source_suite(suite: Suite, out: Path, write: Callable[..., str] = write_new_or_same) -> Suite:
     """The suite on disk, as the environment pack needs it. A subset is written to ``out/source-suite``."""
     if suite.root.resolve() == (REPO_ROOT / pack_protocol.PUBLIC_SUITE_DIR).resolve() and suite.manifest == load_suite(suite.root).manifest:
         return suite
     target = out / SOURCE_SUITE_DIR
-    write_new_or_same(target / "manifest.json", suite.manifest.to_file_text())
+    write(target / "manifest.json", suite.manifest.to_file_text())
     for entry in suite.manifest.entries:
-        write_new_or_same(target / entry.path, (suite.root / entry.path).read_bytes().decode("utf-8"), encoding="utf-8")
+        write(target / entry.path, (suite.root / entry.path).read_bytes().decode("utf-8"), encoding="utf-8")
     copy = load_suite(target)
     if copy.manifest.suite_hash() != suite.manifest.suite_hash():
         raise PackError(f"{target}: the written subset suite differs from the protocol suite")
     return copy
 
 
-def _environment_pack(protocol: pack_protocol.Protocol, suite: Suite, manifest: EvaluationManifest, out: Path) -> EnvironmentPack:
-    """Freeze the environment pack, or load and check the one a previous run froze."""
+def _environment_pack(
+    protocol: pack_protocol.Protocol, suite: Suite, manifest: EvaluationManifest, out: Path, *, verify: bool = False
+) -> EnvironmentPack:
+    """Freeze the environment pack, or load and check the one a previous run froze (the only option when verifying)."""
     root = out / PACK_DIR
     pack_id = f"emberbench-v1-{protocol.name}-unique-worlds"
+    source = _source_suite(suite, out, check_same if verify else write_new_or_same)
     if root.exists() and any(root.iterdir()):
-        pack = load_environment_pack(root)
+        pack = load_environment_pack(root)  # rejects a missing, extra or changed file
+    elif verify:
+        raise PackError(f"{root}: the environment pack is missing")
     else:
-        pack = freeze_environment_pack(_source_suite(suite, out), manifest, root, pack_id=pack_id)
+        pack = freeze_environment_pack(source, manifest, root, pack_id=pack_id)
     if pack.pack_id != pack_id or pack.manifest != manifest or pack.suite.manifest.suite_hash() != suite.manifest.suite_hash():
         raise PackError(f"{root}: the environment pack does not match protocol {protocol.name}")
     return pack
@@ -243,6 +266,7 @@ def privileged_references(suite: Suite, manifest: EvaluationManifest, pack: Envi
         )
     return {
         "artifact": "privileged-references",
+        "label": pack_protocol.RUN_LABEL,
         "privileged": True,
         "fair": False,
         "competing_model": False,
@@ -264,13 +288,27 @@ def _log(message: str) -> None:
     print(message, flush=True)
 
 
-def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str], None] = _log) -> dict[str, Any]:
-    """Run the whole pack into ``out`` and return the canonical index. See the module docstring."""
+def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str], None] = _log, verify: bool = False) -> dict[str, Any]:
+    """Run the whole pack into ``out`` and return the canonical index. See the module docstring.
+
+    With ``verify=True`` nothing is run or written: every result in ``out`` is
+    authenticated by replay against the frozen environment pack, every other
+    artifact is recomputed from the authenticated inputs and must equal the
+    file byte for byte, and ``out`` must hold no other file. Any difference
+    stops with :class:`PackError` (fail closed).
+    """
     started = time.perf_counter()
-    out = _check_out_dir(out)
+    check_benchmark_versions()
+    write = check_same if verify else write_new_or_same
+    if verify:
+        out = out.resolve()
+        if not (out / "index.json").is_file():
+            raise PackError(f"{out}: no pack run to verify (index.json is missing)")
+    else:
+        out = _check_out_dir(out)
     suite = protocol_suite(protocol)
     manifest = protocol_manifest(protocol, suite)
-    pack = _environment_pack(protocol, suite, manifest, out)
+    pack = _environment_pack(protocol, suite, manifest, out, verify=verify)
     suite, manifest = pack.suite, pack.manifest  # every model runs the frozen pack
     worlds = unique_worlds(suite, manifest)
     nominal = nominal_schedule(protocol, suite)
@@ -288,14 +326,20 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
         slug = pack_index.model_slug(spec.model_id)
         # The descriptor pins the configuration (and, for pack agents, the code)
         # before any episode runs, so a resume can never mix two agent versions.
-        write_new_or_same(out / "models" / f"{slug}.json", pack_index.canonical(dict(spec.descriptor)) + "\n")
+        write(out / "models" / f"{slug}.json", pack_index.canonical(dict(spec.descriptor)) + "\n")
         path = out / "results" / f"{slug}.json"
-        path.parent.mkdir(exist_ok=True)
-        log(f"run      {spec.model_id}")
-        run_evaluation(suite, manifest, spec.model_id, agent_policy_factory(spec.factory), path, resume=True)
+        if verify:
+            if not path.is_file():
+                raise PackError(f"{path}: result is missing")
+        else:
+            path.parent.mkdir(exist_ok=True)
+            log(f"run      {spec.model_id}")
+            run_evaluation(suite, manifest, spec.model_id, agent_policy_factory(spec.factory), path, resume=True)
         result = load_evaluation_result(path, suite)  # authenticate every episode by replay
         if not result.is_complete or result.manifest_hash != manifest.manifest_hash():
             raise PackError(f"{path}: result is incomplete or belongs to another manifest")
+        if verify:
+            check_same(path, result.to_file_text())  # the canonical bytes that run_evaluation writes
         results[spec.model_id] = result
     timings["episodes"] = time.perf_counter() - t
 
@@ -306,7 +350,7 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
         report = score_result(results[spec.model_id], pack, resamples=protocol.resamples)
         if not report.official:
             raise PackError(f"{spec.model_id}: the score report is not an official-procedure score")
-        write_new_or_same(out / pack_index.score_file(spec.model_id), report.to_json() + "\n")
+        write(out / pack_index.score_file(spec.model_id), report.to_json() + "\n")
         reports[spec.model_id] = report
 
     comparisons: dict[tuple[str, str], str] = {}
@@ -314,7 +358,7 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
         log(f"compare  {a} - {b}")
         doc = pack_index.comparison_document(reports[a], reports[b], compare_scores(reports[a], reports[b], resamples=protocol.resamples))
         text = pack_index.canonical(doc) + "\n"
-        write_new_or_same(out / pack_index.comparison_file(a, b), text)
+        write(out / pack_index.comparison_file(a, b), text)
         comparisons[(a, b)] = text
     timings["scoring"] = time.perf_counter() - t
 
@@ -323,7 +367,7 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
     for spec in specs:
         log(f"diag     {spec.model_id}")
         text = aggregate_result(results[spec.model_id], suite, resamples=protocol.resamples).to_json() + "\n"
-        write_new_or_same(out / pack_index.diagnostics_file(spec.model_id), text)
+        write(out / pack_index.diagnostics_file(spec.model_id), text)
         diagnostics[spec.model_id] = text
     timings["diagnostics"] = time.perf_counter() - t
 
@@ -331,15 +375,19 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
     log("refs     privileged references (separate context, not models)")
     references = privileged_references(suite, manifest, pack)
     references_text = pack_index.canonical(references) + "\n"
-    write_new_or_same(out / "privileged" / "references.json", references_text)
+    write(out / "privileged" / "references.json", references_text)
     timings["privileged"] = time.perf_counter() - t
 
     index = pack_index.build_index(
         protocol, suite, manifest, pack, worlds, nominal, specs, results, reports, comparisons, diagnostics, references_text
     )
-    write_new_or_same(out / "index.json", pack_index.canonical(index) + "\n")
+    write(out / "index.json", pack_index.canonical(index) + "\n")
     report_text = pack_report.render_report(protocol, index, results, reports, comparisons, references)
-    write_new_or_same(out / "REPORT.md", report_text, encoding="utf-8")
+    write(out / "REPORT.md", report_text, encoding="utf-8")
+    if verify:
+        extra = sorted(str(p.relative_to(out)) for p in out.rglob("*") if p.is_file() and p not in _expected_files(out, index))
+        if extra:
+            raise PackError(f"{out}: files that no pack artifact accounts for: {extra}")
     timings["total"] = time.perf_counter() - started
     size = sum(p.stat().st_size for p in out.rglob("*") if p.is_file())
     log(f"index    {pack_index.index_digest(index)}")
@@ -348,14 +396,32 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
     return index
 
 
+def _expected_files(out: Path, index: Mapping[str, Any]) -> set[Path]:
+    """Every file a pack run writes: the indexed artifacts, the per-model descriptors, the frozen pack and the subset suite."""
+    files = {out / "index.json", out / "REPORT.md", out / "privileged" / "references.json"}
+    for model in index["models"]:
+        slug = pack_index.model_slug(model["model_id"])
+        files |= {out / "models" / f"{slug}.json", out / model["result"]["file"], out / model["score_report"]["file"], out / model["diagnostics"]["file"]}
+    files |= {out / c["file"] for c in index["paired_comparisons"]}
+    for tree in (PACK_DIR, SOURCE_SUITE_DIR):  # the pack verifies its own file list on load
+        files |= {p for p in (out / tree).rglob("*") if p.is_file()}
+    return files
+
+
+def verify_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str], None] = _log) -> dict[str, Any]:
+    """Re-authenticate a finished run in ``out`` without running or writing anything. See :func:`run_pack`."""
+    return run_pack(protocol, out, log=log, verify=True)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n", 1)[0])
     parser.add_argument("--out", type=Path, required=True, help="output directory, outside the repository")
     parser.add_argument("--protocol", choices=sorted(pack_protocol.PROTOCOLS), default=pack_protocol.PUBLIC.name)
+    parser.add_argument("--verify", action="store_true", help="re-authenticate a finished run in --out; run and write nothing")
     args = parser.parse_args(argv)
     sys.addaudithook(_deny_network)
     try:
-        run_pack(pack_protocol.PROTOCOLS[args.protocol], args.out)
+        (verify_pack if args.verify else run_pack)(pack_protocol.PROTOCOLS[args.protocol], args.out)
     except PackError as exc:
         print(f"run_public_benchmark: error: {exc}", file=sys.stderr)
         return 1

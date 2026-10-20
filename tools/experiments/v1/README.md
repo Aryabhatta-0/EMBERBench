@@ -1,6 +1,6 @@
 # EMBERBench V1 evaluation pack (research lane)
 
-**PUBLIC DEVELOPMENT EVALUATION — NOT AN OFFICIAL HIDDEN-SUITE SCORE**
+**PUBLIC DEVELOPMENT EVALUATION — NOT A HIDDEN-SUITE LEADERBOARD**
 
 This pack shows how EMBERBench compares decision-making methods with the
 official EMBER Score (`emberbench.scoring`, scoring version 1.0) on the public
@@ -72,6 +72,16 @@ per-model results continue through `run_evaluation`, and every other output
 must be byte-identical, or the run stops. Nothing is overwritten. The runner
 opens no network connection.
 
+```bash
+python tools/experiments/v1/run_public_benchmark.py --out ../emberbench-pack-out --verify
+```
+
+`--verify` runs and writes nothing. It authenticates every result by replay
+against the frozen environment pack, recomputes every score report,
+comparison, diagnostic, reference, the index and the report from the
+authenticated inputs, and requires each file to be byte-identical. A missing,
+changed or extra file stops it with exit status 1.
+
 ## Performance
 
 Measured on one Windows 11 laptop core (Python 3.12), full public protocol,
@@ -82,24 +92,31 @@ pinned artifact holds them, because they are not reproducible.
 |---|---|
 | unique worlds | 19 |
 | episodes per model | 19 (8 models, 152 episodes) |
-| total runtime | 2 min 7 s to 3 min 17 s (three runs) |
-| episodes (run and replay authentication) | 57 s to 89 s |
-| official scoring (8 score reports, 19 paired comparisons) | 38 s to 85 s |
-| diagnostics (`aggregate_result`) | 13 s to 22 s |
-| privileged references | 2.5 s to 6 s |
-| artifact size | 14.1 MB (13 MB of it `results/`) |
+| total runtime | 113 s and 114 s (two clean runs; 115 s and 116 s process wall time) |
+| episodes (run and replay authentication) | 52 s to 54 s |
+| official scoring (8 score reports, 19 paired comparisons) | 39 s to 40 s |
+| diagnostics (`aggregate_result`) | 12 s to 13 s |
+| privileged references | 2.2 s to 2.4 s |
+| `--verify` of a finished run (no episodes are run) | 76 s |
+| artifact size | 14,138,424 bytes, 67 files (13 MB of it `results/`) |
 
 The earlier pack ran 100 episodes per model (every scenario under 10 seeds)
-in about 19 minutes; 81 of the 100 were duplicates of a deterministic world.
+in about 19 minutes (800 episodes); 81 of the 100 were duplicates of a deterministic world.
+The unique-world schedule runs 152 episodes with the same 19 worlds, about 10x faster.
 Replay authentication and fire-world checks against the pack are unchanged.
 
 ## Version handling
 
-The index pins `benchmark_versions()`, the environment-pack versions
-(including the generator versions), the scoring version and constants digest.
-A change to any of them changes the golden indexes and `REPORT.md`: rerun the
-full protocol and the smoke protocol and commit the new index files and
-report. Nothing else in the pack needs to change.
+`pack_protocol.BENCHMARK_VERSIONS` pins all 24 keys of `benchmark_versions()`
+for benchmark revision 2. The runner and `--verify` fail closed when the
+running code differs in any key or value. The index also pins the
+environment-pack versions (including the generator versions), the scoring
+version and constants digest, the suite and manifest hashes, every world
+digest and every model, result, score-report and comparison digest.
+
+A new benchmark revision needs a new pack run, never a mix: update
+`BENCHMARK_VERSIONS`, rerun the full and the smoke protocols, and commit the
+new index files and report. Nothing else in the pack needs to change.
 
 ## Why `tools/experiments/v1/`
 
