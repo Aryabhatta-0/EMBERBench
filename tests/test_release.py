@@ -287,6 +287,11 @@ def test_ci_installs_only_pinned_tools_and_keeps_the_release_gates() -> None:
     assert workflow.count("tools/check_release.py") == 1 and workflow.index("tools/check_release.py") > workflow.index("  packaging:")
     # Every pip install in CI resolves through the constraints, never by a bare "pip install -U".
     assert "-U" not in workflow and "--upgrade" not in workflow
+    # A plain YAML scalar cannot hold ": " (for example "--only-binary=:all: --dest"): GitHub rejects the whole file.
+    for line in workflow.splitlines():
+        value = line.strip().removeprefix("- ")
+        if value.startswith("run: ") and not value.startswith(("run: '", 'run: "', "run: |")):
+            assert ": " not in value[len("run: ") :].split(" #", 1)[0], f"quote this run step: {line.strip()}"
 
 
 # --------------------------------------------------------------------------- regression digest registry

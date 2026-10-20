@@ -49,6 +49,6 @@ jobs:
       - run: python -m pip install build setuptools packaging pytest
       - run: python tools/check_dev_constraints.py --installed
       # The pinned build backend alone, for the isolated offline sdist -> wheel build.
-      - run: python -m pip download --no-deps --only-binary=:all: --dest wheelhouse setuptools
+      - run: 'python -m pip download --no-deps --only-binary=:all: --dest wheelhouse setuptools'
       # SOURCE_DATE_EPOCH is frozen to the commit time, so both builds and every wheel member carry it.
       - run: SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) python tools/check_release.py --dist dist --wheelhouse wheelhouse
