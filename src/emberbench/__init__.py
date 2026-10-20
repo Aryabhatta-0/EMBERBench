@@ -165,6 +165,11 @@ from .environment_pack import (  # noqa: E402
     load_environment_pack,
     verify_environment_pack,
 )
+from .worlds import (  # noqa: E402
+    ENVIRONMENT_WORLD_VERSION,
+    build_unique_world_manifest,
+    environment_world_digest,
+)
 from .scoring import (  # noqa: E402
     OFFICIAL_CONSTANTS,
     SCORING_VERSION,
@@ -200,6 +205,7 @@ __all__ = [
     "BASELINES_VERSION",
     "BASELINE_IDS",
     "ENVIRONMENT_PACK_VERSION",
+    "ENVIRONMENT_WORLD_VERSION",
     "EnvironmentPack",
     "EnvironmentPackError",
     "EpisodeEvidence",
@@ -320,6 +326,7 @@ __all__ = [
     "benchmark_versions",
     "build_evaluation_provenance",
     "build_evaluation_manifest",
+    "build_unique_world_manifest",
     "build_animation",
     "build_replay_audit",
     "baseline_factory",
@@ -330,6 +337,7 @@ __all__ = [
     "efficiency_view",
     "inference_config_digest",
     "episode_evidence",
+    "environment_world_digest",
     "fire_world_digest",
     "format_summary",
     "freeze_environment_pack",

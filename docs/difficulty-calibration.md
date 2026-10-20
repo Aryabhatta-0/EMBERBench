@@ -1,199 +1,250 @@
-# Difficulty tiers and calibration (research, V1)
+# Difficulty bands and calibration (research, V1)
 
 | Field | Value |
 | --- | --- |
-| Status | **Research proposal. Not merged.** Cutpoints must be re-anchored on the final EMBER Score (PR #32). |
-| Code | `difficulty_band`, `family_tags`, `select_suite` in [`tools/analyze_suite_design.py`](../tools/analyze_suite_design.py) |
-| Evidence | [suite-design-results.md](suite-design-results.md) (development pool: 400 generated scenarios, 880 unique worlds) |
-| Score used | The **provisional** safety-only analysis score. It is not the EMBER Score. |
+| Status | **Research design. Not merged.** Uses the official EMBER Score (scoring version 1.0). |
+| Code | `CALIBRATION_PANEL`, `calibrate`, `difficulty_band`, `capacity_savable`, `capacity_ceiling`, `family_tags`, `select_suite` in [`tools/analyze_suite_design.py`](../tools/analyze_suite_design.py) |
+| Evidence | [suite-design-results.md](suite-design-results.md) (development pool: 1,120 generated scenarios, 2,320 unique worlds) |
+| Score used | The official EMBER Score from `emberbench.scoring` (`score_episode`, `score_evidence`). The tool has no other score. |
 
-This document defines how a world or scenario gets a difficulty band, and
-how the evaluator uses bands to compose the unseen suite. The parent design is
-[evaluation-suite-design.md](evaluation-suite-design.md).
+This document defines how a scenario gets an admission decision and a
+difficulty band, and how the evaluator uses the bands to compose the unseen
+suite. The parent design is [evaluation-suite-design.md](evaluation-suite-design.md).
 
 ## 1. Requirements
 
 1. A band is computed from measurements. Nobody labels a scenario by hand.
-2. The computation is deterministic and reproducible from the scenario, the
-   seed and the public reference panel.
-3. The rule does not depend on any model under evaluation.
-4. The rule is calibrated on **development** worlds only. Hidden worlds are
-   only measured, evaluator-side, with the rule frozen beforehand.
-5. The composed suite separates methods: it must not be mostly worlds where
-   every reference agent scores about 100, or about 0.
+2. The computation is deterministic and reproducible from the scenario, its
+   unique worlds and the frozen calibration panel.
+3. No model under evaluation is an input. The rule is not fitted to any model.
+4. The rule is calibrated on **development** worlds (public development seeds)
+   only. Hidden worlds are only measured, evaluator-side, with the rule frozen
+   beforehand.
+5. The composed suite separates methods. It must not be mostly worlds where
+   every reference policy scores about 100, or about 0.
 
-## 2. Candidate inputs
+## 2. The frozen calibration panel (version 1.0)
 
-Three kinds of measurement are available in V1.
+| Role | Policy | Use |
+| --- | --- | --- |
+| Panel member | `nearest-exit-greedy-v1` | band input |
+| Panel member | `static-shortest-path-v1` | band input |
+| Panel member | `fire-aware-shortest-path-v1` | band input |
+| Panel member | `congestion-aware-v1` | band input |
+| Floor reference | `random-legal-v1` | reported only (the analogue of Procgen's `R_min`); it scores 0 on every public world |
+| Privileged reference | `M*` (official `max_evacuated`), `M_cap` (section 6), official time and path bounds | a **bound only**. It normalizes the official score and excludes capacity artifacts. It never sets a band. |
 
-| Kind | Examples | Needs the seed? | Cost |
-| --- | --- | --- | --- |
-| Structural proxies | population, crowd density, `N / min cut` (drain time through the narrowest cut), obstacle density, route redundancy, passage width, ignition distance, exit-distance gap, deceptive-exit share | no | milliseconds |
-| Privileged fire-dynamics proxies | escapable share `M*/N`, threatened-exit share, share of people whose every static shortest route is cut (recoverable invalidation), forced-delay share, exit throughput cap | yes (evaluator only) | milliseconds |
-| Reference-panel performance | provisional (later: final) score of `nearest-exit-greedy-v1`, `static-shortest-path-v1`, `fire-aware-shortest-path-v1`, `congestion-aware-v1` relative to the privileged reference | yes (evaluator only) | about 0.03 s per episode (median) |
+The panel is the four public, non-random V1 baselines, in the order of
+increasing information use. Its members, its version (`CALIBRATION_PANEL_VERSION
+= "1.0"`) and the band thresholds are frozen and recorded in the freeze record
+of every suite. A change to any of them is a new panel version and needs new
+suites.
 
-`random-legal-v1` scores about 0 on almost every world. It is the floor, the
-analogue of Procgen's `R_min`, and it does not set bands.
+**No circular calibration.**
 
-## 3. Evidence: proxies alone do not predict difficulty
+- The panel is fixed before any model is evaluated. A model under evaluation
+  is never a panel member and never an input to admission, banding or
+  selection (tests check the signatures).
+- The thresholds are fixed numbers with a stated meaning on the official
+  score scale (section 4). They are not quantiles of a pool and not fitted to
+  make any policy look good.
+- The panel members define the bands, so their own scores on a selected suite
+  are biased by the selection. The suite-design study therefore measures rank
+  stability also with two comparators that are **not** panel members: a
+  congestion-aware policy with an ε share of uniformly random legal actions,
+  ε = 0.05 and ε = 0.2.
+- `fire-aware-shortest-path-v1` and `congestion-aware-v1` are practically tied
+  on the pool (mean 61.1 and 61.6). The design study does not count their
+  order as evidence.
 
-On the development pool, the rank correlation (Spearman, per world) between
-each proxy and the **oracle gap of the best fair baseline**
-(`100 - max panel score`) is:
+## 3. Evidence: structural proxies do not predict difficulty
+
+Rank correlation (Spearman) between each proxy and `100 - B` over the admitted
+development scenarios, where `B` is the best panel score (section 4):
 
 | Proxy | rho |
 | --- | --- |
-| population | 0.23 |
-| crowd density | 0.24 |
-| N / min cut | 0.14 |
-| obstacle density | -0.08 |
-| route redundancy | 0.07 |
-| ignition-person distance | -0.18 |
-| escapable share (privileged) | -0.03 |
-| threatened share (privileged) | 0.24 |
-| recoverable invalidation (privileged) | 0.63 |
-| forced delay (privileged) | 0.61 |
+| population | 0.35 |
+| crowd density | 0.17 |
+| N / min cut | 0.20 |
+| obstacle density | -0.48 |
+| route redundancy | 0.34 |
+| ignition-person distance | -0.30 |
+| threatened share (privileged) | 0.27 |
+| recoverable invalidation (privileged) | 0.57 |
+| savable share `M*/N` (privileged) | 0.04 |
 
-- Every **structural** proxy has `|rho| <= 0.24`. A band from structural
-  proxies would be mostly noise. Safety Gym style levels ("more hazards is
-  harder") do not transfer to EMBER: hazard timing, not count, decides.
-- The two **privileged fire-dynamics** proxies reach about 0.6. They measure
-  what actually happens to the static plans. They need the seed, so they are
-  evaluator-side.
-- No proxy measures crowd interaction well. The privileged bound `M*` is a
-  per-person relaxation, so the escapable share is uncorrelated with the gap.
+- No structural proxy reaches `|rho| = 0.5`. Obstacle density correlates
+  **negatively**: mazes slow the fire and are easy for any planner. A
+  Safety-Gym-style level ("more obstacles is harder") would be wrong here.
+- The best single predictor is privileged: the share of savable people whose
+  every static shortest route the fire cuts (0.57). It needs the seed, so it
+  is evaluator-side.
+- Proxies are therefore used for **family tags** and quality checks, not for
+  bands.
 
-## 4. Options considered
+## 4. Band definition
 
-| Option | For | Against | Decision |
-| --- | --- | --- | --- |
-| Structural proxies only | Seed-free; cheap; public | Weak evidence (section 3) | Use for **family tags** and diagnostics, not for bands |
-| Pool quantiles of baseline scores | Equal band sizes by construction | Bands drift with the generator config and the pool; a "hard" world in one pool is "easy" in another; quantiles hide saturation | Rejected as the definition; reported as a diagnostic |
-| Oracle gap of the reference panel, with fixed cutpoints | Direct measurement of difficulty relative to the privileged reference (regret, as in PAIRED); stable across pools; interpretable | Needs evaluator-side runs; selection on the panel's outcome biases the panel's own scores on the selected suite | **Adopted** |
-| Combination | Best of both | More moving parts | Adopted in this form: bands from the panel gap; tags from proxies; proxies as QA |
+For a scenario, take each panel member's mean official EMBER Score over the
+scenario's applicable unique worlds (worlds with `M* > 0`). `B` is the
+highest of the four means.
 
-## 5. Band definition
-
-For one world, let `best` and `worst` be the highest and lowest score of the
-four panel members. For a scenario with several worlds (stochastic fire), each
-member's score is first averaged over the scenario's unique worlds.
-
-| Band | Rule | Meaning |
+| Band | Rule (official points) | Best panel member, development pool (median avoidable losses) |
 | --- | --- | --- |
-| Easy | `worst >= 90` | Every competent heuristic solves it. A control item: a failure means a basic fault. |
-| Moderate | `best >= 90 > worst` | Some heuristic solves it and some does not. It separates simple from informed policies. |
-| Hard | `30 <= best < 90` | No heuristic solves it. The best keeps part of the attainable score. |
-| Stress | `best < 30` | Even the best heuristic loses most of the attainable score. Headroom against saturation. |
+| Easy | `B >= 80` | 0 |
+| Moderate | `30 <= B < 80` | 1 |
+| Hard | `10 <= B < 30` | 1.75 |
+| Stress | `B < 10` | 3 |
 
-The cutpoints `SOLVED = 90` and `STRESS = 30` are anchored to the score
-scale, not fitted to a pool. Under the provisional safety score, 90 means "no
-avoidable loss and nearly full evacuation" (one avoidable casualty out of 10
-already gives about 39), and 30 means "the best heuristic loses about two
-people out of ten or more".
+**Why these cutpoints.** The official score is steep in avoidable losses.
+With perfect quality, one avoidable loss gives at most 52.5 when `M* = 10`,
+65.2 when `M* = 20`, 76.8 when `M* = 100`; two avoidable losses out of 10 give
+28.8, three give 15.4 (computed with `score_evidence`). So:
 
-**After PR #32 merges,** recompute the bands with the final EMBER Score and
-re-anchor the two cutpoints to the same meaning on that scale. Record the
-cutpoints in the freeze record of every suite.
+- `B >= 80` means that the best fair heuristic has **no** avoidable loss and a
+  good quality. On the pool, the mean avoidable loss of the best member in the
+  Easy band is 0.01.
+- `30 <= B < 80` means about one avoidable loss (or none with a severe quality
+  failure).
+- `10 <= B < 30` means about two avoidable losses.
+- `B < 10` means three or more: the best V1 heuristic fails badly. This band
+  is the headroom against saturation.
 
-## 6. Calibration results on the development pool
+The earlier proposal (before PR #32) used `worst >= 90` and `best >= 90` on a
+safety-only analysis score. On the official score, the old Easy rule
+`worst >= 90` mostly selects saturated worlds (every panel member is at 95 or
+more on 28.6% of the pool worlds), which carry no ranking information. The rule
+is replaced by the `B` rule above and an explicit saturation exclusion
+(section 5).
 
-The pool is 9 public development recipes of the existing generator
-(open-sparse, dense-single, partitioned, multi-exit, multi-ignition, maze,
-crowd, stochastic-open, stochastic-partitioned), 400 scenarios, 880 unique
-worlds, generated from public development seeds. One scenario had no
-escapable person in any world and is excluded.
+**Why `B`, not the mean or the worst member.** A band states how much of the
+attainable score the best fair V1 heuristic keeps: the regret of the strongest
+available reference, as in PAIRED (Dennis et al., 2020). The spread of the
+panel is used for admission (section 5), not for the band.
 
-Mean provisional score by band (scenario level):
+## 5. Admission rule (deterministic, in this order)
 
-| Band | Scenarios | random | nearest-exit | static | fire-aware | congestion |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Easy | 107 | 1.9 | 100.0 | 100.0 | 100.0 | 100.0 |
-| Moderate | 117 | 0.0 | 18.0 | 88.4 | 94.4 | 96.1 |
-| Hard | 61 | 0.0 | 28.3 | 38.5 | 51.1 | 53.3 |
-| Stress | 114 | 0.0 | 5.5 | 7.5 | 10.1 | 10.6 |
+| Order | Exclusion | Rule | Pool share |
+| --- | --- | --- | --- |
+| 1 | `not_applicable` | no world has a savable person (`M* = 0`); the official score is NOT_APPLICABLE | 0.9% |
+| 2 | `capacity_artifact` | mean capacity ceiling `< 50` (section 6) | 4.1% |
+| 3 | `saturated` | every panel member `>= 95` | 24.1% |
+| 4 | `floor` | every panel member `< 1` | 2.2% |
+| 5 | `no_separation` | panel spread `B - worst <` the official practical difference (1 point) | 12.9% |
+| — | `admitted` | every other scenario; banded by `B` | 55.7% |
 
-- The bands order every panel member monotonically. The panel order
-  (random < nearest-exit < static < fire-aware <= congestion) holds inside
-  every band.
-- **Without calibration the pool does not separate methods.** In 286 of 869
-  worlds every panel member scores at least 90. In 244 of 869 every member
-  scores below 30. So 61% of raw generated worlds carry almost no ranking
-  information among the fair baselines. The median panel spread
-  (`max - min`) per world is 0.
-- Recipes do not determine bands. For example `maze` gives 12 easy, 32
-  moderate, 0 hard and 4 stress scenarios; `dense-single` gives 9, 13, 2 and
-  24. A recipe is a way to make a family likely, not a difficulty label.
-- Families have different natural band mixes. `route_invalidation_replanning`
-  has 0 easy and 0 moderate scenarios among 30 tagged; `maze_obstacle_routing`
-  has 1 hard among 54. A uniform family x band grid is not achievable; see
-  section 7.
+A saturated or floor scenario carries no ranking information for V1-level
+policies. A no-separation scenario cannot rank the panel itself. All three
+still count in the pool statistics, so the acceptance rates of section 7 are
+honest.
 
-Measured properties by band (medians of structural proxies, means of
-privileged proxies over worlds):
+## 6. Practical unsolvability: the capacity filter (`M_cap`)
 
-| Band | N | crowd density | N / cut | recoverable invalidation | forced delay | threatened |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Easy | 8 | 0.07 | 5.0 | 0.00 | 0.00 | 0.06 |
-| Moderate | 9 | 0.08 | 4.7 | 0.01 | 0.01 | 0.03 |
-| Hard | 13 | 0.08 | 6.5 | 0.05 | 0.06 | 0.11 |
-| Stress | 13 | 0.09 | 7.0 | 0.11 | 0.11 | 0.22 |
+The official `M*` counts the people who can escape **alone** against the
+precomputed fire. It ignores that people share exits and cuts. In a dense
+single-exit room, `M*` can be 35 while at most 14 people can physically leave
+before the fire closes the exit. Every policy then "loses" 21 savable people,
+and the official score is 0 for every policy: the world measures the bound,
+not the policy.
 
-The privileged fire-dynamics proxies and the crowd size rise with the band.
-This is the QA check: if a future generator or simulator revision breaks this
-monotone pattern, the band rule must be reviewed before it is used.
+`capacity_savable(scenario, seed)` returns `(M*, M_cap)`. `M_cap <= M*` adds
+the two capacity facts behind the official time bound `Q_cut`:
 
-## 7. Calibration rule for composing the suite
+- at most one person leaves through an open exit cell per step;
+- at most `k_s` people stand on the cut `N(C)` of a component `C` of the cells
+  with wall distance `> d` at step `s` (the same cut groups as the official
+  `_cut_bound`).
 
-1. **Freeze the rule** (panel IDs and versions, cutpoints, tag thresholds,
-   scoring version) and the generator recipes on development worlds.
-2. **Measure** every hidden candidate evaluator-side: tags, unique worlds, panel
-   scores, band. Store the result only in the private freeze record.
-3. **Target mix per family**: Easy 2, Moderate 4, Hard 8, Stress 6 out of 20
-   (10% / 20% / 40% / 30%). Easy is a small control share. Moderate and Hard
-   carry most of the discrimination between current methods. Stress keeps
-   headroom so that the suite does not saturate.
-4. **Select** with `select_suite`: families from scarcest to most common, cells
-   filled in keyed-hash order. A cell that cannot be filled is reported, never
-   silently filled.
-5. **Shortfall** (decided before any model runs, and recorded): first draw
-   more candidates for that family from the same recipe and generator seed
-   stream; if the cell is still empty, move its quota to the nearest band in
-   the order Hard, Moderate, Stress, Easy. The realized mix per family is
-   published with the round.
-6. **Discrimination floor**: across the whole suite, at most 15% Easy and at
-   most 30% Stress worlds, and at least half the worlds with a panel spread of
-   at least 20 points or a Hard band.
+Each savable person gets an interval of feasible steps per exit and per cut.
+The maximum number of people who fit is an interval scheduling problem, solved
+exactly by Glover's earliest-deadline greedy. `M_cap` is still an upper bound
+(the relaxation ignores movement conflicts), so it is safe to use as a filter.
 
-## 8. Known limits
+`capacity_ceiling(N, M*, M_cap)` is the best official score that a perfect
+policy can reach when `M* - M_cap` savable people are capacity-limited:
+`score_evidence` on synthetic evidence with `M* - M_cap` avoidable stranded
+people and perfect quality. It uses the official formula; the tool has no
+second implementation.
 
-- **Selection on the panel's outcome.** The panel helps choose the worlds, so
-  the panel's own scores on the selected suite are not unbiased estimates of
-  its performance on the generator distribution. They are reference points.
-  New models are unaffected, because the rule does not depend on them; but if
-  a model is a near copy of a panel member, say so when it is reported.
-- **Loose privileged bound.** `M*` relaxes congestion. Some Stress worlds may
-  be Stress because nobody can reach `M*`, not because the task is hard. The
-  tool reports a simple exit-throughput cap (one person per exit per step
-  until the exit burns). A world whose `M*` exceeds that cap has a provably
-  loose bound and should not be selected as Stress. On the development pool
-  this applies to 11% of Stress worlds (mean share) and to no Easy, Moderate
-  or Hard world, and to no public world. A tighter joint bound is future work
-  and needs no simulator change.
-- **Panel coverage.** All four panel members are heuristics without
-  look-ahead. A world that is Stress for them may be Moderate for a planner.
-  When a stronger public reference exists, add it to the panel under a new
-  rule version. Never change the rule inside a round.
-- **Provisional score.** The provisional score ignores the quality components
-  and is harsher on single casualties than a quality-weighted score would be
-  near the top. Bands must be recomputed on the final score.
+**Rule:** a scenario whose mean capacity ceiling is below `CEILING_MIN = 50`
+is excluded as a capacity artifact. The official score is not changed:
+`M*` stays the official reference. The filter only stops such scenarios from
+entering a suite.
 
-## 9. Reproducibility and tests
+| Measurement (development pool) | Value |
+| --- | --- |
+| applicable worlds with `M_cap < M*` | 92 of 2,286 (4.0%) |
+| scenarios with such a world | 75 |
+| scenarios excluded (ceiling `< 50`) | 46 (41 of them would otherwise be Stress) |
+| panel runs that evacuated more than `M_cap` | 0 (2,320 worlds x 4 members): the bound holds |
+| capacity-limited worlds where the best member reaches `M_cap` exactly | 50: the bound is tight there |
+| public V1 suite | `M_cap = M*` on all 73 unique worlds |
 
-`tests/test_suite_design.py` checks that:
+The artifacts come mostly from the `dense-single` recipe (34 of its 120
+scenarios). Without the filter they would enter the Stress band, where every
+policy scores about 0 for a reason that no policy controls.
 
-- the band rule gives the documented band for fixed panel scores;
-- the band of public scenarios is reproducible (`v1-pub-01` is Easy,
-  `v1-pub-08` is Moderate);
-- selection is deterministic, independent of candidate order, uses each
-  scenario once, and changes only with the private selection key;
-- shortfall is reported, not filled from another band.
+## 7. Calibration results on the development pool
+
+Mean official score of each comparator over the admitted units (scenarios with
+a final primary family) per band:
+
+| Band | Units | nearest-exit-greedy | static-shortest-path | fire-aware-shortest-path | congestion-aware | noisy ε=0.05 | noisy ε=0.2 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Easy | 264 | 14.2 | 76.6 | 93.0 | 94.0 | 85.7 | 49.9 |
+| Moderate | 69 | 10.7 | 23.3 | 40.9 | 42.4 | 35.8 | 13.0 |
+| Hard | 79 | 4.1 | 6.4 | 14.4 | 17.4 | 17.2 | 9.0 |
+| Stress | 105 | 0.9 | 1.3 | 3.9 | 4.5 | 5.2 | 2.4 |
+
+- The bands are ordered for every comparator, including the two non-panel
+  comparators. The calibration is not circular in effect either.
+- The Easy band still separates policies strongly (nearest-exit-greedy 14.2
+  against congestion-aware 94.0): "Easy" means easy for an informed planner,
+  not for every policy.
+- The official score is bimodal on single scenarios (histogram of `B`: 224 of
+  1,110 applicable scenarios below 10, 595 at 90 or more). The Moderate band is
+  the scarcest (7.9% of candidates).
+
+Public V1 suite, same rule (one world per deterministic scenario, 64 worlds
+for the stochastic one): pub-01 and pub-04 saturated; pub-03 and pub-08 Easy;
+pub-02 and pub-10 Moderate; pub-06, pub-07 and pub-09 Hard; pub-05 Stress.
+
+## 8. Composition rule
+
+1. Every candidate gets its `calibrate` result and its family tags
+   (`family_tags`, fixed thresholds on the structural profile and on the
+   evaluator-side fire profile).
+2. `select_suite(candidates, quotas, selection_key)` fills the
+   family x band quotas. Families are filled scarcest first; each candidate is
+   used once and its selected family becomes its primary family; inside a
+   cell the order is a keyed SHA-256 of the scenario content hash, so the
+   private key, not the candidate order or a model, decides which candidate is
+   taken.
+3. A cell that cannot be filled is reported as a **shortfall**. It is never
+   filled from another band in silence. The evaluator generates more candidates
+   for that cell (targeted recipe), or the freeze record states the shortfall.
+4. The fire-model quota (stochastic slots per family) is applied in the same
+   way, as part of the cell key.
+
+## 9. Known limits
+
+- Bands are relative to V1 heuristics. A strong model can find Stress worlds
+  solvable. That is the intended headroom; saturation triggers a new panel
+  version (evaluation-suite-design.md, section 16).
+- `M_cap` is a relaxation. Some admitted Stress worlds can still be harder than
+  any policy can solve. The filter removes the clear capacity artifacts only.
+- Family tags use fixed thresholds on measured properties. The generator's own
+  `describe_families` names fewer families; the evaluator-side tags are the
+  stratification key (see the gap table in evaluation-suite-design.md).
+- The noisy comparators share their base policy with a panel member. They test
+  rank stability; they are not independent agents.
+
+## 10. Reproducibility and tests
+
+Every band and admission decision is a pure function of the scenario, its
+unique worlds (by `environment_world_digest`) and the frozen panel. The tool
+caches expensive runs outside the repository, keyed by every version; the
+reported numbers are recomputed from the final code. `tests/test_suite_design.py`
+checks the band thresholds, the admission order, the capacity bound on a
+scenario with `M_cap < M*`, Glover's greedy, the capacity ceiling against the
+official score, the official scoring of panel runs and the selector rules.

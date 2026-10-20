@@ -2,486 +2,565 @@
 
 | Field | Value |
 | --- | --- |
-| Status | **Research proposal. Not merged.** Waits for the scoring contract (PR #32). |
-| Scope | Design of the official V1 unseen (hidden) evaluation suite. No simulator, scenario, generator or metric change. |
+| Status | **Research design. Not merged.** Final for V1 on the official EMBER Score. |
+| Scope | Design of the official V1 unseen (hidden) evaluation suite. No simulator, observation, scenario-format, generator or scoring change. |
+| Score | The official EMBER Score (`emberbench.scoring`, scoring version 1.0). Every number in this document comes from it. |
 | Companion documents | [difficulty-calibration.md](difficulty-calibration.md), [suite-design-results.md](suite-design-results.md) |
-| Analysis tool | [`tools/analyze_suite_design.py`](../tools/analyze_suite_design.py) (`audit-public`, `study`) |
+| Library support | `environment_world_digest`, `build_unique_world_manifest` (`emberbench.worlds`) |
+| Analysis tool | [`tools/analyze_suite_design.py`](../tools/analyze_suite_design.py) (`audit-public`, `study`, `gap-probe`) |
 | Tests | [`tests/test_suite_design.py`](../tests/test_suite_design.py) |
-| Score used here | The **provisional** safety-only analysis score (section 11). It is not the EMBER Score. |
 
 This document is named "evaluation suite", not "held-out suite", on purpose:
 the leak guard (`emberbench.leakguard`) rejects any repository path with a
 `heldout-` component, so that private material cannot be committed by
-accident. The document holds no private scenario, seed or result.
+accident. The document holds no private scenario, seed or result. Every
+number comes from public development seeds.
 
-## 0. Summary of the recommendation
+## 0. Summary
 
-- **Size:** 12 families x 20 scenarios = **240 scenarios, 384 unique
-  worlds** (168 deterministic scenarios with 1 world, 72 stochastic scenarios
-  with 3 distinct fire worlds). Minimum acceptable: 12 per family.
-- **Difficulty per family:** Easy 2, Moderate 4, Hard 8, Stress 6, from the
-  measured oracle gap of a fixed public reference panel. No hand labels.
-- **Model trials:** K = 1 for verified-deterministic models, K = 3 otherwise.
-  Trials are never counted as worlds.
-- **Precision (provisional score):** mean 95% interval width about 8 points
-  for one model's overall score; adjacent public baselines 5 points apart are
-  ranked correctly in every draw; a 0.4-point gap is a tie at any size.
-- **World identity:** a seed-free fire-trajectory digest. Equal fire
-  trajectories are one world; a deterministic scenario is one world.
-- **Findings for other work:** PR #32's `fire_world_digest` includes the seed;
-  the manifest builder schedules duplicate deterministic episodes; the
-  generator names only 3 primary families; the public suite is 73 unique
-  worlds for 640 nominal episodes and has one scenario per family.
-- **Protocol:** frozen rules, private seeds and selection key with public
-  commitments, measured selection, one frozen pack per suite, new suite per
-  round, never a silent replacement.
+- **One design:** 10 primary families x 16 scenarios = **160 scenarios,
+  240 unique worlds**. Per family: Easy 2, Moderate 4, Hard 6, Stress 4;
+  12 deterministic-fire scenarios (1 world each) and 4 stochastic-fire
+  scenarios (3 distinct fire worlds each).
+- **World identity:** `environment_world_digest`, a seed-free digest of the
+  scenario and its burning trajectory. The public suite is 640 nominal episodes
+  but only **73 unique worlds** (88.6% duplicates).
+- **Difficulty:** bands from the best official score `B` of a frozen
+  four-baseline calibration panel: Easy `B >= 80`, Moderate `[30, 80)`, Hard
+  `[10, 30)`, Stress `< 10`. A capacity filter (`M_cap`, official
+  `score_evidence`) excludes worlds that are hard only because `M*` ignores
+  exit and cut capacity.
+- **Model trials:** K = 1 for a verified-deterministic model, K = 3 for every
+  other model, on the same frozen worlds: 240 or 720 episodes.
+- **Precision:** within-suite 95% CI about 7.9 points wide (about +-3.9);
+  paired 95% width between adjacent comparators at most 5.8 points; comparator
+  pairs more than 1.12 points apart keep their order in at least 95% of
+  simulated suites.
+- **Candidate pool:** about 4,000 candidates (25x the suite) with the current
+  recipes plus the probe recipes, then targeted top-up batches for any
+  shortfall cell. The earlier "10x" figure is **not** supported: 1,120
+  candidates (7x) filled 87.6% of the quotas and never all of them.
+- **Generator gap:** the generator names 3 primary families. Nine of the ten
+  primary families need some generator work (section 6): new proxies or
+  constraints for three, fire-dependent evaluator-side tags for two, labels or
+  recipes for four. Until then the evaluator assigns families by measured tags.
 
 ## 1. Literature review
 
-The table lists the primary sources and what each one implies for EMBERBench.
-
 | Source | Finding | Implication for EMBERBench |
 | --- | --- | --- |
-| Cobbe, Hesse, Hilton, Schulman. *Leveraging Procedural Generation to Benchmark RL* (Procgen), ICML 2020, arXiv:1912.01588 | 16 procedurally generated environments. Generalization protocol: train on a finite level set (200 levels in easy mode, 500 in hard mode), test on the full level distribution. Agents need "as many as 10,000 levels" to close the generalization gap. Scores are normalized per environment by `R_min` and `R_max`. Results use 3 to 4 seeds. | A fixed public suite of 10 scenarios is memorizable. Scored evaluation must draw from an unbounded procedural distribution that no model saw. Per-world normalization by a privileged reference (EMBER's `M*`, `D*`) is the analogue of `R_max`. |
+| Cobbe, Hesse, Hilton, Schulman. *Leveraging Procedural Generation to Benchmark RL* (Procgen), ICML 2020, arXiv:1912.01588 | 16 procedurally generated environments. Train on a finite level set, test on the full distribution; agents need many thousands of levels to close the generalization gap. Scores are normalized per environment by `R_min` and `R_max`. | A fixed public suite of 10 scenarios is memorizable. Scored evaluation must draw from a procedural distribution that no model saw. Per-world normalization by a privileged reference (EMBER's `M*`) is the analogue of `R_max`; `random-legal-v1` is the analogue of `R_min`. |
 | Cobbe, Klimov, Hesse, Kim, Schulman. *Quantifying Generalization in RL* (CoinRun), ICML 2019, arXiv:1812.02341 | Agents overfit to surprisingly large training-level sets. | The number of distinct worlds, not the number of episodes, is the unit of evidence. |
-| Machado, Bellemare, Talvitie, Veness, Hausknecht, Bowling. *Revisiting the Arcade Learning Environment*, JAIR 2018, arXiv:1709.06009 | A deterministic environment lets an agent memorize an open-loop action sequence ("the Brute"). Sticky actions (p = 0.25) add stochasticity; the Brute collapses under them (Asterix 6,909 to 308). Separate the games used to tune from the games used to report. 5 trials can lack power. | Deterministic worlds are memorizable when public. Stochastic fire is EMBER's robustness test. Repeating a deterministic world with a deterministic policy adds no evidence. Calibration and reporting must use different worlds. |
-| Agarwal, Schwarzer, Castro, Courville, Bellemare. *Deep RL at the Edge of the Statistical Precipice*, NeurIPS 2021, arXiv:2108.13264 | With 3 to 5 runs per task, point estimates mislead; 3-run bootstrap intervals under-cover. Use a stratified bootstrap (resample runs inside each task), interval estimates, robust aggregates (IQM) and the probability of improvement. | Stratify by family. A stratum with one unit has no variance estimate (PR #32 notes a zero-width interval). Every family needs several independent scenarios. Report the probability of improvement next to the interval. |
-| Henderson, Islam, Bachman, Pineau, Precup, Meger. *Deep RL that Matters*, AAAI 2018, arXiv:1709.06560 | Two groups of 5 seeds of the same algorithm can differ significantly. | Seeds are a source of variance to control and freeze, not a free sample-size multiplier. |
-| Colas, Sigaud, Oudeyer. *How Many Random Seeds?*, 2018, arXiv:1806.08295 | Power analysis for RL comparisons. The bootstrap test has an inflated false-positive rate (about 10% at nominal 5%) with small samples; use at least 20 samples in pilot studies and more than the power analysis prescribes. | Size the suite from a power analysis, with margin, not from cost. |
-| Bouthillier et al. *Accounting for Variance in Machine Learning Benchmarks*, MLSys 2021, arXiv:2103.03098 | Data sampling is the largest variance source; randomize as many sources as possible; a criterion P(A > B) >= 0.75 separates real improvements from benchmark fluctuation. | In EMBER the analogue of data sampling is **which worlds are drawn**. Our study confirms that between-scenario variance dominates (section 11). |
-| Miller. *Adding Error Bars to Evals*, 2024, arXiv:2411.00640 | CLT standard errors; **clustered** standard errors when questions are grouped (naive errors can be about 3x too narrow); resample each question K times to cut within-question variance to sigma^2/K; paired differences; a closed-form sample-size formula. | Seeds of one scenario are a cluster. K model trials on the same frozen world reduce model variance without new worlds. Paired comparison on one frozen pack. |
-| Ray, Achiam, Amodei. *Benchmarking Safe Exploration in Deep RL* (Safety Gym), OpenAI 2019 | Layouts are randomized at the start of each episode to stop trajectory memorization. Difficulty levels 0, 1, 2 differ by the number of hazards. | Difficulty bands defined by measurable content. EMBER needs evidence that its proxies track difficulty; section 4 shows that they track it only weakly. |
-| Ji et al. *Safety-Gymnasium*, NeurIPS 2023 Datasets and Benchmarks, arXiv:2310.12567 | Levels 0 to 2 add obstacles and agents; results over 3 seeds and 10 evaluation iterations. | Same lesson: levels are structural, results are repeated. |
-| Mattson et al. *MLPerf Training Benchmark*, MLSys 2020, arXiv:1910.01500 | Run counts come from measured run-to-run variance: 5 runs for vision, 10 for the rest; drop the fastest and the slowest; target "90% of entries ... within 5%" (vision) or 10%. Rules are frozen per round. | Choose repetition counts (K, seeds) from measured variance. Freeze the rules and the suite per round and give the round an identity. |
-| Reddi et al. *MLPerf Inference Benchmark*, ISCA 2020, arXiv:1911.02549 | Minimum query counts and run durations are set so that tail statistics have a stated statistical confidence. | A stated precision target (here: interval width) fixes the minimum size. |
-| Liang et al. *Holistic Evaluation of Language Models* (HELM), TMLR 2023, arXiv:2211.09110; *HELM Lite* (CRFM, 2023) | 16 core scenarios x 7 metric categories; every model on the same scenarios; at most 1,000 instances per scenario; HELM Classic used 3 random seeds for in-context example choice. | One frozen environment set for all models. Model stochasticity is handled by repeated trials on the same instances, not by new instances. |
-| Recht, Roelofs, Schmidt, Shankar. *Do ImageNet Classifiers Generalize to ImageNet?*, ICML 2019, arXiv:1902.10811 | A new test set from the same process drops accuracy by 11% to 14% on ImageNet (3% to 15% on CIFAR-10), but the model ranking is largely kept. | A refreshed suite changes absolute scores. Scores are comparable only inside one suite revision. |
-| Blum, Hardt. *The Ladder*, ICML 2015, arXiv:1502.04585; Dwork et al. *The Reusable Holdout*, Science 2015 | Repeated adaptive queries to a holdout overfit it. | Limit scored submissions per suite revision; publish coarse results during an active round. |
-| Roelofs et al. *A Meta-Analysis of Overfitting in Machine Learning*, NeurIPS 2019 | Kaggle private holdouts showed little adaptive overfitting. | A hidden suite with limited queries works in practice. |
-| Kiela et al. *Dynabench*, NAACL 2021, arXiv:2104.14337; Ott et al. *Mapping Global Dynamics of Benchmark Creation and Saturation in AI*, Nature Communications 2022 | Static benchmarks saturate quickly. | Define saturation triggers and a refresh policy in advance. |
-| Jacovi, Caciularu, Goldman, Goldberg. *Stop Uploading Test Data in Plain Text*, EMNLP 2023, arXiv:2305.10160 | Test data in public plain text contaminates later models. | Never publish a live pack. Publish digests only. |
-| Zhang et al. *A Careful Examination of LLM Performance on Grade School Arithmetic* (GSM1k), 2024, arXiv:2405.00332 | Some models drop on a fresh, equivalent test set, which shows overfitting to the public one. | A fresh batch from the same generator config is the contamination check. |
-| White et al. *LiveBench*, 2024, arXiv:2406.19314; Jain et al. *LiveCodeBench*, 2024, arXiv:2403.07974 | Dated, periodically refreshed releases limit contamination. | Each round gets a new batch identity; old rounds are retired, not edited. |
-| Rodriguez et al. *Evaluation Examples Are Not Equally Informative*, ACL 2021; Polo et al. *tinyBenchmarks*, ICML 2024, arXiv:2402.14992 | Item response theory: items differ in difficulty and discrimination; 100 curated MMLU items can reproduce full-benchmark estimates. | Prefer worlds that separate methods. But EMBER episode scores are near-bimodal, so far fewer worlds are not enough (section 11). |
-| Dennis et al. *PAIRED*, NeurIPS 2020, arXiv:2012.02096 | Environment difficulty as regret: the gap between a strong reference and the agent. | The oracle gap of the best fair baseline is a principled difficulty measure (difficulty-calibration.md). |
-| Kirk, Zhang, Grefenstette, Rocktäschel. *A Survey of Zero-Shot Generalisation in Deep RL*, JAIR 2023, arXiv:2111.09794 | Train and test context sets must be disjoint and drawn by a stated process. | Development (public) and evaluation (private) contexts come from disjoint seed domains. |
-| Card et al. *With Little Power Comes Great Responsibility*, EMNLP 2020, arXiv:2010.06595 | Many test sets are too small to detect the effects they report. | State the minimum detectable effect of the suite. |
+| Machado et al. *Revisiting the Arcade Learning Environment*, JAIR 2018, arXiv:1709.06009 | A deterministic environment lets an agent memorize an open-loop action sequence; sticky actions break it. Separate tuning games from reporting games. | Deterministic worlds are memorizable when public. Repeating a deterministic world with a deterministic policy adds no evidence. Calibration and reporting use different worlds. |
+| Agarwal et al. *Deep RL at the Edge of the Statistical Precipice*, NeurIPS 2021, arXiv:2108.13264 | With few runs, point estimates mislead. Use stratified intervals, robust aggregates and the probability of improvement. | Stratify by family. A stratum with one unit has no variance estimate. Every family needs several independent scenarios. |
+| Henderson et al. *Deep RL that Matters*, AAAI 2018, arXiv:1709.06560 | Two groups of 5 seeds of one algorithm can differ significantly. | Seeds are a variance source to control and freeze, not a free sample-size multiplier. |
+| Colas, Sigaud, Oudeyer. *How Many Random Seeds?*, 2018, arXiv:1806.08295 | Power analysis for RL comparisons; small-sample tests are anti-conservative. | Size the suite from a precision target, with margin, not from cost. |
+| Bouthillier et al. *Accounting for Variance in Machine Learning Benchmarks*, MLSys 2021, arXiv:2103.03098 | Data sampling is the largest variance source. | In EMBER the analogue is **which worlds are drawn**. The study measures suite-sampling variance directly (section 11). |
+| Miller. *Adding Error Bars to Evals*, 2024, arXiv:2411.00640 | Clustered standard errors when items are grouped; K resamples per item cut within-item variance to sigma^2/K; paired differences. | Worlds of one scenario are a cluster. K model trials on the same frozen worlds. Paired comparison on one pack. |
+| Ray, Achiam, Amodei. *Safety Gym*, 2019; Ji et al. *Safety-Gymnasium*, 2023, arXiv:2310.12567 | Difficulty levels by hazard count. | EMBER needs evidence that its proxies track difficulty. They do not (difficulty-calibration.md, section 3): obstacle density correlates negatively. |
+| Mattson et al. *MLPerf Training*, MLSys 2020, arXiv:1910.01500; Reddi et al. *MLPerf Inference*, ISCA 2020, arXiv:1911.02549 | Run counts from measured variance; frozen rules per round; stated statistical confidence. | Choose K and worlds per stochastic scenario from measured variance. Freeze rules and suite per round. |
+| Liang et al. *HELM*, TMLR 2023, arXiv:2211.09110 | Every model on the same instances; repeated trials for model randomness. | One frozen pack for all models; model randomness by trials, not by new worlds. |
+| Recht et al. *Do ImageNet Classifiers Generalize to ImageNet?*, ICML 2019, arXiv:1902.10811 | A new test set from the same process changes absolute accuracy but mostly keeps the ranking. | Scores are comparable only inside one suite revision. |
+| Blum, Hardt. *The Ladder*, ICML 2015; Dwork et al. *The Reusable Holdout*, Science 2015 | Repeated adaptive queries overfit a holdout. | Limit scored submissions per suite; no per-world results while a suite is live. |
+| Kiela et al. *Dynabench*, NAACL 2021; Ott et al., Nature Communications 2022 | Static benchmarks saturate. | Define saturation triggers in advance (section 16). |
+| Jacovi et al. *Stop Uploading Test Data in Plain Text*, EMNLP 2023, arXiv:2305.10160 | Public plain-text test data contaminates later models. | Never publish a live pack. Publish digests only. |
+| Zhang et al. *GSM1k*, 2024, arXiv:2405.00332 | Some models drop on a fresh equivalent test set. | A fresh suite from the same frozen rules is the contamination check (section 15). |
+| White et al. *LiveBench*, 2024; Jain et al. *LiveCodeBench*, 2024 | Dated, refreshed releases limit contamination. | Each round gets a new suite identity; old suites are retired, not edited. |
+| Rodriguez et al., ACL 2021; Polo et al. *tinyBenchmarks*, ICML 2024 | Items differ in difficulty and discrimination. | Prefer worlds that separate methods (admission rule). EMBER scores are bimodal, so a tiny suite is not enough. |
+| Dennis et al. *PAIRED*, NeurIPS 2020, arXiv:2012.02096 | Environment difficulty as regret against a strong reference. | Band = score kept by the best fair reference heuristic (difficulty-calibration.md). |
+| Kirk et al. *A Survey of Zero-Shot Generalisation in Deep RL*, JAIR 2023 | Train and test contexts disjoint and drawn by a stated process. | Development (public) and evaluation (private) seeds come from disjoint domains. |
+| Card et al. *With Little Power Comes Great Responsibility*, EMNLP 2020 | Many test sets are too small for the effects they report. | State the smallest difference the suite resolves (section 11). |
 
 ## 2. Audit of the public V1 suite
 
 Full tables: [suite-design-results.md, part A](suite-design-results.md#part-a-public-v1-suite-audit).
-The public suite (hash `5274d103...065b`) has 10 scenarios, one per family
-except `split_flow_across_exits`, which shares `v1-pub-09` with `crowd_100`.
+Schedule: `build_evaluation_manifest` with 64 public development seeds.
 
-| Property | Public suite |
+| Quantity | Value |
 | --- | --- |
-| Grid sizes | 12x9 to 26x16 |
-| Population `N` | 4, 36, 8, 5, 8, 6, 9, 5, 100, 6 (seven scenarios have `N <= 9`) |
-| Exits | 4 single, 5 double, 1 triple |
-| Ignitions | 1, except `v1-pub-07` (3) |
-| Fire model | 9 deterministic, 1 stochastic (`v1-pub-10`) |
-| `N / min vertex cut` | 2.5 to 36 |
-| Static plan invalidated by fire | only `v1-pub-06` (0.5), `v1-pub-07` (0.11), `v1-pub-10` (median 0.83) |
-| Final burn share | about 1 everywhere (the fire fills the map) |
-| Provisional band | Easy: 01, 04. Moderate: 03, 08. Hard: 02, 10. Stress: 05, 06, 07, 09 |
+| nominal scheduled episodes | 640 |
+| unique scenarios | 10 |
+| unique environment worlds | **73** |
+| deterministic-fire worlds | 9 (one per deterministic scenario) |
+| stochastic-fire worlds | 64 (all from `v1-pub-10`) |
+| duplicate episodes | 567 (88.6%) |
+| `build_unique_world_manifest`, 3 worlds per stochastic scenario | 12 episodes |
+| worlds per primary family | 1 for nine families; 64 for `route_invalidation_replanning` |
 
-Weaknesses for use as a scientific evaluation suite (it was designed as a
-public development suite, and it is good for that):
+Official score of the calibration panel (difficulty-calibration.md):
+pub-01 and pub-04 are saturated (every member at 95 or more); pub-03 and pub-08
+Easy; pub-02 and pub-10 Moderate; pub-06, pub-07 and pub-09 Hard; pub-05
+Stress. `random-legal-v1` scores 0 on every world. `M_cap = M*` on every
+world (no capacity artifact).
 
-1. **One scenario per family.** Every family-level confidence interval from a
-   resampling bootstrap has zero width (there is nothing to resample), and a
-   family score is one world. Family results are anecdotes.
-2. **Few unique worlds.** A schedule of 64 seeds per scenario is 640 nominal
-   episodes but only **73 unique worlds**: each deterministic scenario is one
-   world for every seed (567 duplicates). Reported sample sizes that count
-   seeds overstate the evidence by a factor of about 9.
-3. **Small populations.** Seven of ten scenarios have 9 or fewer people, so
-   one casualty moves a score by more than 10%. Crowd interaction is tested by
-   two scenarios.
-4. **Weak separation.** `nearest-exit`, `static` and `fire-aware` give the
-   same score on 7 of 10 scenarios. Only 3 scenarios invalidate a static plan.
-5. **Public.** Every scenario, hash and trajectory is in the repository. Any
-   model can be tuned on it. It must never be the scored suite.
+The public suite is a good development suite and a poor scored suite: one
+scenario per family (family intervals not estimable), 73 worlds of which 64
+belong to one scenario, two saturated scenarios, small populations (seven of
+ten have 9 people or fewer), and every scenario is public.
 
-## 3. Unique worlds and world identity
+## 3. World identity and unique-world scheduling
 
-In V1 the episode seed feeds only the fire stream (`FIRE_STREAM`), and the
-observation never contains the seed. The agent's view of an episode is fully
-determined by the scenario and the exogenous fire trajectory. So:
+In V1 the episode seed reaches a run only through the simulator's fire stream.
+The fire ignores the agents' actions, and the observation contains no seed or
+RNG state. A policy's view of an episode is therefore fixed by the scenario
+and the burning trajectory:
 
-> **World** = (simulator version, observation version, scenario content hash,
-> exogenous fire trajectory).
+> **Environment world** = (simulator version, observation version, scenario
+> content hash, burning cells at every snapshot `0..H`).
 
 ```text
-fire_trajectory_digest = sha256(canonical_json({scenario_hash, burning cells per snapshot}))
-world_id               = sha256(canonical_json({world_identity_version: "1.0", simulator_version,
-                                                observation_version, scenario_hash,
-                                                fire_trajectory_digest}))
+environment_world_digest = sha256(canonical_json({
+    environment_world_version: "1.0", simulator_version, observation_version,
+    scenario_hash, burning: [sorted [row, col] per snapshot 0..H]}))
 ```
 
-- The seed is **not** an input of the digest. Two seeds with equal fire
-  trajectories give one world. A deterministic scenario is always one world.
+- The seed is **not** an input. Two seeds with equal trajectories are one
+  world; a deterministic-fire scenario is one world for every seed.
 - The model is **not** an input. Tests check that every baseline sees exactly
-  the precomputed `fire_trajectory(scenario, seed)`.
-- The trajectory covers `max_steps + 1` snapshots, so two worlds that differ
-  only after the episode ends are still counted as different. This is
-  conservative (no under-counting of duplicates is possible inside the horizon)
-  and costs nothing.
-- **Finding for PR #32.** Its `fire_world_digest` hashes the seed together
-  with the trajectory, so it cannot detect two seeds with equal trajectories
-  (for example a stochastic scenario whose ignition is sealed by walls; see
-  the `SEALED` test layout). Use a seed-free trajectory digest for duplicate
-  detection and keep the seed only as an episode attribute.
-- **Finding for the current manifest builder.** `build_evaluation_manifest`
-  schedules the cross product of scenarios and seeds, so it repeats every
-  deterministic scenario once per seed. The tool adds
-  `build_unique_world_manifest`, which schedules one episode per deterministic
-  scenario and `S` distinct-world seeds per stochastic scenario. The existing
-  `EvaluationManifest` validator already accepts such ragged schedules.
+  the precomputed trajectory.
+- PR #32's `fire_world_digest` is unchanged. It hashes the seed with the
+  trajectory and stays the per-episode pack attribute. It is not used for
+  deduplication.
+- `build_unique_world_manifest(suite, candidate_seeds, *, stochastic_worlds)`
+  schedules each deterministic scenario once (the first candidate seed) and
+  each stochastic scenario with the first `stochastic_worlds` candidate seeds
+  of pairwise-different worlds. It raises `EvaluationError` when the
+  candidates give fewer worlds. The result is a normal, validated
+  `EvaluationManifest`; it freezes into an `EnvironmentPack` unchanged. It
+  takes no model input. `build_evaluation_manifest` is unchanged.
+- Every count in this document is a count of unique worlds. Seed duplicates
+  are never counted as evidence.
 
-## 4. Capability axes and families
+## 4. Families: audit and final list
 
-The V1 families (`ScenarioFamily`) stay the primary strata. No new mechanic
-(smoke, floors, psychology) is introduced. The axes group them:
+Audit criteria (the brief's five): V1-supported (needs only V1 mechanics: grid,
+walls, exits, people, deterministic or stochastic fire), independently
+meaningful (tests a distinct decision capability), non-redundant (tag overlap,
+Jaccard), scoreable (admitted scenarios exist and the panel separates on them),
+generatable (the current generator produces it without hand-authoring). No
+V2 concept (smoke, psychology, floors, communication) is used.
 
-| Capability axis | Primary families | Measured property that defines the tag |
-| --- | --- | --- |
-| Basic evacuation | `single_exit_low_density` | one exit, crowd density < 0.15 |
-| Queueing and flow | `single_exit_high_density`, `narrow_corridor_bottleneck`, `crowd_100`, `split_flow_across_exits` | density >= 0.15; passage width 1 and `N / cut >= 4`; `N >= 100`; several exits, `N >= 20`, split pressure > 1 |
-| Exit choice | `multiple_exits_unequal_distance`, `deceptive_nearest_exit` | exit-gap median >= 4; share of people whose nearest exit is a dead end or longer by route >= 0.25 |
-| Hazard-aware routing | `central_ignition`, `threatened_nearest_exit`, `multiple_ignitions` | ignition centrality <= 0.34; mean threatened share >= 0.2 (privileged); >= 2 ignitions |
-| Navigation | `maze_obstacle_routing` | obstacle density >= 0.25 or detour ratio >= 1.5 |
-| Replanning | `route_invalidation_replanning` | mean recoverable invalidation share >= 0.2 (privileged) |
-| Robustness to fire randomness | (orthogonal stratum, not a family) | `fire.model == stochastic` |
+| Family | Capability tested | Tag rule (measured) | Supported | Meaningful | Non-redundant (max Jaccard) | Scoreable (admitted) | Generatable now | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `single_exit_low_density` | Basic evacuation planning: route every person to the only exit before the fire cuts the route. The control family. | one exit, crowd density < 0.15 | yes | yes | 0.23 | 89 | yes | **primary** |
+| `single_exit_high_density` | Queue management at one exit: order and timing so that the queue drains before the exit burns; conflict-free moves. | one exit, density >= 0.15 | yes | yes | 0.07 | 59 | yes (28% capacity artifacts) | **primary** |
+| `narrow_corridor_bottleneck` | Sequencing through a width-1 cut without blocked or conflicting moves. | passage width 1 and `N / cut >= 4` | yes | yes | 0.23 | 200 | yes | **primary** |
+| `split_flow_across_exits` | Load balancing: assign people to exits by expected queue time, not by distance. | several exits, split pressure > 1, `N >= 20` | yes | yes | **0.87 with `crowd_100`** in the pool | 39 | partly (only at crowd scale) | **primary**; needs a medium-population recipe |
+| `crowd_100` | Scale: one decision per step for 100 or more people; long observations and action lists. | `N >= 100` | yes | yes | 0.87 (see above) | 35 | yes (slow) | **primary** |
+| `maze_obstacle_routing` | Path finding with detours in obstacle-rich layouts. | obstacle density >= 0.25 or detour ratio >= 1.5 | yes | yes | 0.24 | 97 | yes, but no Moderate band in the default recipe | **primary** |
+| `deceptive_nearest_exit` | Exit choice by true path length, not by straight-line distance. | share of people whose nearest exit by distance is a dead end or longer by route >= 0.25 | yes | yes | 0.24 | 58 | only by rejection sampling | **primary** |
+| `threatened_nearest_exit` | Fire anticipation: avoid the nearest exit when the fire reaches it first. | mean threatened share >= 0.2 (evaluator-side, needs the trajectory) | yes | yes | 0.30 | 61 | only by rejection sampling | **primary** |
+| `multiple_ignitions` | Reasoning about several fire fronts at once. | 2 or more ignitions | yes | yes | 0.22 | 125 | yes | **primary** |
+| `route_invalidation_replanning` | Replanning when the fire cuts the planned route while another route stays open. | mean recoverable invalidation share >= 0.2 (evaluator-side) | yes | yes | 0.30 | 113 | only by rejection sampling | **primary** |
+| `central_ignition` | A fire geometry, not a separate decision capability: its failures are the threatened-exit and invalidation failures. | ignition centrality <= 0.34 | yes | weak | 0.22 | 89 | no label | secondary tag |
+| `multiple_exits_unequal_distance` | A layout property of almost every multi-exit scenario (49.5% of the pool); exit choice is tested by the deceptive, threatened and split-flow families. | exit-gap median >= 4 | yes | weak | 0.22 | 346 | implicit | secondary tag |
 
-The generator's own `describe_families` can only name three primary families
-(`single_exit_low_density`, `single_exit_high_density`,
-`split_flow_across_exits`). So the evaluator assigns families with the
-measured tags above (`family_tags` in the tool). A scenario can carry several
-tags; it is selected for **one** primary family, which is the stratum used by
-the PR #32 hierarchy (episode-trial, episode, scenario, primary family,
-overall). Other tags are kept for diagnostics only.
+**Final list: 10 primary families.** Twelve is not correct for V1: two values
+of `ScenarioFamily` are scenario attributes, not capabilities. They stay valid
+`ScenarioFamily` values and secondary tags; no enum changes. `crowd_100` and
+`split_flow_across_exits` overlap 0.87 in the development pool only because
+the crowd recipe is the only source of split pressure. The capabilities differ
+(scale against load balancing), so both stay primary, and the gap table asks
+for a medium-population split-flow recipe.
 
-## 5. Difficulty tiers
+What fails per family (congestion-aware-v1 on admitted tagged worlds, official
+score, Safety, Quality): the families separate both in Safety (0.33 for route
+invalidation to 0.92 for mazes) and in Quality; severe replanning failures
+range from 2.6% (maze) to 29.8% (threatened exit). Table:
+[suite-design-results.md, part B, section 6](suite-design-results.md).
 
-Full definition and evidence: [difficulty-calibration.md](difficulty-calibration.md).
+Stochastic fire is an orthogonal stratum, not a family.
 
-- Band from the oracle gap of the fair reference panel with fixed cutpoints:
-  Easy (worst >= 90), Moderate (best >= 90 > worst), Hard (30 <= best < 90),
-  Stress (best < 30).
-- Structural proxies do not predict difficulty (`|rho| <= 0.24`). Privileged
-  fire-dynamics proxies do (about 0.6). Both are recorded; only the panel sets
-  the band.
-- 61% of raw generated worlds are solved by every panel member or failed by
-  every panel member. Calibration is therefore necessary, not cosmetic.
+## 5. Difficulty
 
-## 6. Suite size alternatives
+The full rule and its evidence are in
+[difficulty-calibration.md](difficulty-calibration.md). In short:
 
-Assumptions: 12 families, the band mix of section 7, 30% stochastic scenarios
-with `S = 3` distinct worlds, so 1.6 unique worlds per scenario on average.
-Interval widths are the 95% bootstrap width of one agent's family-balanced
-provisional score, from the subsampling study (section 11; maximum over the
-five baselines, then mean). Calls assume one model call per step, the
-measured mean of 20.6 steps for a competent policy and 82.8 for a policy that
-stalls until `max_steps`.
+- Frozen calibration panel 1.0: `nearest-exit-greedy-v1`,
+  `static-shortest-path-v1`, `fire-aware-shortest-path-v1`,
+  `congestion-aware-v1`. `random-legal-v1` is the floor reference only. The
+  privileged reference is a bound only.
+- `B` = best panel mean official score over the scenario's worlds. Easy
+  `B >= 80` (best member has no avoidable loss), Moderate `[30, 80)` (about
+  one), Hard `[10, 30)` (about two), Stress `< 10` (three or more).
+- Admission, in order: not applicable; capacity artifact (mean capacity
+  ceiling < 50); saturated (every member >= 95); floor (every member < 1);
+  no separation (spread < 1 point, the official practical difference).
+- Development pool: 55.7% admitted. Structural proxies do not predict
+  difficulty (largest `|rho|` 0.48, and negative for obstacle density).
+- Not circular: no model under evaluation is an input; thresholds are fixed
+  numbers with a meaning on the score scale; rank stability is checked with
+  two non-panel comparators.
 
-| Option | Scenarios per family | Scenarios | Unique worlds | Episodes per model (K = 1 / 3) | 95% width, max / mean | Band mix 2/4/8/6 per family | Storage | Evaluator CPU per baseline | Calls per model at K = 3 (competent / upper bound) |
-| --- | ---: | ---: | ---: | --- | --- | --- | ---: | ---: | --- |
-| about 50 | 4 | 48 | 77 | 77 / 231 | 22.8 / 17.6 | no (4 of 20) | 0.2 MB | about 2 s | 4,800 / 19,100 |
-| about 100 | 8 | 96 | 154 | 154 / 462 | 15.5 / 12.4 | no (8 of 20) | 0.4 MB | about 5 s | 9,500 / 38,300 |
-| minimum | 12 | 144 | 230 | 230 / 690 | 12.4 / 9.5 | no (12 of 20) | 0.6 MB | about 7 s | 14,200 / 57,100 |
-| about 200 | 16 | 192 | 307 | 307 / 921 | 11.6 / 9.0 | no (16 of 20) | 0.8 MB | about 9 s | 19,000 / 76,300 |
-| **recommended** | **20** | **240** | **384** | **384 / 1,152** | **11.1 / 8.1** | **yes** | **1.0 MB** | **about 12 s** | **23,700 / 95,400** |
-| about 400 | 32 | 384 | 614 | 614 / 1,842 | 8.0 / 6.3 | yes | 1.5 MB | about 18 s | 37,900 / 152,500 |
+## 6. Generator Coverage Gap
 
-Storage uses the measured mean scenario file of 4.0 KB; evaluator CPU uses
-the measured mean of 0.03 s per baseline episode. Widths are on the 0 to 100
-score scale (a width of 8 is about +-4 points).
+The current generator (version 1.0.0) produces scenarios from a config
+(grid, population, exits, ignitions, partitions, doors, door width, scatter,
+fire model, spread interval and probability, flammable exits) and accepts or
+rejects them by structural constraints (route length, obstacle density, crowd
+density, exit separation, passage width, route redundancy, ignition-person and
+ignition-exit distance). Its `describe_families` names only **three primary
+families** (`single_exit_low_density`, `single_exit_high_density`,
+`split_flow_across_exits`; every multi-exit scenario becomes
+`split_flow_across_exits`) and four secondary labels. It cannot target a
+difficulty band.
 
-- **Fewer than 2 scenarios per family** gives no family-level interval at
-  all.
-- **About 50 scenarios** cannot hold the band mix (20 cells per family) and
-  gives overall intervals of about +-9 points: enough to separate random from
-  heuristic, not enough to compare competent models in absolute terms.
-- **About 100 scenarios** already ranks public baselines 5 points apart
-  correctly (pairing does that from 2 per family), but the overall interval
-  is about +-6 points and each family has only 8 scenarios.
-- **12 per family** is the minimum: about +-5 points overall and at least
-  one scenario in most family x band cells.
-- **240 scenarios** (recommended) fills every family x band cell, keeps
-  the mean interval width near 8 points (worst baseline 11), and costs less than 2 MB of storage and
-  under a minute of evaluator CPU per baseline.
-- **Larger than about 400** gives little: the width falls only with the
-  square root of the size, and a gap of 0.4 points (fire-aware vs
-  congestion-aware) is not resolvable at any size in the table. Spend extra
-  budget on refresh rounds, not on one larger suite.
+Evidence: the development pool (10 recipes, 1,120 scenarios) and the
+`gap-probe` command (four config-only recipes, development seeds; results in
+[suite-design-results.md, part C](suite-design-results.md#part-c-generator-coverage-probe)).
 
-The cost of API evaluation was not the criterion. It is reported so that
-participants can plan.
+| Family | Current generator support | Missing generator capability | Procedural generation feasible? | Required engineering work |
+| --- | --- | --- | --- | --- |
+| `single_exit_low_density` | Primary label; any recipe with one exit and few people | none | yes (shown) | none |
+| `single_exit_high_density` | Primary label; `dense-single` recipe | A capacity check at generation time: 34 of 120 deterministic and 24 of 40 stochastic dense scenarios are capacity artifacts | yes (shown; stochastic variant shown by the probe) | Optional constraint "capacity ceiling >= 50" in the generator, or keep the evaluator-side filter; add a stochastic dense recipe |
+| `narrow_corridor_bottleneck` | Secondary label; `door_width` and `passage_width` controls | Primary-family assignment | yes (shown) | Label only |
+| `split_flow_across_exits` | Primary label, but given to **every** multi-exit scenario | A split-pressure proxy and constraint (exit load imbalance at `N >= 20`); a medium-population multi-exit recipe. In the pool the tag appears almost only at crowd scale | yes (proxy is structural and seed-free; the probe's crowded-maze recipe gives 5 split-flow scenarios with `N < 100`) | New proxy, new constraint, fixed label rule, new recipe (new generator version) |
+| `crowd_100` | Secondary label; population control | none (stochastic crowd shown by the probe) | yes (shown; slow: about 30x the CPU of a small scenario) | Recipe only |
+| `maze_obstacle_routing` | Secondary label; partitions and scatter | The default recipe never gives the Moderate band (0 of 120) | yes: the probe's crowded maze (more people, faster fire) and stochastic maze recipes give Moderate mazes | Recipe only |
+| `deceptive_nearest_exit` | None (no label, proxy or constraint) | A deceptive-exit proxy (share of people whose nearest exit by distance is not the nearest by route) and a constraint | yes (structural, seed-free) | New proxy and constraint; label (new generator version) |
+| `threatened_nearest_exit` | Indirect: `ignition_exit_distance` constraint | A fire-aware tag. It needs the fire trajectory, so for stochastic fire it depends on the evaluation seed | yes for deterministic fire (rejection on the one trajectory); for stochastic fire only evaluator-side | Constraint for deterministic fire; keep the evaluator-side tag (this tool's `family_tags`) for stochastic fire and promote it to a supported API |
+| `multiple_ignitions` | Secondary label; ignition-count control | Primary-family assignment | yes (shown) | Label only |
+| `route_invalidation_replanning` | None | An invalidation tag; it needs the trajectory (same limit as above) | yes, by evaluator-side rejection sampling (10.1% of the pool qualifies) | Same as `threatened_nearest_exit` |
+| `central_ignition` (secondary) | None | not needed for V1 strata | yes | none for V1 |
+| `multiple_exits_unequal_distance` (secondary) | Implicit (`exit_separation`) | not needed for V1 strata | yes | none for V1 |
 
-## 7. Family and difficulty allocation
+Cross-cutting work for the next generator PR:
 
-| | Easy | Moderate | Hard | Stress | Total |
+1. A family-assignment rule for all ten primary families (today: three), with
+   the thresholds frozen in a generator version.
+2. Recipes that target cells: a medium-population split-flow recipe, a
+   crowded-maze recipe and stochastic variants of the dense, maze and crowd
+   recipes. The probe shows that the last three need configuration only.
+3. Fire-dependent tags (threatened exit, route invalidation) cannot be a
+   seed-free generator property for stochastic fire. They stay evaluator-side,
+   measured on the selected unique worlds, and the freeze record stores them.
+4. Difficulty cannot be targeted by the generator. Bands come from the
+   evaluator's calibration (section 5) and rejection sampling.
+
+**Until this work lands, the V1 suite is composed by evaluator-side tagging
+and rejection sampling from a large pool** (section 12). This works for every
+cell (shown by the pool and the probe), but it is not yet a supported library
+feature. The design does not claim that the generator alone produces the
+10-family suite.
+
+## 7. Suite size
+
+400 simulated suites per size, drawn cell by cell from the 517 admitted
+development units, with the final shares (2/4/6/4 of 16, 25% stochastic, 3
+worlds each). Six comparators: the four panel members and two non-panel
+noisy policies. Widths are in official EMBER points.
+
+| Scenarios / family | Scenarios | Unique worlds (simulated) | Max 95% suite-sampling width | Within-suite CI width (mean) | Max paired width | Largest gap reversing in > 5% of suites | Kendall tau | Family-mean width | Decision calls / model run | Evaluator CPU / run |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 10 | 100 | 124 | 6.59 | 9.26 | 7.02 | 1.16 | 0.88 | 17.40 | 3,054 | 2.4 min |
+| 12 | 120 | 158 | 6.46 | 10.02 | 7.20 | 2.08 | 0.89 | 14.49 | 3,843 | 3.0 min |
+| **16** | **160** | **210** | **5.36** | **7.91** | **5.74** | **1.12** | **0.90** | **14.20** | **5,108** | **3.9 min** |
+| 20 | 200 | 264 | 4.67 | 7.44 | 5.47 | 1.77 | 0.92 | 11.48 | 6,497 | 5.0 min |
+| 24 | 240 | 316 | 4.24 | 6.44 | 4.85 | 1.27 | 0.92 | 11.06 | 7,746 | 5.9 min |
+
+(Simulated suites have fewer worlds than the design because four families have
+no stochastic candidate in the development pool and fall back to deterministic
+slots; with the probe recipes the design has 24 worlds per family.)
+
+**Decision: 16 per family.**
+
+- 16 is the smallest size with a paired width of about 6 points or less
+  (5.7 to 6.2 in independent simulations; half-width about 3 points) for every
+  adjacent comparator pair; 10 and 12 are above 7.
+- It gives every family at least 4 scenarios in each of Moderate, Hard and
+  Stress and 2 Easy controls, so every family x band cell has more than one
+  unit.
+- 20 per family narrows the widths by about 5% to 13% for 25% more episodes,
+  API calls and rare-cell candidates. That is not worth its cost in V1.
+- The "largest gap reversing" metric depends on which comparator pairs exist,
+  so it is not monotone in size; at 16 every pair more than 1.12 points apart
+  kept its order in at least 95% of suites.
+- Family coverage: all 10 families x 4 bands at every size from 10.
+
+## 8. Difficulty allocation
+
+Same simulation, 16 per family, different band shares:
+
+| Allocation (E/M/H/S) | nearest-exit | static | fire-aware | congestion | noisy 0.05 | noisy 0.2 | Scores < 1 | Mean P(paired CI resolves) | Mean 95% width |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| uniform 4/4/4/4 | 7.1 | 23.6 | 36.5 | 38.2 | 35.3 | 19.1 | 20.3% | 0.57 | 4.50 |
+| previous 2/4/8/6 (scaled to 2/3/6/5) | 5.0 | 15.0 | 25.1 | 26.9 | 25.8 | 14.4 | 25.2% | 0.70 | 3.89 |
+| **final 2/4/6/4** | **5.6** | **16.3** | **27.1** | **28.9** | **28.0** | **15.2** | **22.4%** | **0.68** | **3.91** |
+| hard-heavy 1/3/8/4 | 4.4 | 11.9 | 20.9 | 23.1 | 23.0 | 13.2 | 23.3% | 0.56 | 3.52 |
+| stress-heavy 1/3/4/8 | 3.9 | 10.5 | 18.6 | 20.0 | 19.1 | 10.6 | 27.5% | 1.00 | 3.22 |
+| no easy 0/6/6/4 | 4.4 | 10.5 | 20.0 | 22.0 | 21.4 | 10.9 | 23.3% | 0.70 | 3.16 |
+
+Why 2/4/6/4 is scientifically useful:
+
+- **Headroom.** The best V1 comparator scores about 29 points. A strong model
+  has 70 points of room before saturation.
+- **Not a floor suite.** 22.4% of comparator x world scores are below 1
+  point, against 27.5% for the stress-heavy mix. Stress worlds give headroom,
+  but every Stress world scores about 0 for weak policies and carries no
+  information about them.
+- **Separation.** Moderate and Hard are where the panel spreads most (mean
+  spread 36 and 15 points). The final mix has the most Moderate slots of the
+  separating mixes. It matches the previous 2/4/8/6 in resolving power with
+  fewer floor scores.
+- **Controls.** Two Easy worlds per family detect basic faults (a model that
+  fails an Easy world has a bug, not a weakness). "No easy" removes them for
+  no gain.
+- The stress-heavy mix resolves every counted pair only because three of its
+  five adjacent pairs fall below the 1-point practical difference there and are
+  not counted; it is not more precise.
+
+## 9. Deterministic and stochastic fire
+
+Variance components over admitted stochastic units (up to 6 worlds each):
+the world-to-world share of the variance is 24% to 42% depending on the
+comparator. So for a fixed episode budget, more scenarios always beat more
+worlds per scenario (`Var = sigma_b^2 / S + sigma_w^2 / (S W)`); extra worlds
+are worth their cost only to measure robustness to fire realisations inside a
+scenario.
+
+| Stochastic scenarios x worlds (per family) | Unique worlds | Max 95% width | Max paired width | CVaR10 width | Fallback slots |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Per family | 2 | 4 | 8 | 6 | 20 |
-| Share | 10% | 20% | 40% | 30% | |
-| Suite (12 families) | 24 | 48 | 96 | 72 | 240 |
+| 0 x 1 | 160 | 5.12 | 6.19 | 0.45 | 7.5% |
+| 4 x 1 | 160 | 5.76 | 6.22 | 0.40 | 16.9% |
+| 4 x 2 | 185 | 5.65 | 6.02 | 0.36 | 16.9% |
+| **4 x 3** | **210** | **5.85** | **6.19** | **0.33** | **16.9%** |
+| 4 x 5 | 260 | 5.03 | 5.17 | 0.32 | 16.9% |
+| 8 x 3 | 264 | 5.08 | 5.42 | 0.26 | 25.0% |
+| 16 x 3 | 368 | 5.71 | 5.38 | 0.18 | 42.5% |
 
-- Every family gets the same number of scenarios. The PR #32 aggregation
-  weights families equally, so equal allocation minimizes the variance of the
-  overall score for a fixed size (each family term has weight 1/12).
-- Hard carries the most weight because it is where the panel spreads most
-  (section 5 of the calibration document). Easy is a control: a model that
-  fails Easy worlds has a basic fault.
-- Inside each family about 6 of the 20 scenarios are stochastic (spread over
-  the bands as the candidates allow). Families whose current recipes give no
-  stochastic candidates (`single_exit_high_density`, `crowd_100`,
-  `split_flow_across_exits`) need stochastic variants of the existing
-  generator configs. That is a config change, not a simulator change.
-- **Feasibility on the development pool.** On the 400-scenario development pool (only 1.7 times the suite
-  size), `select_suite` filled 184 of the 240 cells; 56 were short. Shortfall is
-  concentrated where the pool is thin (`crowd_100`, `split_flow_across_exits`)
-  or the family has no natural easy worlds (`route_invalidation_replanning`
-  has 0 Easy and 0 Moderate among 30 tagged scenarios). The pre-registered
-  shortfall rule (calibration document, section 7) handles this: oversample
-  the family's recipe, then move the quota to the nearest band. The real
-  candidate pool must be about 10 times the suite size (about 2,500
-  candidates), with dedicated recipes for the rare families.
-- Selection: `select_suite(candidates, quotas, selection_key)` fills the
-  scarcest family first, in keyed-hash order, never uses one scenario twice
-  and reports shortfall instead of filling silently.
+(Simulated, 400 suites each; differences below about 0.5 points are Monte
+Carlo noise.)
 
-## 8. Stochastic seed policy
+**Decision: 12 deterministic + 4 stochastic scenarios per family, 3 unique
+fire worlds per stochastic scenario.**
 
-- A stochastic scenario contributes `S = 3` **distinct** worlds. Seeds are
-  drawn from the private episode seed stream in order, and a seed whose fire
-  trajectory digest equals an earlier one is skipped
-  (`select_distinct_seeds`). If a scenario cannot give 3 distinct worlds from
-  64 candidate seeds, it is treated as deterministic (one world) and that is
-  recorded.
-- The scenario score is the mean over its distinct worlds. Worlds of one
-  scenario are not independent samples of the suite; resampling is two-stage
-  (scenarios, then worlds), as in PR #32.
-- **Why 3.** The within-scenario (fire) variance is 0.18 to 0.53 of the
-  between-scenario variance for the panel. The precision-optimal number of
-  worlds per scenario is therefore below 1 (`S* = sqrt(ratio) < 0.73`): extra
-  scenarios buy more precision than extra seeds. Seeds still matter for
-  validity: one seed measures one fire draw, not the scenario's fire
-  distribution. Three distinct worlds give a per-scenario variance estimate
-  with 2 degrees of freedom and cut the fire term of the variance by 3. In the sample-size study, changing from 4 to 3 worlds per stochastic
-  scenario changed the mean width at 32 scenarios per family from 6.30 to
-  6.29: seeds beyond 3 buy almost no precision.
-- Seeds are never published before the suite retires, never chosen per model
-  and never re-drawn after any model runs.
-
-## 9. Deterministic scenario policy
-
-- A deterministic scenario is **one world**. It gets exactly one scheduled
-  episode per trial, whatever the seed list.
-- Reports count unique worlds, not seed x scenario pairs. A manifest that
-  repeats a world (equal `world_id`) is rejected by the freeze step.
-- Deterministic scenarios are not weaker evidence: the fire is fixed, so all
-  information is in the agent's behavior. They make up 70% of the suite
-  because scenario diversity, not fire diversity, dominates the variance.
+- Precision barely depends on the mix; the decision rests on coverage. Four
+  stochastic scenarios per family (25% of scenarios, 50% of worlds) test
+  robustness to fire randomness in every family, and 3 worlds give each one a
+  within-scenario spread (the lower-tail CVaR10 width falls from 0.40 at 1
+  world to 0.33 at 3; 5 worlds add little).
+- More stochastic scenarios need stochastic candidates in every family. The
+  development pool has none for four families (fallback 17% to 43%); the probe
+  shows they need recipes only.
+- The previous 14/6 x 3 out of 20 is not kept: at 16 per family, 4 x 3 gives
+  the same precision with fewer rare stochastic candidates.
+- Worlds come from `build_unique_world_manifest`: three seeds with pairwise
+  different trajectories, never duplicates.
 
 ## 10. Model trials (K)
 
-Trials repeat a world for one model; they are **not** new worlds and add no
-new environments. The world seed stays fixed; only the model's own sampling
-changes.
+Model randomness is separate from environment randomness: trials repeat the
+same frozen worlds. Surrogate: congestion-aware-v1 with ε random actions, 10
+trials on 60 admitted worlds; trial noise of the suite mean for 240 worlds.
 
-| Model | K | Reason |
-| --- | ---: | --- |
-| Deterministic code or a model verified deterministic (identical action sequences in 2 trials on a 10% sample of worlds) | 1 | Repeats give identical episodes. |
-| Non-deterministic model (sampling, non-deterministic API) | 3 | See below. |
-| Non-deterministic, pilot within/between trial-variance ratio > 0.5 | 5 | |
+| ε | K | Trial-noise SD of the suite mean (points) | CI width inflation vs K = infinity | Width saved vs K = 1 |
+| --- | ---: | ---: | ---: | ---: |
+| 0.05 | 1 | 1.00 | 1.073 | — |
+| 0.05 | 3 | 0.58 | 1.025 | 4.8% |
+| 0.05 | 5 | 0.45 | 1.015 | 5.8% |
+| 0.05 | 10 | 0.32 | 1.008 | 6.6% |
+| 0.2 | 1 | 1.21 | 1.146 | — |
+| 0.2 | 3 | 0.70 | 1.051 | 9.5% |
+| 0.2 | 5 | 0.54 | 1.031 | 11.5% |
+| 0.2 | 10 | 0.38 | 1.016 | 13.0% |
 
-Evidence: an epsilon-noisy surrogate (congestion-aware with 10% random
-actions, 8 trials on 40 worlds) has a within-world trial variance of 0.385 of
-the between-world variance. The CI width inflation against infinite trials
-is 1.18 for K = 1, 1.09 for K = 2, 1.06 for K = 3, 1.04 for K = 5. K = 3
-captures most of the gain and gives a per-world trial-variance estimate, which
-is required to report reliability (Miller 2024; Bouthillier et al. 2021). The
-model's per-world mean over trials is the episode value (PR #32
-episode-trial level). Trial seeds or sampling settings are recorded with the
-submission.
+**Decision: K = 3 for every model that is not verified deterministic; K = 1
+for a verified-deterministic model** (two runs on the first 10 worlds give
+identical action sequences; otherwise K = 3). K = 3 removes about 70% to 75% of
+the possible gain; K = 5 adds 1 to 2 percentage points for 67% more calls.
+Re-check with the measured trial variance of the first real models: if the
+within-world share of a model's variance is above 0.5, use K = 5 for it.
 
-## 11. Sample size and interval width
+## 11. Sample size, CI and rank stability (final design)
 
-Score used: the **provisional analysis score** is the PR #32 safety factor
-only (`100 x E x P_casualty x P_stranding`, with the catastrophic gate),
-computed against `M*`. It omits the quality factor. It is used only to study
-variance and ranking stability, and every number in this section must be
-recomputed with the final EMBER Score.
+All values for 16 per family, 400 simulated suites, paired worlds (every
+comparator on the same worlds), unique worlds only.
 
-Method: from the development pool (11 families with at least 3 scenarios),
-draw `m` scenarios per family without replacement (400 draws per size), use
-`S = 3` worlds per stochastic scenario, compute each baseline's
-family-balanced score, and measure (a) the 2.5 to 97.5 percentile width over
-draws and (b) the probability that a pair of adjacent baselines is ranked in
-the wrong order.
+| Quantity | Value |
+| --- | --- |
+| 95% suite-sampling width of the family-balanced score (max over comparators) | 5.63 points |
+| within-suite 95% CI width (stratified CLT, mean) | 7.89 points (about +-3.9) |
+| paired 95% width, adjacent comparators (max) | 5.76 points |
+| largest expected gap that reverses in > 5% of suites | 1.12 points |
+| P(every adjacent pair >= 1 point apart in the right order) | 0.63 |
+| mean Kendall tau to the expected order (6 comparators) | 0.90 |
+| family-mean 95% width (one family, best comparator) | 13.9 points |
+| CVaR10 95% width over unique worlds | 0.33 points |
 
-| Scenarios per family | Scenarios | Unique worlds | Max 95% width | Mean 95% width | Mean CLT width | P(rev) static / fire-aware (gap 4.9) | P(rev) fire-aware / congestion (gap 0.4) | P(exact ranking of 5) |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 11 | 16 | 47.37 | 36.48 | 0.00 | 0.11 | 0.42 | 0.63 |
-| 2 | 22 | 33 | 32.33 | 25.63 | 24.55 | 0.01 | 0.44 | 0.56 |
-| 4 | 44 | 65 | 22.77 | 17.60 | 17.70 | 0.00 | 0.44 | 0.56 |
-| 8 | 88 | 131 | 15.48 | 12.42 | 12.59 | 0.00 | 0.37 | 0.63 |
-| 12 | 132 | 196 | 12.36 | 9.46 | 10.35 | 0.00 | 0.35 | 0.65 |
-| 16 | 176 | 261 | 11.59 | 8.96 | 8.95 | 0.00 | 0.34 | 0.67 |
-| **20** | **220** | **326** | **11.11** | **8.07** | **8.04** | **0.00** | **0.25** | **0.75** |
-| 24 | 264 | 392 | 9.41 | 7.37 | 7.34 | 0.00 | 0.27 | 0.73 |
-| 32 | 352 | 522 | 7.97 | 6.29 | 6.38 | 0.00 | 0.26 | 0.74 |
+- **Overall score:** about +-4 points. Two models whose paired difference is
+  more than about 3 points are resolved. Differences near the official
+  practical difference (1 point) are not: the two comparator pairs about
+  1.1 points apart reverse in about 20% of suites. Reports must call such pairs
+  ties, not rank them.
+- **Family scores** are coarse (about +-7 points with 16 scenarios). Report
+  them with intervals; never rank models on one family.
+- **Lower tail:** p10 and CVaR10 are 0 for every V1 comparator (the worst 10%
+  of worlds are lost by every heuristic), so the lower-tail statistics are
+  stable but carry information only for strong models.
+- Use paired differences on the same pack for model comparison.
 
-The adjacent pairs random / nearest-exit (gap 35.7) and nearest-exit / static
-(gap 22.8) are never reversed at any size. The study pool has a stochastic
-share of 0.24, so it has slightly fewer worlds per scenario than the proposal
-(0.30). Pool family-balanced scores: random 0.36, nearest-exit 36.11, static
-58.88, fire-aware 63.75, congestion-aware 64.16.
+## 12. Candidate-pool size
 
-![95% interval width of the family-balanced provisional score against scenarios per family](figures/suite-ci-width.svg)
+Acceptance per generated candidate = admitted, tagged with the family and in
+the band (1,120 development candidates, current recipe mix):
 
-Findings:
+| Band | Acceptance (any family) |
+| --- | ---: |
+| Easy | 29.5% |
+| Moderate | 7.9% |
+| Hard | 8.4% |
+| Stress | 10.0% |
 
-- The width falls about as `1 / sqrt(m)`. The stratified CLT width agrees
-  with the subsampling width from `m = 2` on. With one scenario per family
-  the CLT gives width 0 (no within-family variance can be estimated), which
-  is the PR #32 zero-width case.
-- **Ranking needs pairing, not size.** Static vs fire-aware differ by 4.9
-  points overall, but they are almost never reversed from `m = 2` on, because
-  both are evaluated on the same worlds and the per-world differences are
-  consistent. Fire-aware vs congestion-aware differ by 0.4 points and are
-  reversed in 26% to 45% of draws at every size: they are tied, and the
-  report must say so instead of ranking them.
-- Reports should therefore give paired-difference intervals between models
-  (same worlds, same trials), not only per-model intervals.
+Per family: 3.1% (`crowd_100`) to 17.9% (`narrow_corridor_bottleneck`).
+Rarest cells (current mix): `maze_obstacle_routing`/Moderate (0 hits),
+`crowd_100`/Moderate, `deceptive_nearest_exit`/Stress and
+`maze_obstacle_routing`/Stress (0.36%), the deceptive and maze Hard cells
+(0.45%).
 
-## 12. Generation and freeze protocol
+Binomial requirement per cell at 99.875% (a 95% family-wise guarantee over 40
+cells, Bonferroni): **3,611 candidates** (22.6x the suite) for all cells
+except maze Moderate, which the current mix never produced. The probe's maze
+recipes produce it at 10% (crowded maze) and 20% (stochastic maze), so a
+targeted batch of 59 to 123 candidates fills it. The real selector filled
+30%, 49%, 69% and 88% of the quotas from 140, 280, 560 and 1,120 candidates,
+and never all of them.
 
-1. **Freeze the rules.** Simulator, observation, generator and scoring
-   versions; recipes; tag thresholds; reference panel and band cutpoints;
-   quotas and shortfall rule. Publish a hash of this rule set before any
-   private material exists.
-2. **Freeze submissions** (`freeze_submission`), or use post-submission
-   generation (integrity section 8), so that no model can be tuned on the
-   suite and the suite cannot be tuned on any model.
-3. **Draw private material** from a CSPRNG in the evaluator's private
-   workspace: one generator seed per recipe, one episode seed stream, one
-   selection key. Publish SHA-256 commitments only.
-4. **Generate the candidate pool** (`generate_suite(config, seed,
-   batch_id=...)` per recipe), about 10 times the suite size. Remove duplicate
-   scenario hashes and any scenario equal to a public or earlier-round
-   scenario.
-5. **Measure every candidate** evaluator-side: structural profile, distinct
-   worlds (`select_distinct_seeds`), world IDs, privileged profile, panel
-   scores, band, family tags. Exclude scenarios with no escapable person and
-   Stress candidates whose `M*` exceeds the exit-throughput cap.
-6. **Select** with `select_suite` and the private key. Apply the shortfall
-   rule and check the discrimination floor. Nothing about any submitted model
-   is an input.
-7. **Write the selected scenarios as a plain suite** and schedule it with
-   `build_unique_world_manifest`. Verify that every `world_id` is unique.
-8. **Freeze one environment pack** (PR #32 `freeze_environment_pack`) with a
-   new suite ID, batch ID and version. Publish: suite hash, manifest hash,
-   pack hash, counts per family x band x fire model, rule-set hash. Keep the
-   seeds, key and measurements in the private freeze record.
-9. **Evaluate and audit.** Every model runs the same pack (no model-specific
-   regeneration) with its K. Results are replay-verified. At retirement,
-   reveal the generator seeds, key and pack so that anybody can check the
-   suite with `verify_regeneration`.
+**Decision:** generate **4,000 candidates** (25x the suite; 11% margin over
+the binomial requirement) with the current recipes plus the probe recipes.
+Then, for every cell with a shortfall, generate targeted batches of 200 with
+the best recipe for that cell until the cell is full or 10,000 candidates in
+total are reached. The stopping rule depends only on cell counts, never on a
+model. A cell still short at the cap is reported in the freeze record. The
+binomial model ignores competition between cells (one candidate serves one
+cell), so the empirical fill, not the binomial number, is the reason for the
+top-up rule. Evaluator cost: about 6.4 CPU hours for the panel on 4,000
+candidates (1.79 h for 1,120).
 
-## 13. Leakage and contamination controls
+## 13. API workload (final design)
 
-- **No hidden information to developers.** Developers receive the public
-  suite, the generator, the rules and the commitments. They never receive
-  scenario files, seeds, world IDs, per-world results or bands of the hidden
-  suite before it retires. The observation format contains no seed.
-- **Repository guard.** Private material lives only under paths the leak
-  guard forbids (`hidden/`, `private/`, `heldout-*`, ...). Tests check that
-  the research files of this proposal pass the guard and that the tool
-  contains no seed literal (every development seed is derived from a public
-  label).
-- **Per-world results stay private.** Published results are per family and
-  overall. A per-world table would reveal the hidden worlds' difficulty
-  structure.
-- **API exposure.** A model behind an API sees the hidden worlds in its
-  prompts, and the provider may keep them. Use zero-retention terms where
-  available, record which providers saw which suite, and treat a suite as
-  exposed to a provider after its round.
-- **Contamination test.** Before a round closes, generate a small fresh
-  shadow suite with the same rules and a new key (as GSM1k did for GSM8k).
-  A model whose score on the hidden suite exceeds its score on the shadow
-  suite by more than the paired interval is flagged.
-- **Canary.** The evaluation harness puts a fixed canary string in every
-  hidden-suite prompt and pack archive (not in the scenario format, which
-  stays unchanged), so that copies in crawled data can be found later.
+| Quantity | Value |
+| --- | --- |
+| episodes, verified-deterministic model (K = 1) | 240 |
+| episodes, other model (K = 3) | 720 |
+| expected decision calls (one per simulator step; congestion-aware step counts) | 5,825 (K = 1); 17,475 (K = 3) |
+| worst-case calls (every episode to `max_steps`) | 21,972 (K = 1); 65,916 (K = 3) |
+| step-0 observation size | 1,906 characters mean |
+| approximate input tokens (calls x step-0 characters / 4) | 2.8 M (K = 1); 8.3 M (K = 3) |
+| evaluator CPU (simulator + official scoring) | about 4 minutes per model run |
 
-## 14. Refresh policy
+Observation size grows with population: `crowd_100` worlds dominate the
+token count. Cost does not decide validity; it is shown for planning.
 
-A suite is replaced, never edited. Every replacement gets a **new suite ID,
-batch ID and version** and a public changelog; scores on different suites are
-not pooled and not ranked against each other.
+## 14. Hidden evaluation protocol
+
+In this order. No step uses any model under evaluation, and there is no
+model-specific regeneration.
+
+1. **Freeze versions.** Benchmark, simulator, observation, scoring
+   (`SCORING_VERSION`), generator and generator-config versions; calibration
+   panel 1.0; environment-world version 1.0; analysis tool version. Publish a
+   hash of this rule set.
+2. **Freeze quotas.** 10 families x 16 (2/4/6/4), 4 stochastic x 3 worlds,
+   admission rule, band thresholds, tag thresholds, pool size and top-up rule.
+   Include them in the rule-set hash.
+3. **Choose private seeds.** From a CSPRNG in the evaluator's private
+   workspace: one high-entropy generator seed per recipe, one evaluation-seed
+   stream, one selection key. Publish SHA-256 commitments only.
+4. **Generate the candidate pool** (section 12). Drop duplicate scenario
+   hashes and any scenario equal to a public or earlier-round scenario.
+5. **Run the fixed calibration panel** on every candidate's unique worlds
+   (`distinct_world_seeds`, 3 candidate worlds for stochastic fire): official
+   EMBER Score, `M*`, `M_cap`, capacity ceiling, admission, band, tags.
+6. **Stratify** admitted candidates by family x band x fire model.
+7. **Select deterministically** with `select_suite` and the private key.
+   Report every shortfall; never borrow another band.
+8. **Freeze the unique evaluator worlds** with `build_unique_world_manifest`
+   (1 world per deterministic scenario, 3 per stochastic one). Check that every
+   `environment_world_digest` is unique.
+9. **Create one immutable `EnvironmentPack`** (`freeze_environment_pack`) with
+   a new suite ID, version and batch ID.
+10. **Commit only digests publicly before evaluation:** pack digest, suite
+    hash, manifest hash, rule-set hash, counts per family x band x fire model.
+    Seeds, key, scenarios and measurements stay in the private freeze record.
+11. **Evaluate every model on the same pack**, with its K, replay-verified.
+    Record provider, model ID and version, date and K for every run.
+
+## 15. Leakage and contamination
+
+- **No hidden material to developers.** They get the public suite, the
+  generator, the rules and the commitments. They never get hidden scenarios,
+  seeds, world digests, bands or per-world results of a live suite. The
+  observation contains no seed.
+- **No per-world results while a suite is live.** Publish overall and
+  per-family scores with intervals only.
+- **Provider and model identity** are recorded per run (section 14, step 11).
+  A suite is treated as exposed to every provider that served it.
+- **No hidden suite in release artifacts.** Private material lives only under
+  leak-guarded paths; `tools/check_public_assets.py` checks the built
+  distribution; tests check that no study cache or generated suite is
+  committed and that the tool and `worlds.py` contain no seed literal.
+- **Reveal only after retirement:** generator seeds, selection key, pack and
+  freeze record, so that anybody can check the suite with
+  `verify_regeneration`.
+- **Canary policy.** A canary string in prompts or archives can show, after
+  the fact, that a **copy of the material** appeared somewhere it was searched
+  for (a crawl, a dataset, a model output that reproduces it verbatim). It
+  cannot show that a model was trained on the suite, and its absence proves
+  nothing. EMBER observations are grid states, which a model can learn from
+  without reproducing any string. This design therefore does **not** use a
+  canary as a contamination test. A harness may add one to pack archives for
+  provenance tracing only, and must describe it that way.
+- **Contamination check (when required).** Before a round closes, if a model
+  is suspected (for example a large jump between rounds), generate a fresh
+  check suite with the same frozen rules, a new seed and a new key, and run
+  that model and the calibration panel on it. A model whose paired score
+  (against the panel) on the live suite exceeds its paired score on the check
+  suite by more than the paired 95% interval is flagged for review. This is a
+  statistical check of overfitting to the live suite, not proof of training
+  contamination.
+
+## 16. Refresh and version policy
+
+A live suite is replaced, never edited, and never replaced silently. Every
+replacement has a **new suite ID and version, a new pack digest and a
+published reason**. Scores on different suites are not pooled or ranked
+together. The scoring version is separate from the suite version: a suite
+records the scoring version it was calibrated with, and a scoring change does
+not rename a suite by itself.
 
 | Trigger | Action |
 | --- | --- |
-| Scheduled | New suite every evaluation round (recommended at least every 6 months). Retire and reveal the previous one. |
-| Leak or exposure | Retire immediately. Re-run all affected models on a new suite. |
-| Saturation | If the best model scores >= 90 on the Hard band or on the overall score, re-calibrate the bands (stronger reference panel) under a new rule version. |
-| Simulator, observation or generator revision | New suite, because world IDs change. |
-| Defect in a world (for example a wrong `M*`) | Retire the suite, publish the defect, regenerate. Do not drop worlds from a live suite. |
+| Leak of hidden material | Retire at once; new suite; re-run affected models |
+| Contamination flag confirmed (section 15) | Retire; new suite |
+| Saturation: the best model scores >= 90 overall or on Stress | New calibration-panel version with a stronger reference; new suite |
+| Generator bug that affects selected worlds | Retire; fix; new generator version; new suite |
+| Scoring or benchmark revision (`SCORING_VERSION` or rule change) | Re-calibrate the bands on the new score; new suite |
+| Simulator or observation revision | New suite (world digests change) |
+| Invalid hidden world (for example a wrong `M*` or a capacity artifact found later) | Retire the suite and publish the defect; never drop a world from a live suite |
+| Scheduled | New suite each evaluation round (at least every 6 months); retire and reveal the previous one |
 
-To compare rounds, run the public reference panel on every suite and report
-each model relative to the panel (a linking set), not raw scores across
-suites.
+To compare rounds, run the calibration panel on every suite and report models
+relative to it (a linking set), not raw scores across suites.
 
-## 15. API workload
+## 17. Final V1 proposal
 
-Per model, for the recommended suite (384 unique worlds):
-
-| K | episodes | calls (competent, mean 20.6 steps) | calls (upper bound, mean max_steps 82.8) | input characters per call (step 0, median / max) |
-| ---: | ---: | ---: | ---: | --- |
-| 1 | 384 | about 7,900 | about 31,800 | 1,406 / 7,114 |
-| 3 | 1,152 | about 23,700 | about 95,400 | 1,406 / 7,114 |
-| 5 | 1,920 | about 39,600 | about 159,000 | 1,406 / 7,114 |
-
-At about 4 characters per token, a typical observation is about 350 tokens
-(maximum about 1,800), before the system prompt and any history the harness
-sends. The evaluator side is small: a median of 0.03 s per baseline episode
-and about 4 KB per scenario file.
-
-## 16. Open issues for PR #32 and the code
-
-1. `fire_world_digest` must not include the seed when it is used to detect
-   duplicate worlds (section 3).
-2. The manifest builder schedules a cross product. Add a unique-world mode or
-   use `build_unique_world_manifest` (section 3).
-3. A one-scenario-per-family suite gives zero-width intervals; the report must
-   say "not estimable", not "0".
-4. `describe_families` names only 3 primary families. Either extend it with
-   the measured tags of section 4 (generator change, new generator version) or
-   keep family assignment evaluator-side as proposed here.
-5. `M*` relaxes congestion. A joint bound (max-flow over time) would make
-   Stress bands more meaningful. No simulator change is needed.
-
-## 17. Final proposal
-
-| Item | Proposal |
+| Item | Value |
 | --- | --- |
-| Families | The 12 V1 families as primary strata (section 4); stochastic fire is an orthogonal stratum |
-| Scenarios per family | 20 |
-| Difficulty per family | Easy 2, Moderate 4, Hard 8, Stress 6 (10/20/40/30%), from the panel-gap bands with frozen cutpoints |
-| Deterministic scenarios | 14 per family, 168 in total, 1 world each |
-| Stochastic scenarios | 6 per family, 72 in total |
-| Distinct worlds per stochastic scenario | `S = 3` (216 worlds) |
-| Total unique worlds | **384** (240 scenarios) |
-| Model trials | K = 1 for verified-deterministic models; K = 3 otherwise; K = 5 if the pilot trial-variance ratio is above 0.5 |
-| Episodes per model | 384 (K = 1), 1,152 (K = 3), 1,920 (K = 5) |
-| Minimum acceptable size | 12 scenarios per family (144 scenarios, about 230 worlds); below that, no family x band coverage and a mean width above 9.5 |
-| Expected 95% interval width | about 8 points mean, about 11 points worst case, for one model's overall provisional score (half-width about +-4 to +-5.5); paired differences between models are much narrower |
-| Candidate pool | about 10 times the suite (about 2,500 candidates), with dedicated recipes for `crowd_100`, `split_flow_across_exits` and `route_invalidation_replanning` |
-| Protocol | Section 12 (rules frozen and committed, private seeds and key, measured selection, unique-world manifest, one frozen pack, replay-verified evaluation, reveal at retirement) |
-| Refresh | Section 14 (new suite per round, at least every 6 months; immediate refresh on leak, revision or defect; never a silent replacement) |
-
-All numbers that depend on the score must be recomputed with the final EMBER
-Score after PR #32 merges. The structural numbers (unique worlds, families,
-feasibility) do not depend on the score.
+| Primary families | **10**: `single_exit_low_density` (basic evacuation planning), `single_exit_high_density` (queue management at one exit), `narrow_corridor_bottleneck` (sequencing through a width-1 cut), `split_flow_across_exits` (load balancing across exits), `crowd_100` (scale), `maze_obstacle_routing` (path finding with detours), `deceptive_nearest_exit` (exit choice by true route length), `threatened_nearest_exit` (fire anticipation), `multiple_ignitions` (several fire fronts), `route_invalidation_replanning` (replanning). `central_ignition` and `multiple_exits_unequal_distance` are secondary tags. |
+| Scenarios per family | 16 |
+| Difficulty per family | Easy 2, Moderate 4, Hard 6, Stress 4 |
+| Deterministic / stochastic per family | 12 / 4 |
+| Unique fire trajectories per stochastic scenario | 3 |
+| Total scenarios | 160 |
+| Total unique worlds | **240** (120 deterministic, 120 stochastic) |
+| Model trials | K = 1 verified-deterministic; K = 3 otherwise |
+| Model episodes | 240 (K = 1); 720 (K = 3) |
+| Expected 95% CI width | about 7.9 points within a suite (about +-3.9); paired width between models at most about 5.8 points |
+| Candidate pool | 4,000 candidates, then targeted top-up batches of 200 per short cell, cap 10,000 |
+| API calls per model | about 5,800 (K = 1) or 17,500 (K = 3); worst case 22,000 or 66,000 |
+| Calibration panel | version 1.0: nearest-exit-greedy, static-shortest-path, fire-aware-shortest-path, congestion-aware; random-legal as floor; privileged reference as bound only |
+| Admission and bands | difficulty-calibration.md sections 4 to 6 |
+| World identity | `environment_world_digest` (version 1.0); schedule `build_unique_world_manifest` |
+| Generation and freeze | Section 14 (11 ordered steps) |
+| Refresh | Section 16 |
+| Prerequisite | Generator work in section 6 for a library-supported pipeline; until then evaluator-side tagging and rejection sampling |

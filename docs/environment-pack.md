@@ -66,7 +66,22 @@ verify_environment_pack("packs/2026-q4", expected_digest=digest)   # returns the
   digest or raises.
 - `fire_world_digest(scenario, seed)` is the SHA-256 of the canonical JSON of
   the scenario hash, the seed and the sorted burning cells of every snapshot
-  `0..H`.
+  `0..H`. Because it includes the seed, two seeds always give two digests,
+  also when their fire trajectories are equal.
+- `environment_world_digest(scenario, seed)` (module `emberbench.worlds`) is
+  the seed-free world identity: the SHA-256 of the canonical JSON of the
+  environment-world version, the simulator and observation versions, the
+  scenario hash and the sorted burning cells of every snapshot `0..H`. Two
+  episodes have the same digest exactly when they give a policy the same
+  environment. A deterministic-fire scenario is one world for every seed.
+- `build_unique_world_manifest(suite, candidate_seeds, *, stochastic_worlds)`
+  schedules each deterministic-fire scenario once (first candidate seed) and
+  each stochastic-fire scenario with the first `stochastic_worlds` candidate
+  seeds that give pairwise-different environment worlds. It raises
+  `EvaluationError` when the candidates have too few different worlds. The
+  result is a normal `EvaluationManifest`, so it freezes into a pack like any
+  other schedule. `build_evaluation_manifest` is unchanged and still schedules
+  the full scenario x seed product.
 
 The pack ID is 1 to 128 ASCII letters, digits, `-`, `_` or `.`.
 
