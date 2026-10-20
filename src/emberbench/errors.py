@@ -41,6 +41,14 @@ class StatisticsInputError(EvaluationError):
     """An evaluation result cannot be summarized: it fails authentication against its suite."""
 
 
+class ScoringInputError(EvaluationError):
+    """An evaluation result cannot be scored: it fails authentication, or a failure declaration is invalid."""
+
+
+class EnvironmentPackError(EmberBenchError):
+    """A frozen environment pack is malformed, incomplete, tampered with or of another benchmark version."""
+
+
 class GenerationError(EmberBenchError):
     """A generator config is invalid or unsatisfiable, or a frozen generated suite does not verify."""
 
