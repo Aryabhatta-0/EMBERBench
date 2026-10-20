@@ -353,7 +353,7 @@ def test_fair_agents_receive_only_the_observation(tmp_path: Path) -> None:
 ALLOWED_PACK_IMPORTS = {"emberbench"}
 PRIVILEGED_MODULES = ("emberbench.oracle", "emberbench.simulator", "emberbench.scenario", "emberbench.rng",
                       "emberbench.fire", "emberbench.state", "emberbench.evaluation", "emberbench.generator",
-                      "emberbench.scoring", "analyze_suite_design")
+                      "emberbench.scoring", "emberbench.calibration", "analyze_suite_design")
 
 
 def test_pack_agents_use_only_the_public_package_namespace() -> None:

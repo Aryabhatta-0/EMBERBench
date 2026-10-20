@@ -16,7 +16,7 @@ statistic or score of its own:
   environment pack, ``compare_scores`` and ``leaderboard_order``;
 - diagnostics (never the headline): ``aggregate_result``;
 - separate privileged references: ``emberbench.oracle.privileged_manifest_bounds``
-  and the capacity-aware bound ``capacity_savable`` of ``tools/analyze_suite_design.py``.
+  and the capacity-aware bound ``emberbench.calibration.capacity_savable``.
 
 Rules:
 
@@ -60,6 +60,7 @@ from emberbench import (
     run_evaluation,
     score_result,
 )
+from emberbench.calibration import capacity_savable  # privileged: evaluator-side references only
 from emberbench.evaluation import resolve_scenario
 from emberbench.oracle import privileged_manifest_bounds  # privileged: evaluator-side references only
 
@@ -69,7 +70,6 @@ import pack_protocol
 import pack_report
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-TOOLS_DIR = REPO_ROOT / "tools"
 PACK_DIR = "environment-pack"
 SOURCE_SUITE_DIR = "source-suite"
 
@@ -222,10 +222,6 @@ def nominal_schedule(protocol: pack_protocol.Protocol, suite: Suite) -> dict[str
 
 def privileged_references(suite: Suite, manifest: EvaluationManifest, pack: EnvironmentPack) -> dict[str, Any]:
     """M*, the capacity-aware bound M_cap and the single-person time bound per world. Never a model row."""
-    if str(TOOLS_DIR) not in sys.path:
-        sys.path.insert(0, str(TOOLS_DIR))
-    from analyze_suite_design import capacity_savable  # privileged evaluator-side analysis
-
     worlds = []
     for spec, bound in zip(manifest.episodes, privileged_manifest_bounds(suite, manifest), strict=True):
         if (bound.scenario_id, bound.seed) != (spec.scenario_id, spec.seed):
@@ -253,7 +249,7 @@ def privileged_references(suite: Suite, manifest: EvaluationManifest, pack: Envi
         "note": (
             "Privileged relaxed references. They read the scenario and the evaluator seed (the whole future fire). "
             "M* is the official savable count (people who can escape alone); M_cap <= M* adds exit and cut capacity "
-            "(tools/analyze_suite_design.py). They are bounds, not models, not baselines and not leaderboard rows."
+            "(emberbench.calibration). They are bounds, not models, not baselines and not leaderboard rows."
         ),
         "evaluation_manifest_hash": manifest.manifest_hash(),
         "environment_pack_digest": pack.digest,

@@ -391,7 +391,7 @@ def render_report(
         "",
         "These references read the scenario and the evaluator seed (the whole future fire). They are bounds, not "
         "fair methods, and they never appear in a ranking. `M*` is the official savable count (people who can escape "
-        "alone); `M_cap <= M*` adds exit and cut capacity (`capacity_savable`, tools/analyze_suite_design.py).",
+        "alone); `M_cap <= M*` adds exit and cut capacity (`emberbench.calibration.capacity_savable`).",
         "",
         f"Over the {n_worlds} worlds: {population} people, `M*` = {m_star}, `M_cap` = {m_cap}"
         + (" (no capacity gap on any world)." if m_cap == m_star else "."),

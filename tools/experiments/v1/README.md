@@ -82,11 +82,11 @@ pinned artifact holds them, because they are not reproducible.
 |---|---|
 | unique worlds | 19 |
 | episodes per model | 19 (8 models, 152 episodes) |
-| total runtime | 2 min 43 s to 3 min 17 s (two runs) |
-| episodes (run and replay authentication) | 73 s to 89 s |
+| total runtime | 2 min 7 s to 3 min 17 s (three runs) |
+| episodes (run and replay authentication) | 57 s to 89 s |
 | official scoring (8 score reports, 19 paired comparisons) | 38 s to 85 s |
-| diagnostics (`aggregate_result`) | 15 s to 22 s |
-| privileged references | 6 s |
+| diagnostics (`aggregate_result`) | 13 s to 22 s |
+| privileged references | 2.5 s to 6 s |
 | artifact size | 14.1 MB (13 MB of it `results/`) |
 
 The earlier pack ran 100 episodes per model (every scenario under 10 seeds)
