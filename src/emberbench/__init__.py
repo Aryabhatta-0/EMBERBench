@@ -15,6 +15,7 @@ from .errors import (  # noqa: E402
     MetricsInputError,
     ModelOutputError,
     ObservationFormatError,
+    ReplayAuditError,
     ReplayMismatchError,
     ScenarioValidationError,
     SimulationError,
@@ -44,6 +45,22 @@ from .simulator import Simulator, run_episode  # noqa: E402
 from .state import PersonState, PersonStatus, SimState, TerminationReason, render  # noqa: E402
 from .metrics import METRICS_VERSION, EpisodeMetrics, compute_episode_metrics, validate_run_record  # noqa: E402
 from .crowd import CROWD_DIAGNOSTICS_VERSION, CrowdDiagnostics, compute_crowd_diagnostics  # noqa: E402
+from .audit import (  # noqa: E402
+    REPLAY_AUDIT_VERSION,
+    PersonPath,
+    ReplayAudit,
+    TimelineFrame,
+    build_replay_audit,
+    verify_replay_audit,
+)
+from .visualization import (  # noqa: E402
+    ANIMATION_FORMAT_VERSION,
+    animation_json,
+    build_animation,
+    export_animation,
+    render_frame,
+    verify_animation,
+)
 from .suite import ScenarioFamily, Suite, SuiteEntry, SuiteManifest, load_suite  # noqa: E402
 from .evaluation import (  # noqa: E402
     EVALUATION_MANIFEST_VERSION,
@@ -172,6 +189,7 @@ from .scoring import (  # noqa: E402
 __all__ = [
     "ACTION_SCHEMA_VERSION",
     "ALLOWED_ACTIONS",
+    "ANIMATION_FORMAT_VERSION",
     "BENCHMARK_REVISION",
     "ComparisonOutcome",
     "CROWD_DIAGNOSTICS_VERSION",
@@ -195,6 +213,7 @@ __all__ = [
     "OBSERVATION_VERSION",
     "OFFICIAL_CONSTANTS",
     "PackEpisode",
+    "REPLAY_AUDIT_VERSION",
     "SCHEMA_VERSION",
     "ScoreComparison",
     "ScoreReport",
@@ -258,10 +277,13 @@ __all__ = [
     "PolicyAgent",
     "PolicyFactory",
     "Pos",
+    "PersonPath",
     "ProtocolMode",
     "ProvenanceRecord",
     "ProvenanceVerification",
     "ReplayMismatchError",
+    "ReplayAudit",
+    "ReplayAuditError",
     "ReportsExecution",
     "RulesView",
     "RunRecord",
@@ -284,13 +306,17 @@ __all__ = [
     "SuiteValidationError",
     "TerminationConfig",
     "TerminationReason",
+    "TimelineFrame",
     "WorkspaceStage",
     "agent_policy",
     "agent_policy_factory",
     "aggregate_result",
+    "animation_json",
     "benchmark_versions",
     "build_evaluation_provenance",
     "build_evaluation_manifest",
+    "build_animation",
+    "build_replay_audit",
     "baseline_factory",
     "compare_results",
     "compare_scores",
@@ -306,6 +332,7 @@ __all__ = [
     "get_baseline",
     "deserialize_actions",
     "deserialize_observation",
+    "export_animation",
     "leaderboard_order",
     "load_environment_pack",
     "load_evaluation_manifest",
@@ -319,6 +346,7 @@ __all__ = [
     "pair_results",
     "post_submission_generator_seed",
     "render",
+    "render_frame",
     "replay",
     "run_episode",
     "run_evaluation",
@@ -339,4 +367,6 @@ __all__ = [
     "verify_regeneration",
     "verify_evaluation_provenance",
     "verify_evaluation_workspace",
+    "verify_animation",
+    "verify_replay_audit",
 ]
