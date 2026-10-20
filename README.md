@@ -13,8 +13,9 @@ well the model's decisions get people out through the exits before the fire reac
 > seed schedules. Wind, delayed
 > ignitions, burn-out, smoke and material flammability are deferred to a
 > future benchmark version. Model integrations, LLM APIs, a UI, procedural map generation,
-> leaderboards, a composite score, cross-seed aggregation, win rates and
-> confidence intervals, and human-behaviour models are out of scope for now.
+> cross-seed aggregation, win rates and confidence intervals, and
+> human-behaviour models are out of scope for now. Phase 10 adds the
+> official EMBER Score and frozen environment packs (see below).
 
 ## What EMBERBench measures
 
@@ -29,7 +30,7 @@ Per-episode raw metrics (evacuated, casualties, stranded, timing, congestion,
 path efficiency, a fire-exposure proxy, exit use and replanning proxies) are
 computed from the `Scenario` and the `RunRecord` with `compute_episode_metrics`.
 It scores only records that pass structural validation and a full simulator
-replay (`verify_record`). See [docs/metrics.md](docs/metrics.md). There is no single score: raw metrics
+replay (`verify_record`). See [docs/metrics.md](docs/metrics.md). The metrics have no single score: raw metrics
 are canonical, and safety always comes before speed.
 
 Crowd coordination diagnostics come from `compute_crowd_diagnostics` on the
@@ -143,6 +144,37 @@ Post-submission generation binds the generator seed to a frozen submission
 roster. `emberbench.leakguard` keeps held-out material out of the repository,
 the wheel and the sdist. Hashes prove content identity, not authorship. See
 [docs/integrity.md](docs/integrity.md).
+
+## The EMBER Score
+
+`score_results(trials, pack)` gives one failure-sensitive number in
+`[0, 100]`: **benchmark-performance points under EMBER scoring version 1.0**,
+never a percentage of people evacuated. It is
+`100 * Safety * Quality^beta * Severity`. Safety multiplies evacuation, a
+casualty factor and a stranding factor over losses attributed person by
+person (a loss is avoidable when that person could have escaped), and is 0
+when half of the savable people are lost. Quality is a weighted geometric
+mean of time, hazard, path and replanning, each relative to a privileged
+optimum of the same episode; time is relative to a capacity bound that
+counts unavoidable queues at exits and doors. Every input is a function of
+the replayed state trajectory, so identical trajectories score identically.
+Congestion (block rate, contested cells, hotspots, exit throughput) is
+reported in every score report but is never a score input: a bottleneck is
+charged by the delay, exposure and losses it causes. An avoidable casualty
+caps an episode below 60; a severe delay (including a severe realized
+bottleneck), exposure, path or replanning failure caps it below 80. Missing, invalid,
+failed and timed-out episodes score 0 and are counted. Episodes are averaged
+by scenario, then by primary family; the report gives a stratified
+bootstrap 95% interval, every component, per-family scores and lower-tail
+statistics. `compare_scores` gives a paired outcome (`a_better`,
+`b_better`, `inconclusive` or `exact_tie`), and `leaderboard_order` breaks
+ties by safety. Every model is scored on the same frozen
+`EnvironmentPack` (`freeze_environment_pack`, `verify_environment_pack`),
+whose digest pins the scenario bytes, the seed schedule, the versions and
+the fire world of every episode. See [docs/scoring.md](docs/scoring.md),
+[docs/environment-pack.md](docs/environment-pack.md) and the research and
+sensitivity study in
+[docs/benchmark-methodology.md](docs/benchmark-methodology.md).
 
 ## V1 scope
 
