@@ -35,5 +35,5 @@ addopts = "-ra"
 
 [tool.mypy]
 strict = true
-files = ["src", "tests"]
+files = ["src", "tests", "tools/check_release.py", "tools/check_dev_constraints.py", "tools/refresh_dev_constraints.py", "tools/check_public_assets.py"]
 mypy_path = ["src", "tests", "tools"]

@@ -202,6 +202,15 @@ def test_version_json_lists_every_contract_version() -> None:
         "environment_pack_version": emberbench.ENVIRONMENT_PACK_VERSION,
         "replay_audit_version": emberbench.REPLAY_AUDIT_VERSION,
         "animation_format_version": emberbench.ANIMATION_FORMAT_VERSION,
+        "environment_world_version": emberbench.ENVIRONMENT_WORLD_VERSION,
+        "family_rules_version": emberbench.FAMILY_RULES_VERSION,
+        "calibration_panel_version": emberbench.CALIBRATION_PANEL_VERSION,
+        "difficulty_rules_version": emberbench.DIFFICULTY_RULES_VERSION,
+        "admission_rules_version": emberbench.ADMISSION_RULES_VERSION,
+        "composition_version": emberbench.COMPOSITION_VERSION,
+        "selection_rules_version": emberbench.SELECTION_RULES_VERSION,
+        "recipe_catalog_version": emberbench.RECIPE_CATALOG_VERSION,
+        "suite_freeze_record_version": emberbench.SUITE_FREEZE_RECORD_VERSION,
         "benchmark_revision": emberbench.BENCHMARK_REVISION,
     }
 

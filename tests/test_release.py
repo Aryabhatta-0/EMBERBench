@@ -5,10 +5,12 @@ See docs/versioning.md and docs/release-checklist.md.
 
 import contextlib
 import hashlib
+import importlib
 import importlib.util
 import io
 import json
 import os
+import pkgutil
 import re
 import shutil
 import subprocess
@@ -24,6 +26,7 @@ import emberbench
 from emberbench import (
     BENCHMARK_REVISION,
     RunRecord,
+    benchmark_versions,
     build_evaluation_manifest,
     load_evaluation_manifest,
     load_evaluation_result,
@@ -38,11 +41,12 @@ from emberbench.cli import main as cli_main
 from emberbench.cli import version_info
 from emberbench.generator import GeneratorConfig, freeze_generated_suite, generate_suite, load_generated_suite
 from conftest import greedy_exit_policy
-from release_digests import REGISTRY_PATH, load_registry
+from release_digests import BYTE_PINNED, PUBLIC_SUITE_ENV, REGISTRY_ONLY, REGISTRY_PATH, SPEC, load_registry, registry_drift, registry_text
 from test_baselines import GOLDEN_CONFIG_DIGESTS, GOLDEN_RESULT_DIGESTS
 from test_determinism import GOLDEN_DIGESTS
 from test_evaluation import PUBLIC_DEV_MANIFEST_HASH, subset
 from test_generator import BASE_CONFIG, BATCH, GOLDEN_CONFIG_HASH, GOLDEN_GENERATION_HASH, GOLDEN_SUITE_HASH, SEED
+from test_replay_audit import GOLDEN_DIGESTS as GOLDEN_REPLAY_DIGESTS
 from test_statistics import GOLDEN_STATISTICS_DIGESTS
 from test_stochastic_hazard import GOLDEN as GOLDEN_FIRE_TRACES
 from test_suite import PINNED_HASHES, REPO_ROOT, SUITE_DIR, SUITE_HASH
@@ -53,8 +57,6 @@ PYPROJECT = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf
 REGISTRY = load_registry()
 SPARSE = "v1-pub-01-single-exit-sparse"
 
-# Version constants that are not a separate line of `emberbench version`, with the reason.
-NOT_REPORTED = {"GENERATED_SUITE_VERSION": "moves with GENERATOR_VERSION; written into every generated suite manifest"}
 
 
 def _tool(name: str) -> ModuleType:
@@ -65,13 +67,27 @@ def _tool(name: str) -> ModuleType:
     return module
 
 
+CHECK_RELEASE = _tool("check_release")
+
+
 def _version_constants() -> dict[str, str]:
+    """Every ``*_VERSION`` string constant and ``BENCHMARK_REVISION`` of every emberbench module, by import."""
     found: dict[str, str] = {}
-    for path in sorted((REPO_ROOT / "src" / "emberbench").glob("*.py")):
-        for name, value in re.findall(r'^([A-Z][A-Z_]*_VERSION|BENCHMARK_REVISION) = "([^"]+)"$', path.read_text(encoding="utf-8"), re.M):
-            assert name not in found, f"{name} is defined twice"
-            found[name] = value
+    for info in pkgutil.iter_modules(emberbench.__path__):
+        if info.name == "__main__":
+            continue
+        module = importlib.import_module(f"emberbench.{info.name}")
+        for name, value in vars(module).items():
+            if isinstance(value, str) and (name == "BENCHMARK_REVISION" or re.fullmatch(r"[A-Z][A-Z0-9_]*_VERSION", name)):
+                assert found.setdefault(name, value) == value, f"{name} has two values"
+    for name, value in vars(emberbench).items():
+        if isinstance(value, str) and name in found:
+            assert value == found[name], name
     return found
+
+
+def _reported() -> dict[str, str]:
+    return {key: value for key, value in version_info().items() if key != "package_version"}
 
 
 def _crlf_copy(source: Path, destination: Path) -> Path:
@@ -102,49 +118,116 @@ def test_package_version_has_one_source() -> None:
 
 def test_version_output_keeps_package_version_and_benchmark_revision_apart() -> None:
     info = version_info()
-    assert info["package_version"] == source_version
-    assert info["benchmark_revision"] == BENCHMARK_REVISION == "1"
+    assert info["package_version"] == source_version == "0.1.0"  # no release-tag decision yet (docs/versioning.md, section 1)
+    assert info["benchmark_revision"] == BENCHMARK_REVISION == "2"
     assert list(info)[0] == "package_version"
 
 
-def test_every_component_version_is_reported_and_documented() -> None:
+def test_version_output_contains_every_benchmark_version_by_construction() -> None:
+    """Provenance and `emberbench version` cannot disagree: the CLI builds its benchmark part from benchmark_versions()."""
+    info = version_info()
+    for key, value in benchmark_versions().items():
+        assert info[CHECK_RELEASE.BENCHMARK_VERSION_KEYS.get(key, f"{key}_version")] == value, key
+    assert len(benchmark_versions()) == 24
+    tooling = {k for k in info if k != "package_version"} - {CHECK_RELEASE.BENCHMARK_VERSION_KEYS.get(k, f"{k}_version") for k in benchmark_versions()}
+    assert tooling == {"cli_version", "baselines_version", "integrity_protocol_version", "replay_audit_version", "animation_format_version"}
+
+
+def test_every_version_constant_has_an_owner_and_a_reported_key() -> None:
+    """A new *_VERSION constant in any module fails here until it is reported (or listed as a suite label)."""
     constants = _version_constants()
-    assert "SIMULATOR_VERSION" in constants and "BENCHMARK_REVISION" in constants
-    reported = version_info()
-    policy = (DOCS / "versioning.md").read_text(encoding="utf-8")
+    assert "SIMULATOR_VERSION" in constants and constants["BENCHMARK_REVISION"] == BENCHMARK_REVISION
+    reported = _reported()
     for name, value in constants.items():
-        if name not in NOT_REPORTED:
-            assert reported.get(name.lower()) == value, f"{name} is missing from `emberbench version`"
-        assert f"| `{name}` | `{value}` |" in policy, f"{name} = {value!r} is missing from docs/versioning.md"
-    assert set(NOT_REPORTED) <= set(constants)
+        if name in CHECK_RELEASE.UNREPORTED_LABELS:
+            assert name.lower() not in reported, f"{name} is reported; remove it from UNREPORTED_LABELS"
+        else:
+            assert reported.get(name.lower()) == value, f"{name} = {value!r} is missing from `emberbench version`"
+    # Every reported key and every benchmark_versions() entry has an owning constant with the same value.
+    assert {key.upper() for key in reported} <= set(constants)
+    for key, value in benchmark_versions().items():
+        constant = CHECK_RELEASE.BENCHMARK_VERSION_KEYS.get(key, f"{key}_version").upper()
+        assert constants.get(constant) == value, f"benchmark_versions()[{key!r}] has no owning constant {constant}"
+    assert set(CHECK_RELEASE.UNREPORTED_LABELS) <= set(constants)
+
+
+def test_version_contracts_match_the_docs_changelog_checklist_and_provenance() -> None:
+    """The same check that tools/check_release.py runs against the installed wheel, here against the source."""
+    assert CHECK_RELEASE.version_contract_problems(version_info(), benchmark_versions()) == []
+    constants = _version_constants()
+    table = CHECK_RELEASE.versioning_table()
+    for name, value in constants.items():
+        assert table.get(name, ("", ""))[0] == value, f"{name} = {value!r} is missing from docs/versioning.md section 3"
+    assert set(table) == set(constants)
+    checklist = (DOCS / "release-checklist.md").read_text(encoding="utf-8")
+    changelog = (DOCS / "changelog.md").read_text(encoding="utf-8")
+    for name in CHECK_RELEASE.UNREPORTED_LABELS:
+        assert f"`{name}`" in checklist and f"`{name}` `{constants[name]}`" in changelog, name
+
+
+def test_version_contract_check_reports_each_kind_of_drift() -> None:
+    info = version_info()
+    provenance = benchmark_versions()
+    for changed, expected in (
+        ({**info, "scoring_version": "9.9"}, "docs/versioning.md section 3: row for SCORING_VERSION"),
+        ({**info, "brand_new_version": "1.0"}, "the version review does not name `BRAND_NEW_VERSION`"),
+        ({**info, "package_version": "9.9.9"}, "package_version is '9.9.9'"),
+    ):
+        assert any(expected in p for p in CHECK_RELEASE.version_contract_problems(changed, provenance)), expected
+    missing = {k: v for k, v in info.items() if k != "environment_world_version"}
+    assert any("is not reported by `emberbench version`" in p for p in CHECK_RELEASE.version_contract_problems(missing, provenance))
+
+
+def test_no_doc_states_a_stale_benchmark_revision(tmp_path: Path) -> None:
+    assert CHECK_RELEASE.stale_revision_problems(BENCHMARK_REVISION) == []
+    assert CHECK_RELEASE.stale_revision_problems("3"), "the stale-revision scan finds nothing"
 
 
 def test_changelog_records_the_v1_milestones() -> None:
     changelog = (DOCS / "changelog.md").read_text(encoding="utf-8")
     assert f"package `{source_version}`, benchmark revision `{BENCHMARK_REVISION}`" in changelog
-    for pr in (2, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28):
-        assert f"PR #{pr})" in changelog or f"PR #{pr}," in changelog, pr
-    for name, value in _version_constants().items():
-        if name != "BENCHMARK_REVISION":
-            assert f"`{name}` `{value}`" in changelog, name
+    for pr in (2, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34):
+        assert f"PR #{pr})" in changelog or f"PR #{pr}," in changelog or f"PR #{pr}):" in changelog, pr
+    for milestone in ("EMBER Score", "EnvironmentPack", "unique-world", "Generator 1.1", "10-family", "Benchmark revision 2", "Coordination is not a score component"):
+        assert milestone in changelog, milestone
 
 
 def test_release_checklist_covers_the_release_gates() -> None:
-    checklist = (DOCS / "release-checklist.md").read_text(encoding="utf-8").lower()
-    for gate in (
-        "clean `main`",
-        "ci",
-        "component",
-        "digest registry",
-        "0 violation",
-        "check_release.py",
-        "changelog",
-        "held-out",
-        "tag",
-        "rollback",
-        "benchmark_revision",
+    checklist = (DOCS / "release-checklist.md").read_text(encoding="utf-8")
+    for command in (
+        "git status --porcelain",
+        "python -m pip install -c tools/dev-constraints.txt -e \".[dev]\"",
+        "python tools/check_dev_constraints.py --installed",
+        "python -m mypy --strict",
+        "python -m pytest -q",
+        "EMBERBENCH_RELEASE_SMOKE=1 python -m pytest -q tests/test_release.py",
+        "EMBERBENCH_FULL_PACK=1 python -m pytest -q tests/test_evaluation_pack.py",
+        "python tests/release_digests.py --check",
+        "python tools/check_release.py --contracts-only",
+        "python tools/check_public_assets.py --untracked",
+        "python tools/check_release.py --dist dist --wheelhouse wheelhouse --require-license --require-clean",
+        "SOURCE_DATE_EPOCH=",
+        "emberbench\" version --json",
+        "-m emberbench version --json",
+        "git tag -a v<version>",
+        "git diff <previous-tag> -- tests/fixtures/release/digest_registry.json",
     ):
-        assert gate in checklist, gate
+        assert command in checklist, command
+    lowered = checklist.lower()
+    for gate in ("license", "0 violations", "changelog", "held-out", "rollback", "reproducibility boundary", "byte-identical wheels"):
+        assert gate in lowered, gate
+    assert "run tests" not in lowered
+
+
+def test_license_is_an_explicit_release_blocker(built_distributions: tuple[Path, Path]) -> None:
+    """No license is chosen for the maintainers: --require-license fails until one is configured."""
+    wheel, sdist = built_distributions
+    problems = CHECK_RELEASE.check_metadata(wheel, sdist, True)
+    if CHECK_RELEASE.license_configured():
+        assert problems == []
+    else:
+        assert not any(REPO_ROOT.glob("LICENSE*")) and "license" not in PYPROJECT["project"]
+        assert len(problems) == 1 and "LICENSE file" in problems[0] and "SPDX" in problems[0], problems
 
 
 # --------------------------------------------------------------------------- development tool constraints
@@ -196,9 +279,12 @@ def test_ci_installs_only_pinned_tools_and_keeps_the_release_gates() -> None:
         "python -m pytest -q",
         "python -m build --no-isolation --outdir dist .",
         "python tools/check_public_assets.py --dist dist",
-        "python tools/check_release.py --dist dist --wheelhouse wheelhouse",
+        "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) python tools/check_release.py --dist dist --wheelhouse wheelhouse",
+        "python -m pip install build setuptools packaging pytest",
     ):
         assert f"- run: {command}" in workflow, command
+    # The expensive release checks run in one job, not in every matrix cell.
+    assert workflow.count("tools/check_release.py") == 1 and workflow.index("tools/check_release.py") > workflow.index("  packaging:")
     # Every pip install in CI resolves through the constraints, never by a bare "pip install -U".
     assert "-U" not in workflow and "--upgrade" not in workflow
 
@@ -206,19 +292,29 @@ def test_ci_installs_only_pinned_tools_and_keeps_the_release_gates() -> None:
 # --------------------------------------------------------------------------- regression digest registry
 
 
-def test_registry_is_compact_and_well_formed() -> None:
+def test_registry_is_compact_well_formed_and_generated_from_spec() -> None:
     raw = REGISTRY_PATH.read_bytes()
-    assert len(raw) < 16_000 and b"\r" not in raw
-    assert list(REGISTRY) == sorted(REGISTRY) and 10 <= len(REGISTRY) <= 40
+    assert len(raw) < 24_000 and b"\r" not in raw
+    assert list(REGISTRY) == sorted(REGISTRY) == sorted(SPEC) and 20 <= len(REGISTRY) <= 40
     for name, entry in REGISTRY.items():
         assert set(entry) == {"digest", "owner", "mirrors", "what"}, name
         assert re.fullmatch(r"[0-9a-f]{64}", entry["digest"]), name
         assert entry["owner"] and entry["what"], name
+    # The file is exactly what `python tests/release_digests.py --write` produces.
+    assert raw == registry_text({name: entry["digest"] for name, entry in REGISTRY.items()}).encode("ascii")
+
+
+def test_registry_holds_no_host_private_or_hidden_material() -> None:
+    text = REGISTRY_PATH.read_text(encoding="ascii").lower()
+    for forbidden in (str(REPO_ROOT).lower(), "/home/", "/users/", "c:\\\\", "/tmp/", "heldout", "hidden-suite", "private", "selection_key", "seed="):
+        assert forbidden not in text, forbidden
 
 
 def test_registry_mirrors_the_test_pins() -> None:
     """The registry and the pins in the component tests can only change together."""
     digest = {name: entry["digest"] for name, entry in REGISTRY.items()}
+    coverage = json.loads((REPO_ROOT / "tests" / "fixtures" / "generator-coverage-summary.json").read_text(encoding="utf-8"))
+    replay = GOLDEN_REPLAY_DIGESTS["public:route-invalidation:fire-aware:s1"]
     mirrored = {
         "suite.public-v1.suite_hash": SUITE_HASH,
         "evaluation.public-v1-dev-seeds.manifest_hash": PUBLIC_DEV_MANIFEST_HASH,
@@ -228,8 +324,11 @@ def test_registry_mirrors_the_test_pins() -> None:
         "generator.test-config.suite_hash": GOLDEN_SUITE_HASH,
         "statistics.aggregate": GOLDEN_STATISTICS_DIGESTS["aggregate"],
         "statistics.paired": GOLDEN_STATISTICS_DIGESTS["paired"],
+        "replay.route-invalidation-fire-aware-s1.audit_digest": replay[1],
+        "replay.route-invalidation-fire-aware-s1.animation_sha256": replay[2],
+        "rules.composition.rule_set_digest": coverage["rule_set_digest"],
     }
-    for name, value in digest.items():
+    for name in digest:
         if name.startswith("scenario."):
             mirrored[name] = PINNED_HASHES[name.split(".")[1]]
         elif name.startswith("simulator.golden-record."):
@@ -238,12 +337,15 @@ def test_registry_mirrors_the_test_pins() -> None:
             mirrored[name] = GOLDEN_CONFIG_DIGESTS[name.split(".")[1]]
         elif name.startswith("baseline.") and name.endswith(".result_digest"):
             mirrored[name] = GOLDEN_RESULT_DIGESTS[name.split(".")[1]]
-    registry_only = {"integrity.test-run.provenance_digest", "cli.evaluation-manifest.file_sha256"}
-    assert set(digest) == set(mirrored) | registry_only
-    drift = {name: (digest[name], value) for name, value in mirrored.items() if digest[name] != value}
-    assert not drift, f"registry entry != test pin: {drift}"
-    for name in registry_only:
-        assert REGISTRY[name]["mirrors"] == "this registry only"
+    registry_only = {name for name, entry in REGISTRY.items() if entry["mirrors"] == REGISTRY_ONLY}
+    assert set(digest) == set(mirrored) | registry_only and not set(mirrored) & registry_only
+    drift = registry_drift({name: digest[name] for name in mirrored}, mirrored)
+    assert not drift, f"registry entry != test pin: {json.dumps(drift, indent=2)}"
+
+
+def test_registry_drift_is_reported_as_a_diff() -> None:
+    drift = registry_drift({"a": "1", "b": "2"}, {"a": "1", "b": "3", "c": "4"})
+    assert drift == {"b": {"registry": "2", "computed": "3"}, "c": {"registry": None, "computed": "4"}}
 
 
 _FRESH_SCRIPT = """
@@ -253,10 +355,10 @@ from release_digests import compute_registry_digests
 sys.stdout.write(json.dumps(compute_registry_digests(), sort_keys=True) + "\\n")
 """
 
-# The second environment changes everything that must not matter.
+# The second environment changes everything that must not matter, and reads a CRLF copy of the public suite.
 _FRESH_ENVIRONMENTS = (
     {"PYTHONHASHSEED": "0"},
-    {"PYTHONHASHSEED": "4242", "LC_ALL": "tr_TR.UTF-8", "LANG": "tr_TR.UTF-8", "TZ": "Pacific/Chatham", "PYTHONIOENCODING": "latin-1"},
+    {"PYTHONHASHSEED": "4242", "LC_ALL": "tr_TR.UTF-8", "LANG": "tr_TR.UTF-8", "TZ": "Pacific/Chatham", "PYTHONIOENCODING": "latin-1", PUBLIC_SUITE_ENV: ""},
 )
 
 
@@ -265,13 +367,20 @@ def test_registry_digests_in_fresh_interpreters(tmp_path: Path) -> None:
     expected = {name: entry["digest"] for name, entry in REGISTRY.items()}
     cwd = tmp_path / "fresh cwd with spaces"
     cwd.mkdir()
-    base = {k: v for k, v in os.environ.items() if k not in ("PYTHONPATH", "LC_ALL", "LANG", "TZ", "PYTHONIOENCODING")}
+    crlf_suite = _crlf_copy(SUITE_DIR, tmp_path / "crlf copy" / "public suite")
+    base = {k: v for k, v in os.environ.items() if k not in ("PYTHONPATH", "LC_ALL", "LANG", "TZ", "PYTHONIOENCODING", PUBLIC_SUITE_ENV)}
     for changes in _FRESH_ENVIRONMENTS:
-        proc = subprocess.run([sys.executable, "-c", script], cwd=cwd, env={**base, **changes}, capture_output=True, timeout=600)
+        env = {**base, **changes}
+        if PUBLIC_SUITE_ENV in env:
+            env[PUBLIC_SUITE_ENV] = str(crlf_suite)
+        proc = subprocess.run([sys.executable, "-c", script], cwd=cwd, env=env, capture_output=True, timeout=900)
         assert proc.returncode == 0, proc.stderr.decode(errors="replace")
-        actual = json.loads(proc.stdout)
-        drift = {name: {"registry": expected.get(name), "computed": actual.get(name)} for name in sorted(set(expected) | set(actual)) if expected.get(name) != actual.get(name)}
-        assert not drift, f"contract drift under {changes}: {json.dumps(drift, indent=2)}"
+        drift = registry_drift(expected, json.loads(proc.stdout))
+        if PUBLIC_SUITE_ENV in env:
+            # A pack pins exact file bytes by design; every other contract is independent of line endings.
+            assert set(drift) == BYTE_PINNED, f"contract drift under {changes}: {json.dumps(drift, indent=2)}"
+        else:
+            assert not drift, f"contract drift under {changes}: {json.dumps(drift, indent=2)}"
 
 
 # --------------------------------------------------------------------------- newline and path portability
@@ -340,14 +449,40 @@ def test_built_wheel_and_sdist_metadata(built_distributions: tuple[Path, Path]) 
     wheel, sdist = built_distributions
     assert wheel.name == f"emberbench-{source_version}-py3-none-any.whl"
     assert sdist.name == f"emberbench-{source_version}.tar.gz"
-    problems: list[str] = _tool("check_release").check_metadata(wheel, sdist, False)
-    assert problems == []
+    assert CHECK_RELEASE.check_metadata(wheel, sdist, False) == []
+    assert CHECK_RELEASE.content_problems(wheel, sdist) == []
     with zipfile.ZipFile(wheel) as z:
-        assert not [n for n in z.namelist() if n.startswith(("tests/", "tools/", "scenarios/", "docs/"))]
+        names = z.namelist()
+    assert not [n for n in names if n.startswith(("tests/", "tools/", "scenarios/", "docs/"))]
+    # The wheel is the package code only: every module of src/emberbench and py.typed.
+    sources = sorted(f"emberbench/{p.name}" for p in (REPO_ROOT / "src" / "emberbench").iterdir() if p.suffix == ".py" or p.name == "py.typed")
+    assert sorted(n for n in names if n.startswith("emberbench/")) == sources
+
+
+def test_release_check_rejects_unintended_package_data(tmp_path: Path, built_distributions: tuple[Path, Path]) -> None:
+    """Generated research outputs (for example a 14 MB evaluation-pack run) never become package data."""
+    wheel, sdist = built_distributions
+    planted = tmp_path / wheel.name
+    shutil.copyfile(wheel, planted)
+    with zipfile.ZipFile(planted, "a") as z:
+        z.writestr("emberbench/data/pack-results.json", b"0" * (CHECK_RELEASE.MEMBER_MAX_BYTES + 1))
+    problems = CHECK_RELEASE.content_problems(planted, sdist)
+    assert any("not package code" in p for p in problems) and any("bytes (limit" in p for p in problems), problems
+
+
+def test_release_check_freezes_source_date_epoch(built_distributions: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SOURCE_DATE_EPOCH", "1767225600")
+    assert CHECK_RELEASE.source_date_epoch() == "1767225600"
+    monkeypatch.setenv("SOURCE_DATE_EPOCH", "yesterday")
+    with pytest.raises(CHECK_RELEASE.ReleaseCheckError):
+        CHECK_RELEASE.source_date_epoch()
+    # The shared test build sets no SOURCE_DATE_EPOCH, so its member times are the build time, not a frozen epoch.
+    wheel, _ = built_distributions
+    assert CHECK_RELEASE.wheel_time_problems(wheel, "0")
 
 
 def test_release_check_compares_normalized_members(tmp_path: Path) -> None:
-    tool = _tool("check_release")
+    tool = CHECK_RELEASE
     paths = []
     for n, content in enumerate((b"a", b"a", b"b")):
         path = tmp_path / f"w{n}.whl"

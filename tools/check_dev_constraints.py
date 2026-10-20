@@ -73,12 +73,12 @@ def check_files(constraints: Path, pyproject: Path) -> tuple[dict[str, Version],
             errors.append(f"{where}: {req.name} is not pinned in {constraints.name}")
         elif not req.specifier.contains(pins[name], prereleases=True):
             errors.append(f"{where}: pin {name}=={pins[name]} is outside {req}")
-    for name in ALWAYS_PINNED:
-        if name not in pins:
-            errors.append(f"{constraints.name}: {name} is not pinned")
-    for name in NEVER_PINNED:
-        if name in pins:
-            errors.append(f"{constraints.name}: {name} must not be pinned")
+    for always in ALWAYS_PINNED:
+        if always not in pins:
+            errors.append(f"{constraints.name}: {always} is not pinned")
+    for never in NEVER_PINNED:
+        if never in pins:
+            errors.append(f"{constraints.name}: {never} must not be pinned")
     return pins, errors
 
 
