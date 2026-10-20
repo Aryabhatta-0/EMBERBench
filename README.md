@@ -38,6 +38,13 @@ cells, a row-major table of congestion hotspots, per-exit throughput and a
 static nearest-exit demand proxy. They observe the frozen V1 crowd rules and
 do not model human behaviour. See [docs/crowd-diagnostics.md](docs/crowd-diagnostics.md).
 
+`build_replay_audit` turns the same authenticated inputs into a read-only
+replay audit: a step-by-step timeline, per-person paths, per-step fire deltas
+and an optional congestion overlay. Deterministic ASCII frames
+(`render_frame`) and a portable JSON animation export (`export_animation`)
+come from that audit. Visualization never affects benchmark results. See
+[docs/replay-visualization.md](docs/replay-visualization.md).
+
 Five deterministic, non-LLM reference baselines (random legal, nearest-exit
 greedy, static shortest-path, fire-aware shortest-path and congestion-aware
 routing) run through the same model interface as any evaluated model and see
