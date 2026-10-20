@@ -8,7 +8,8 @@
 | Composition | `1.0` (`COMPOSITION_VERSION`); selection rules `1.0`; recipe catalog `1.0`; suite freeze record `1.0` |
 | Modules | [`structure`](../src/emberbench/structure.py), [`families`](../src/emberbench/families.py), [`calibration`](../src/emberbench/calibration.py), [`composition`](../src/emberbench/composition.py), [`generator`](../src/emberbench/generator.py) |
 | Validation | [`tools/validate_generator_coverage.py`](../tools/validate_generator_coverage.py), results in [generator-coverage-results.md](generator-coverage-results.md) |
-| Unchanged | simulator, observation, action schema, scenario schema, metrics, statistics, scoring (`SCORING_VERSION` 1.0), environment world 1.0, benchmark revision |
+| Unchanged | simulator, observation, action schema, scenario schema, metrics, statistics, scoring (`SCORING_VERSION` 1.0), environment world 1.0 |
+| Benchmark revision | `2` (`BENCHMARK_REVISION`). `benchmark_versions()` pins every version above, so provenance from other rules fails verification ([integrity.md](integrity.md) section 12) |
 
 PR #33 ([evaluation-suite-design.md](evaluation-suite-design.md)) froze the V1
 evaluation-suite design: 10 primary families x 16 scenarios (Easy 2,

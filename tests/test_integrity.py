@@ -14,17 +14,28 @@ import pytest
 from conftest import greedy_exit_policy
 from emberbench import (
     ACTION_SCHEMA_VERSION,
+    ADMISSION_RULES_VERSION,
+    CALIBRATION_PANEL_VERSION,
+    COMPOSITION_VERSION,
     CROWD_DIAGNOSTICS_VERSION,
+    DIFFICULTY_RULES_VERSION,
+    ENVIRONMENT_PACK_VERSION,
+    ENVIRONMENT_WORLD_VERSION,
     EVALUATION_MANIFEST_VERSION,
     EVALUATION_RESULT_VERSION,
+    FAMILY_RULES_VERSION,
     GENERATION_MANIFEST_VERSION,
     GENERATOR_CONFIG_VERSION,
     GENERATOR_VERSION,
     METRICS_VERSION,
     OBSERVATION_VERSION,
+    RECIPE_CATALOG_VERSION,
     SCHEMA_VERSION,
+    SCORING_VERSION,
+    SELECTION_RULES_VERSION,
     SIMULATOR_VERSION,
     STATISTICS_VERSION,
+    SUITE_FREEZE_RECORD_VERSION,
     Action,
     Agent,
     EvaluationManifest,
@@ -166,7 +177,7 @@ def edited(run: Run, edit: Callable[[dict[str, Any]], None]) -> dict[str, Any]:
 
 def test_versions_are_pinned_and_unchanged() -> None:
     assert INTEGRITY_PROTOCOL_VERSION == "1.0"
-    assert BENCHMARK_REVISION == "1"
+    assert BENCHMARK_REVISION == "2"
     unchanged = {
         "simulator": (SIMULATOR_VERSION, "0.2.0"),
         "observation": (OBSERVATION_VERSION, "1.0"),
@@ -180,10 +191,51 @@ def test_versions_are_pinned_and_unchanged() -> None:
         "generation_manifest": (GENERATION_MANIFEST_VERSION, "1.1"),
         "evaluation_manifest": (EVALUATION_MANIFEST_VERSION, "1.0"),
         "evaluation_result": (EVALUATION_RESULT_VERSION, "1.0"),
+        "scoring": (SCORING_VERSION, "1.0"),
+        "environment_pack": (ENVIRONMENT_PACK_VERSION, "1.0"),
+        "environment_world": (ENVIRONMENT_WORLD_VERSION, "1.0"),
+        "family_rules": (FAMILY_RULES_VERSION, "1.0"),
+        "calibration_panel": (CALIBRATION_PANEL_VERSION, "1.0"),
+        "difficulty_rules": (DIFFICULTY_RULES_VERSION, "1.0"),
+        "admission_rules": (ADMISSION_RULES_VERSION, "1.0"),
+        "composition": (COMPOSITION_VERSION, "1.0"),
+        "selection_rules": (SELECTION_RULES_VERSION, "1.0"),
+        "recipe_catalog": (RECIPE_CATALOG_VERSION, "1.0"),
+        "suite_freeze_record": (SUITE_FREEZE_RECORD_VERSION, "1.0"),
     }
     for name, (actual, expected) in unchanged.items():
         assert actual == expected, name
-    assert benchmark_versions() == {"benchmark_revision": "1", **{k: v for k, (v, _) in unchanged.items()}}
+    assert benchmark_versions() == {"benchmark_revision": "2", **{k: v for k, (v, _) in unchanged.items()}}
+
+
+def test_benchmark_versions_reuse_the_owning_constants() -> None:
+    """benchmark_versions() repeats no version literal; each value is the owning module's constant."""
+    import emberbench.calibration
+    import emberbench.composition
+    import emberbench.environment_pack
+    import emberbench.families
+    import emberbench.integrity
+    import emberbench.scoring
+    import emberbench.worlds
+
+    owners = {
+        "scoring": emberbench.scoring.SCORING_VERSION,
+        "environment_pack": emberbench.environment_pack.ENVIRONMENT_PACK_VERSION,
+        "environment_world": emberbench.worlds.ENVIRONMENT_WORLD_VERSION,
+        "family_rules": emberbench.families.FAMILY_RULES_VERSION,
+        "calibration_panel": emberbench.calibration.CALIBRATION_PANEL_VERSION,
+        "difficulty_rules": emberbench.calibration.DIFFICULTY_RULES_VERSION,
+        "admission_rules": emberbench.calibration.ADMISSION_RULES_VERSION,
+        "composition": emberbench.composition.COMPOSITION_VERSION,
+        "selection_rules": emberbench.composition.SELECTION_RULES_VERSION,
+        "recipe_catalog": emberbench.composition.RECIPE_CATALOG_VERSION,
+        "suite_freeze_record": emberbench.composition.SUITE_FREEZE_RECORD_VERSION,
+    }
+    versions = benchmark_versions()
+    for key, value in owners.items():
+        assert versions[key] == value, key
+    source = inspect.getsource(emberbench.integrity.benchmark_versions)
+    assert '"1.' not in source and '"0.' not in source
 
 
 def test_public_suite_and_generator_hashes_are_unchanged(run: Run) -> None:
@@ -378,7 +430,19 @@ def test_evaluator_digest_is_checked_when_pinned(run: Run) -> None:
     [
         (lambda p: p["versions"].update(simulator="0.1.0"), r"versions\.simulator"),
         (lambda p: p["versions"].update(generator="2.0.0"), r"versions\.generator"),
-        (lambda p: p["versions"].update(benchmark_revision="2"), r"versions\.benchmark_revision"),
+        (lambda p: p["versions"].update(benchmark_revision="1"), r"versions\.benchmark_revision"),
+        (lambda p: p["versions"].update(scoring="1.1"), r"versions\.scoring"),
+        (lambda p: p["versions"].update(family_rules="1.1"), r"versions\.family_rules"),
+        (lambda p: p["versions"].update(difficulty_rules="1.1"), r"versions\.difficulty_rules"),
+        (lambda p: p["versions"].update(environment_pack="1.1"), r"versions\.environment_pack"),
+        (lambda p: p["versions"].update(environment_world="1.1"), r"versions\.environment_world"),
+        (lambda p: p["versions"].update(calibration_panel="1.1"), r"versions\.calibration_panel"),
+        (lambda p: p["versions"].update(admission_rules="1.1"), r"versions\.admission_rules"),
+        (lambda p: p["versions"].update(composition="1.1"), r"versions\.composition"),
+        (lambda p: p["versions"].update(selection_rules="1.1"), r"versions\.selection_rules"),
+        (lambda p: p["versions"].update(recipe_catalog="1.1"), r"versions\.recipe_catalog"),
+        (lambda p: p["versions"].update(suite_freeze_record="1.1"), r"versions\.suite_freeze_record"),
+        (lambda p: p["versions"].pop("family_rules"), r"missing fields \['family_rules'\]"),
         (lambda p: p["suite"].update(generator_version="0.9.0"), r"suite\.generator_version"),
         (lambda p: p["result"].update(result_version="0.9"), r"result\.result_version"),
         (lambda p: p.update(integrity_protocol_version="2.0"), "unsupported version"),
@@ -387,6 +451,31 @@ def test_evaluator_digest_is_checked_when_pinned(run: Run) -> None:
 def test_version_mismatch_is_rejected(run: Run, edit: Callable[[dict[str, Any]], None], message: str) -> None:
     with pytest.raises(IntegrityError, match=message):
         verify(run, edited(run, edit))
+
+
+@pytest.mark.parametrize(
+    "constant,key",
+    [
+        ("SCORING_VERSION", "scoring"),
+        ("GENERATOR_VERSION", "generator"),
+        ("FAMILY_RULES_VERSION", "family_rules"),
+        ("DIFFICULTY_RULES_VERSION", "difficulty_rules"),
+        ("ENVIRONMENT_PACK_VERSION", "environment_pack"),
+        ("SELECTION_RULES_VERSION", "selection_rules"),
+        ("BENCHMARK_REVISION", "benchmark_revision"),
+    ],
+)
+def test_provenance_from_another_benchmark_definition_fails_closed(
+    run: Run, monkeypatch: pytest.MonkeyPatch, constant: str, key: str
+) -> None:
+    """A record made under one definition does not verify once the running benchmark pins another version."""
+    import emberbench.integrity
+
+    verify(run, run.record)
+    monkeypatch.setattr(emberbench.integrity, constant, "9.9.9")
+    assert benchmark_versions()[key] == "9.9.9"
+    with pytest.raises(IntegrityError, match=rf"versions\.{key}"):
+        verify(run, run.record)
 
 
 @pytest.mark.parametrize(
