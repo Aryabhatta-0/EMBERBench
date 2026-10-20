@@ -100,6 +100,13 @@ Every component, Safety, Quality and Severity are in `[0, 1]`. No component
 can exceed 1, so no strength offsets a failure. Safety caps the score
 (section 5), and each severe quality failure caps it again (section 4.3).
 
+**Trajectory invariance (a V1 invariant).** Every score input is a function
+of the authenticated state trajectory: positions, statuses and the fire, step
+by step. No input comes from the action log alone. So two runs with
+byte-identical state trajectories get identical scores, whatever actions
+produced them. `test_block_scrub_keeps_trajectory_and_score` checks this on
+replayed public episodes (section 4.2).
+
 ### 4.1 Safety and person-level attribution
 
 Every loss is attributed **per person**. A person `i` is **savable** when the
@@ -145,31 +152,100 @@ casualties.
 
 | Component | Formula | Defined when | Weight |
 | --- | --- | --- | --- |
-| Time `T` | `Q* / sum(A_i)` over evacuees; `A_i` is the evacuation step, `Q*` the exit-capacity queue bound (below) | at least one evacuee | 3/10 |
-| Coordination `C` | `(1 - cbr) ^ kC`, `cbr = (blocked_occupied + blocked_conflict + blocked_cycle) / movement_attempts` | at least one movement attempt | 2/10 |
-| Hazard `H` | `(1 - (D - D*) / sum(A_i)) ^ kH` over evacuees; `D` = their danger-zone states, `D* = sum(D*_i)` | at least one evacuee | 2/10 |
-| Path `P` | `sum(m*_i) / sum(m_i)` over evacuees; `m_i` = cells moved | at least one evacuee | 1/10 |
-| Replanning `R` | `sum(L(x_e, t_e) - t_e) / sum(r_e - t_e)` over recoverable route-invalidation events | at least one recoverable event | 2/10 |
+| Time `T` | `Q_cut / sum(A_i)` over evacuees; `A_i` is the evacuation step, `Q_cut` the capacity bound (below) | at least one evacuee | 3/8 |
+| Hazard `H` | `(1 - (D - D*) / sum(A_i)) ^ kH` over evacuees; `D` = their danger-zone states, `D* = sum(D*_i)` | at least one evacuee | 2/8 |
+| Path `P` | `sum(m*_i) / sum(m_i)` over evacuees; `m_i` = cells moved | at least one evacuee | 1/8 |
+| Replanning `R` | `sum(L(x_e, t_e) - t_e) / sum(r_e - t_e)` over recoverable route-invalidation events | at least one recoverable event | 2/8 |
 
-Constants: `kC = 2`, `kH = 1`.
+Constant: `kH = 1`. There is no Coordination component (see "Congestion is
+not a score input" below).
 
 Every ratio is a privileged lower bound over the actual value, so it is in
 `(0, 1]`. If an actual value is below its bound, the record is rejected: that
 can only happen with a forged record.
 
-**Time queue bound `Q*`.** The sum of single-person optimum steps `sum(L_i)`
-ignores that people queue at exits. Positions after movement are distinct,
-so in each step at most one person leaves through each exit cell that is not
-burning at the start of the step. `Q*` is the list schedule of the evacuees'
-release steps `L_i` over these exit slots: in each step, the open exit slots
-are filled with released people who are still waiting. For unit jobs with
-release dates, this schedule minimizes the sum of finish steps, so
-`sum(L_i) <= Q* <= sum(A_i)` for every policy. A bottleneck that no policy can
-avoid is therefore not charged to Time.
+**Time capacity bound `Q_cut`.** The sum of single-person optimum steps
+`sum(L_i)` ignores that people queue. `Q_cut` adds the two capacity limits
+that no policy can avoid. Both are lower bounds on `sum(A_i)` for every
+policy, and `sum(L_i) <= Q_exit <= Q_cut <= sum(A_i)`:
+
+1. **Exit capacity (`Q_exit`, `evacuee_time_queue_bound`).** Positions after
+   movement are distinct, so in each step at most one person leaves through
+   each exit cell that is not burning at the start of the step. `Q_exit` is
+   the list schedule of the evacuees' release steps `L_i` over these exit
+   slots. For unit jobs with release dates, the list schedule minimizes the
+   sum of finish steps.
+2. **Cut capacity (`Q_cut`, `evacuee_time_cut_bound`, the Time reference).**
+   Let `w` be the wall-only distance to the nearest exit. For a threshold
+   `d >= 1`, take a connected component `K` of the open cells with `w > d`.
+   A move changes `w` by at most 1 and exits have `w = 0`, so every escape
+   from `K` first steps onto `N(K)`, the cells next to `K` with `w = d`: a
+   vertex cut, for example a door. Positions are distinct, so in step `s` at
+   most `k_s` people stand on `N(K)`, where `k_s` counts the cut cells that
+   burn neither at the start nor at the end of the step. An evacuee `i` that
+   starts in `K` first enters the cut in a step `s_i >= r_i`, its earliest
+   single-person arrival on a cut cell from which escape is still possible,
+   and needs at least `q_i` more steps from there (the least single-person
+   remaining time over the cut cells and snapshots it can reach). So
+   `A_i >= s_i + q_i` and `A_i >= L_i`. The list schedule of the entries
+   minimizes `sum(s_i)`. Components whose cuts share cells are merged, so
+   each person is in at most one group; people outside every group add
+   `L_i`. `Q_cut` is the maximum over all thresholds and `Q_exit`.
+
+Every step of the derivation is a relaxation, so `Q_cut` is a lower bound for
+every policy (proof in `_cut_bound`, validated on every episode of the study:
+section 6 of [benchmark-methodology.md](benchmark-methodology.md)). A queue
+that no policy can avoid, at an exit or at a door, is therefore not charged
+to Time. A queue that a policy causes, for example by sending everyone to one
+exit when a second exit is free, is charged
+(`test_real_episode_unavoidable_door_queue_is_not_charged`,
+`test_real_episode_avoidable_queue_is_charged`).
+
+**Congestion is not a score input.** Version 1.0 at commit `ce5e322` had a
+Coordination component `(1 - block rate)^2` and a severe gate at a block rate
+above 1/4. It was removed, because a blocked move is an action-log event, not
+a trajectory event:
+
+- **The scrub proof.** Under the public movement resolver, a person whose move
+  is blocked by another person (occupied, conflict or cycle) stays in place.
+  If that move is replaced by `STAY`, the person still stays in place. Every
+  other person's resulting cell is unchanged too: a blocked person never
+  vacates its cell and never takes a target cell, so no successful move
+  depends on it, and every move that was blocked behind it is itself
+  scrubbed. So replacing every congestion-blocked move with `STAY` gives the
+  identical state trajectory with zero blocks. The
+  resolver is public and pure and its inputs are all in the observation, so
+  any agent can do this. The adversary `adv-block-scrub` does it to
+  `congestion-aware-v1`: identical state trajectories in every study episode,
+  and a gain of several points under the old score (section 6 of
+  [benchmark-methodology.md](benchmark-methodology.md)).
+- **No lower bound.** The block count has no positive privileged lower bound:
+  the scrub reaches 0 for every trajectory. A ratio "bound / actual" like the
+  other components cannot exist.
+- **Not a skill.** A policy that predicts the resolver's tie-breaks and emits
+  `STAY` instead of a blocked move evacuates the same people at the same
+  steps on the same cells. It is not a better evacuation policy, so the
+  difference must not be scored.
+- **The realized cost is already scored.** A bottleneck costs delay (Time,
+  against `Q_cut`), exposure while waiting (Hazard) and, at worst, lives
+  (Safety). Every trajectory-only congestion measure tried (waiting steps
+  above the capacity-forced delay, excess person-time over `Q_cut`) is a
+  function of the Time and Path inputs, so it would count the same delay
+  twice.
+- **Dead people are not charged twice.** The blocked moves of people who later
+  die were part of the old block rate, and their deaths are in Safety. Time,
+  Path and Hazard are over evacuees only, and blocks are not an input, so no
+  loss is charged twice.
+
+Congestion stays **mandatory in every report** as diagnostics
+(`ScoreReport.diagnostics`, `CongestionDiagnostics`): congestion block rate,
+contested cell-steps, hotspot cells, peak contested cells and exit throughput
+(evacuations per exit-step inside each exit's active window). They explain a
+score; they never change it (`test_congestion_blocks_are_diagnostics_not_score_inputs`).
 
 **Exit utilization** is diagnostic only. A balanced split between exits is
 not a goal: the right split depends on distances, fire and capacity. The
-queue bound already measures the only effect of exit allocation that the
+capacity bound already measures the only effect of exit allocation that the
 score needs, the time cost of a bad allocation, against an allocation-optimal
 bound. A separate balance or allocation-regret term would count that cost
 twice.
@@ -223,8 +299,7 @@ threshold in natural units. The comparison is exact and strict:
 
 | Component | Severe when | Threshold in component space `q_k_severe` |
 | --- | --- | --- |
-| Time | `T < 1/2` (more than twice the queue bound) | 0.5 |
-| Coordination | block rate `> 1/4` | `(1 - 1/4) ^ 2 = 0.5625` |
+| Time | `T < 1/2` (more than twice the capacity bound `Q_cut`) | 0.5 |
 | Hazard | avoidable danger-zone rate `> 1/4` | `1 - 1/4 = 0.75` |
 | Path | `P < 1/2` (more than twice the fewest cells) | 0.5 |
 | Replanning | `R < 1/2` | 0.5 |
@@ -242,9 +317,12 @@ the list `severe` and the `ceiling = 100 * Safety * Severity`.
 
 The thresholds are set by normative requirements, not by a policy ranking
 (see [benchmark-methodology.md](benchmark-methodology.md), section 6):
-evacuating more than twice as slowly as an exit-capacity optimum, one blocked
-move in four, one avoidable danger-zone step in four, twice the needed cells
-and twice the needed recovery time are each a failure of that dimension.
+evacuating more than twice as slowly as the capacity optimum, one avoidable
+danger-zone step in four, twice the needed cells and twice the needed
+recovery time are each a failure of that dimension. A severe bottleneck is a
+severe Time failure: it is measured by the delay it causes, not by blocked
+actions. Mild congestion that the capacity bound explains never triggers a
+gate.
 
 ### 4.4 Episode statuses
 
@@ -293,18 +371,19 @@ perfect; replanning is undefined.
 | 10 stranded | 30.3 |
 | 1 savable casualty + 1 unsavable stranded person | 56.5 |
 | 50 losses (the gate) | 0.0 |
-| Time 0.8 / 0.5 (threshold) | 94.0 / 82.6 |
-| Time 0.4 / 0.25 / 0.1 (severe) | 49.7 / 27.3 / 8.5 |
-| block rate 0.1 / 0.25 (threshold) | 96.2 / 89.9 |
-| block rate 0.3 / 0.5 (severe bottleneck) | 61.1 / 27.5 |
-| avoidable danger-zone rate 0.1 / 0.3 (severe) | 98.1 / 69.9 |
-| Path 0.6 / 0.4 (severe) | 95.4 / 58.8 |
-| Replanning 0.8 / 0.3 (severe), replanning defined | 96.8 / 40.2 |
-| every quality component exactly at its threshold | 64.8 |
+| Time 0.9 / 0.8 / 0.5 (threshold) | 96.2 / 92.1 / 77.5 |
+| Time 0.4 / 0.25 / 0.1 (severe) | 45.7 / 24.0 / 6.8 |
+| any block rate, no delay (blocks are diagnostics) | 100.0 |
+| avoidable danger-zone rate 0.1 / 0.3 (severe) | 97.4 / 68.4 |
+| Path 0.6 / 0.4 (severe) | 93.9 / 57.2 |
+| Replanning 0.8 / 0.3 (severe), replanning defined | 96.0 / 38.5 |
+| every quality component exactly at its threshold | 64.7 |
 
-The jump at a threshold is the severe factor `phi = 0.8` times the ratio
-`q / q_severe`. Below the thresholds, Quality still matters: Time 0.5 alone
-costs 17.4 points, and a block rate of 0.25 costs 10.1 points.
+Time is relative to the capacity bound `Q_cut`, so "Time 0.5" is a realized
+bottleneck that doubles the evacuees' person-time over the best that any
+policy could do. The jump at a threshold is the severe factor `phi = 0.8`
+times the ratio `q / q_severe`. Below the thresholds, Quality still matters:
+Time 0.5 alone costs 22.5 points.
 
 Ceilings that follow from the formula:
 
@@ -424,13 +503,13 @@ Every existing metric of [metrics.md](metrics.md) has one role:
 | evacuated / evacuation rate | core (Safety) | `E`, relative to `M*` |
 | casualties (fatality) | safety gate and core (Safety) | `P_casualty` on avoidable (savable) casualties, catastrophic gate |
 | stranded | safety gate and core (Safety) | `P_stranding` on avoidable stranded people, catastrophic gate |
-| time to safety (`time.*`) | core (Quality) and severe gate | `T`, evacuees only, relative to the queue bound `Q*` |
-| congestion / bottleneck (`blocked_*`, `congestion_block_rate`) | core (Quality) and severe gate | `C` from occupied, conflict and cycle blocks per movement attempt |
+| time to safety (`time.*`) | core (Quality) and severe gate | `T`, evacuees only, relative to the capacity bound `Q_cut`; a realized bottleneck is charged here |
+| congestion / bottleneck (`blocked_*`, `congestion_block_rate`) | diagnostic only, mandatory in every report | none; an action-log count (section 4.2) |
 | fire exposure (`fire_exposure`, `min_fire_distance`) | diagnostic | replaced by the avoidable danger-zone rate `H` (core and severe gate) |
 | path efficiency (`path_efficiency.*`, static bound) | diagnostic | replaced by `P` with the fire-aware privileged bound (core, low weight, severe gate) |
 | replanning proxies (`recovery_proxy_rate` and others) | diagnostic | replaced by `R` on route-invalidation events (core and severe gate) |
-| exit utilization / balance | diagnostic only | none; a 50/50 split is never rewarded; the time cost of a bad allocation is in `T` through `Q*` |
-| crowd diagnostics (hotspots, contested cells, throughput) | diagnostic only | none |
+| exit utilization / balance | diagnostic only | none; a 50/50 split is never rewarded; the time cost of a bad allocation is in `T` through `Q_cut` |
+| crowd diagnostics (hotspots, contested cells, exit throughput) | diagnostic only, mandatory in every report | none |
 | decisions, latency, input/output tokens, cost, retries, timeouts | operational only | none; `OperationalRecord`, see section 11 |
 
 Reasons for each role are in
@@ -449,24 +528,25 @@ Reasons for each role are in
   family scores and the lower-tail statistics tell which. Always read them
   with the headline.
 - Anchors on the public suite with the development seeds 0, 1, 2:
-  `congestion-aware-v1` 49.1, `fire-aware-shortest-path-v1` 39.8,
-  `static-shortest-path-v1` 36.9, `nearest-exit-greedy-v1` 26.9,
+  `congestion-aware-v1` 53.2, `fire-aware-shortest-path-v1` 40.4,
+  `static-shortest-path-v1` 37.4, `nearest-exit-greedy-v1` 27.5,
   `random-legal-v1` 0.0, always-stay 0.0. The privileged bound would score
   100 but is not a policy.
 
 A report has this shape (`format_summary(report)`, family list shortened):
 
 ```text
-EMBER Score 49.1 / 100 benchmark-performance points under EMBER scoring version 1.0
-95% CI [46.5, 51.7] (stratified two-stage bootstrap, 500 resamples; this sample only)
+EMBER Score 53.2 / 100 benchmark-performance points under EMBER scoring version 1.0
+95% CI [50.6, 58.5] (stratified two-stage bootstrap, 2000 resamples; this sample only)
 Model congestion-aware-v1; trials 1; official; environment pack <id> sha256:<digest>
-Safety factor 0.556; quality factor 0.870
-Components (0-1, defined/total): evacuation 0.864 (30/30); casualty 0.590 (30/30); stranding 1.000 (30/30); time 0.936 (30/30); coordination 0.784 (30/30); hazard 0.896 (30/30); path 0.932 (30/30); replanning 1.000 (8/30)
-Primary families: single_exit_low_density 99.4; single_exit_high_density 4.2; narrow_corridor_bottleneck 91.4; ...
-Tail: median scenario 32.5; worst scenario 4.2 (v1-pub-02-single-exit-dense); p10 episode 6.8; CVaR10 4.2
+Safety factor 0.556; quality factor 0.929
+Components (0-1, defined/total): evacuation 0.864 (30/30); casualty 0.590 (30/30); stranding 1.000 (30/30); time 0.936 (30/30); hazard 0.896 (30/30); path 0.932 (30/30); replanning 1.000 (8/30)
+Primary families: single_exit_low_density 99.1; single_exit_high_density 31.2; narrow_corridor_bottleneck 95.5; ...
+Tail: median scenario 37.7; worst scenario 7.4 (v1-pub-05-central-ignition); p10 episode 16.0; CVaR10 7.4
 Zero-score episode-trials 0 of 30: catastrophic 0; missing 0; invalid_output 0; model_error 0; timeout 0
-Severe quality failures (episode-trials): time 0; coordination 6; hazard 3; path 0; replanning 0
+Severe quality failures (episode-trials): time 0; hazard 3; path 0; replanning 0
 People per trial: escapable 561.0; evacuated 526.0; avoidable casualties 35.0; avoidable stranded 0.0
+Congestion diagnostics (not scored): block rate 0.399; contested cell-steps per trial 1707.0; hotspot cells per trial 447.0; peak contested cells 20; exit throughput 0.776
 The EMBER Score is not a percentage of people evacuated.
 ```
 
@@ -515,7 +595,7 @@ three:
   failure always scores above a perfect run with one avoidable casualty
   (section 4.3). Speed can only help a run with a casualty against a safe run
   that itself fails a dimension severely, for example one that evacuates
-  more than twice as slowly as the exit-capacity bound. Such a run is not
+  more than twice as slowly as the capacity bound. Such a run is not
   "safe and good"; the severe gate makes that explicit.
 - Leaderboard ties of the displayed score are always broken by safety
   first (section 8).

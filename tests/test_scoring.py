@@ -17,6 +17,7 @@ from emberbench import (
     SCORING_VERSION,
     Action,
     ComparisonOutcome,
+    CongestionDiagnostics,
     EpisodeEvidence,
     EpisodeResult,
     EpisodeStatus,
@@ -29,6 +30,8 @@ from emberbench import (
     ScoringInputError,
     Suite,
     TerminationConfig,
+    agent_policy,
+    baseline_factory,
     build_evaluation_manifest,
     compare_scores,
     compute_episode_metrics,
@@ -43,6 +46,8 @@ from emberbench import (
     score_result,
     score_results,
 )
+from emberbench.canonical import canonical_json
+from emberbench.movement import MoveOutcome, resolve_movements
 from emberbench.oracle import privileged_escape_bound
 from emberbench.simulator import Policy
 from emberbench.scoring import (
@@ -78,6 +83,7 @@ def evidence(
     stranded: int = 0,
     unavoidable_casualties: int | None = None,
     time_bound: int = 10,
+    free_bound: int | None = None,
     time: int | None = None,
     attempts: int = 1000,
     blocks: int = 0,
@@ -92,7 +98,9 @@ def evidence(
 
     ``population - max_evacuated`` people are unsavable; by default the first
     ``min(unsavable, casualties)`` casualties are unsavable and the rest of the
-    unsavable people are stranded.
+    unsavable people are stranded. ``time_bound`` is the cut-capacity bound
+    (the Time reference); ``free_bound`` (default: the same) is the free-flow
+    and exit-capacity bound below it.
     """
     evac = population - casualties - stranded
     unsavable = 0 if max_evacuated is None else population - max_evacuated
@@ -114,8 +122,9 @@ def evidence(
         unavoidable_casualty_ids=tuple(dead[:u_cas]),
         unavoidable_stranded_ids=tuple(inside[: unsavable - u_cas]),
         evacuee_time=evac * (time_bound if time is None else time),
-        evacuee_time_bound=evac * time_bound,
-        evacuee_time_queue_bound=evac * time_bound,
+        evacuee_time_bound=evac * (time_bound if free_bound is None else free_bound),
+        evacuee_time_queue_bound=evac * (time_bound if free_bound is None else free_bound),
+        evacuee_time_cut_bound=evac * time_bound,
         movement_attempts=attempts,
         blocked_occupied=blocks,
         blocked_conflict=0,
@@ -200,17 +209,20 @@ def stay(small: Suite, manifest: EvaluationManifest) -> EvaluationResult:
 def test_version_and_official_constants() -> None:
     assert SCORING_VERSION == "1.0"
     c = OFFICIAL_CONSTANTS
-    assert c.weights() == {"time": F(3, 10), "coordination": F(1, 5), "hazard": F(1, 5), "path": F(1, 10), "replanning": F(1, 5)}
+    assert c.weights() == {"time": F(3, 8), "hazard": F(1, 4), "path": F(1, 8), "replanning": F(1, 4)}
+    assert QUALITY_COMPONENTS == ("time", "hazard", "path", "replanning")  # no action-log component
     assert str(c.casualty_incident_factor) == "0.6" and str(c.casualty_rate_exponent) == "4"
     assert str(c.stranding_incident_factor) == "0.8" and str(c.stranding_rate_exponent) == "2"
-    assert str(c.evacuation_exponent) == "2" and str(c.congestion_exponent) == "2" and str(c.hazard_exponent) == "1"
+    assert str(c.evacuation_exponent) == "2" and str(c.hazard_exponent) == "1"
     assert c.catastrophic_loss_rate == F(1, 2) and c.practical_difference == F(1)
     assert HAZARD_RADIUS == 2
-    assert c.severe_time == F(1, 2) and c.severe_block_rate == F(1, 4) and c.severe_hazard_rate == F(1, 4)
+    assert c.severe_time == F(1, 2) and c.severe_hazard_rate == F(1, 4)
     assert c.severe_path == F(1, 2) and c.severe_replanning == F(1, 2)
     assert str(c.severe_factor) == "0.8" and str(c.severe_exponent) == "1"
     thresholds = {k: float(v) for k, v in c.severe_thresholds().items()}
-    assert thresholds == {"time": 0.5, "coordination": 0.5625, "hazard": 0.75, "path": 0.5, "replanning": 0.5}
+    assert thresholds == {"time": 0.5, "hazard": 0.75, "path": 0.5, "replanning": 0.5}
+    for removed in ("weight_coordination", "congestion_exponent", "severe_block_rate"):
+        assert not hasattr(c, removed)
     # beta is derived, not tuned: the one-casualty factor over the lowest threshold.
     assert math.isclose(BETA, math.log(0.6) / math.log(0.5), rel_tol=1e-15)
     assert c.to_dict()["quality_exponent"].startswith("0.7369655941662")
@@ -226,7 +238,7 @@ def test_version_and_official_constants() -> None:
         {"catastrophic_loss_rate": F(0)},
         {"evacuation_exponent": Decimal("-1")},
         {"severe_time": F(1)},
-        {"severe_block_rate": F(0)},
+        {"severe_hazard_rate": F(1)},
         {"severe_factor": Decimal("0")},
     ],
 )
@@ -246,10 +258,10 @@ def test_perfect_episode_scores_100() -> None:
 
 
 def test_time_penalty_hand_calculated() -> None:
-    # Time 1/2 is at the threshold, not severe; replanning undefined, so the weights renormalize over 0.8.
+    # Time 1/2 is at the threshold, not severe; replanning undefined, so the weights renormalize over 6/8.
     s = score_evidence(0, evidence(time_bound=10, time=20))
     assert s.component("time") == F(1, 2) and s.severe == () and s.severity == 1
-    assert close(s.score, 100 * 0.5 ** (3 / 8 * BETA))
+    assert close(s.score, 100 * 0.5 ** (1 / 2 * BETA))
     assert 100 - s.score >= 10  # Time is not irrelevant
 
 
@@ -257,23 +269,32 @@ def test_severe_delay_is_gated() -> None:
     # Time 0.4 is severe: factor 0.8 times (0.4 / 0.5) on top of the quality term.
     s = score_evidence(0, evidence(time_bound=10, time=25))
     assert s.severe == ("time",) and close(s.severity, 0.8 * 0.8, 1e-12)
-    assert close(s.score, 100 * 0.4 ** (3 / 8 * BETA) * 0.64)
+    assert close(s.score, 100 * 0.4 ** (1 / 2 * BETA) * 0.64)
     assert s.ceiling is not None and close(s.ceiling, 64, 1e-9)
     # Mild delay beats extreme delay by a wide margin; extreme delay keeps almost nothing.
     assert points(evidence(time=12)) - points(evidence(time=100)) > 70
     assert points(evidence(time=100)) < 10
 
 
-def test_congestion_penalty_is_nonlinear() -> None:
-    # Congestion block rate 0.3 (> 1/4, severe): Coordination = 0.7^2 = 0.49; gate 0.8 * (0.7 / 0.75)^2.
-    s = score_evidence(0, evidence(blocks=300))
-    assert s.component("coordination") == F(49, 100) and s.severe == ("coordination",)
-    assert close(s.score, 100 * 0.49 ** (BETA / 4) * 0.8 * (0.7 / 0.75) ** 2)
-    # Exactly one in four blocked is not severe.
-    assert severe_failures(evidence(blocks=250)) == {}
-    # Doubling the block rate more than doubles the loss.
-    loss = [100 - points(evidence(blocks=b)) for b in (150, 300, 600)]
-    assert loss[1] > 2 * loss[0] * 0.95 and loss[2] > 2 * loss[1]
+def test_congestion_blocks_are_diagnostics_not_score_inputs() -> None:
+    # A blocked move and STAY give the same trajectory, so the block count never changes the score.
+    for base in (evidence(), evidence(time=25), evidence(casualties=1, time=13), evidence(stranded=2, danger=3, danger_bound=1)):
+        reference = score_evidence(0, base)
+        for blocks in (0, 1, 250, 999):
+            for attempts in (blocks, 1000, 5000):
+                if blocks > attempts:
+                    continue
+                varied = dataclasses.replace(
+                    base,
+                    movement_attempts=attempts,
+                    blocked_occupied=blocks,
+                    contested_cell_steps=3 * blocks,
+                    hotspot_cells=blocks // 10,
+                    peak_contested_cells=blocks // 20,
+                    exit_active_steps=attempts,
+                )
+                assert dataclasses.replace(score_evidence(0, varied), evidence=base) == reference
+        assert not any(name in ("coordination", "congestion") for name, _ in reference.components)
 
 
 def test_exposure_penalty_without_deaths() -> None:
@@ -281,11 +302,11 @@ def test_exposure_penalty_without_deaths() -> None:
     s = score_evidence(0, evidence(danger=4, danger_bound=1))
     assert s.component("hazard") == F(7, 10) and s.severe == ("hazard",)
     assert s.component("casualty") == 1 and s.safety == 1
-    assert close(s.score, 100 * 0.7 ** (BETA / 4) * 0.8 * (0.7 / 0.75))
+    assert close(s.score, 100 * 0.7 ** (BETA / 3) * 0.8 * (0.7 / 0.75))
     assert s.score < 80  # lucky unsafe behaviour is never excellent
     # Mild avoidable exposure costs less, without a gate.
     mild = score_evidence(0, evidence(danger=2, danger_bound=1))
-    assert mild.severe == () and close(mild.score, 100 * 0.9 ** (BETA / 4))
+    assert mild.severe == () and close(mild.score, 100 * 0.9 ** (BETA / 3))
     # Unavoidable danger costs nothing.
     assert score_evidence(0, evidence(danger=3, danger_bound=3)).score == 100
 
@@ -293,7 +314,7 @@ def test_exposure_penalty_without_deaths() -> None:
 def test_path_penalty_hand_calculated() -> None:
     s = score_evidence(0, evidence(moves_bound=10, moves=16))
     assert s.component("path") == F(10, 16) and s.severe == ()
-    assert close(s.score, 100 * (10 / 16) ** (BETA / 8))
+    assert close(s.score, 100 * (10 / 16) ** (BETA / 6))
     # Moves above twice the privileged minimum are severe.
     assert score_evidence(0, evidence(moves_bound=10, moves=25)).severe == ("path",)
 
@@ -305,10 +326,10 @@ def test_path_does_not_charge_necessary_fire_detours() -> None:
 
 
 def test_replanning_penalty_hand_calculated() -> None:
-    # Replanning 1/4 with every weight in use (severe): 100 * 0.25^(0.2 beta) * 0.8 * (0.25 / 0.5).
+    # Replanning 1/4 with every weight in use (severe): 100 * 0.25^(beta / 4) * 0.8 * (0.25 / 0.5).
     s = score_evidence(0, evidence(replan=40, replan_bound=10))
     assert s.component("replanning") == F(1, 4) and s.severe == ("replanning",)
-    assert close(s.score, 100 * 0.25 ** (0.2 * BETA) * 0.4)
+    assert close(s.score, 100 * 0.25 ** (BETA / 4) * 0.4)
     # Failure to replan costs on its own, before any loss of life that it causes is charged to Safety.
     assert s.score < 80
 
@@ -426,7 +447,7 @@ def test_unsafe_fast_cannot_compensate() -> None:
     # R12: no avoidable casualty and no severe failure always beats perfect quality with one casualty,
     # even with every quality component exactly at its severe threshold, for any population.
     for n in (2, 4, 10, 100, 1000):
-        corner = evidence(n, time=20, blocks=250, danger=5, danger_bound=0, moves=20, replan=20, replan_bound=10)
+        corner = evidence(n, time=20, danger=5, danger_bound=0, moves=20, replan=20, replan_bound=10)
         s = score_evidence(0, corner)
         assert s.severe == () and s.safety == 1
         assert s.score > points(evidence(n, casualties=1))
@@ -437,18 +458,47 @@ def test_unsafe_fast_cannot_compensate() -> None:
     assert points(evidence(time=40)) < points(evidence(casualties=1))
 
 
-def test_bottleneck_cannot_compensate() -> None:
-    # Perfect safety and speed cannot hide a congestion block rate of 0.6.
-    assert points(evidence(blocks=600)) < 40
-    # Severe congestion with everything else perfect is never excellent and loses >= 20 points.
-    assert points(evidence(blocks=300)) < 80 and 100 - points(evidence(blocks=300)) >= 20
-    # Mild congestion stays far above severe congestion.
-    assert points(evidence(blocks=50)) - points(evidence(blocks=400)) > 40
+def test_realized_bottleneck_cannot_compensate() -> None:
+    # A bottleneck is charged by the delay it causes, over the cut-capacity bound (Time), not by blocked actions.
+    # R8: a bottleneck that doubles evacuee person-time over the capacity bound costs >= 10 points.
+    assert 100 - points(evidence(time=20)) >= 10 and severe_failures(evidence(time=20)) == {}
+    # R13: a severe realized bottleneck (Time 0.4), everything else perfect, is never excellent and loses >= 20.
+    assert points(evidence(time=25)) < 80 and 100 - points(evidence(time=25)) >= 20
+    # A mild realized delay (Time 0.9) stays far above a severe one (Time 0.4).
+    assert points(evidence(time_bound=9, time=10)) - points(evidence(time_bound=10, time=25)) > 40
     # A non-compensatory mean: one very bad quality component caps the score.
     assert points(evidence(time=100)) <= 60
     # Several severe failures compound.
-    two = score_evidence(0, evidence(time=40, blocks=400))
-    assert two.severe == ("time", "coordination") and two.score < points(evidence(time=40))
+    two = score_evidence(0, evidence(time=40, moves=25))
+    assert two.severe == ("time", "path") and two.score < points(evidence(time=40))
+
+
+def test_unavoidable_queueing_is_not_charged() -> None:
+    # Person-time above the free-flow and exit bounds, but at the cut-capacity bound, costs nothing.
+    s = score_evidence(0, evidence(time_bound=15, free_bound=14, time=15))
+    assert s.component("time") == 1 and s.score == 100
+    # The same person-time against a higher capacity bound is avoidable delay.
+    assert score_evidence(0, evidence(time_bound=12, free_bound=12, time=15)).component("time") == F(12, 15)
+
+
+def test_no_component_duplicates_time() -> None:
+    # Delay is charged once, by Time: changing only the person-time changes only the Time component,
+    # and no component reads the block count (a block-based term would be a second delay charge or none).
+    base = quality_components(evidence(moves=12, danger=2, danger_bound=1, replan=4, replan_bound=2))
+    slow = quality_components(evidence(time=25, moves=12, danger=2, danger_bound=1, replan=4, replan_bound=2))
+    assert {k for k in QUALITY_COMPONENTS if base[k] != slow[k]} <= {"time", "hazard"}
+    assert slow["time"] == F(10, 25) and slow["hazard"] is not None and slow["hazard"] > base["hazard"]  # type: ignore[operator]
+    blocked = quality_components(evidence(blocks=999, moves=12, danger=2, danger_bound=1, replan=4, replan_bound=2))
+    assert blocked == base
+
+
+def test_dead_person_blocks_are_not_double_charged() -> None:
+    # Blocked moves of people who later die are not charged again: the death is in Safety, the blocks nowhere.
+    for cas in (1, 3):
+        assert points(evidence(casualties=cas, blocks=900)) == points(evidence(casualties=cas))
+    # Time, Path and Hazard are over evacuees only: casualties do not change them.
+    q = quality_components(evidence(casualties=3, time=13, moves=12, danger=2, danger_bound=1))
+    assert q == quality_components(evidence(casualties=0, time=13, moves=12, danger=2, danger_bound=1))
 
 
 def test_catastrophic_gate_and_ceilings() -> None:
@@ -503,7 +553,7 @@ def test_real_episode_perfect_and_delayed() -> None:
     delayed = score_episode(scenario, run_episode(scenario, delayed_policy, seed=0))
     # Six moves; three steps of waiting: Time = 6/9, the only imperfect component.
     assert delayed.component("time") == F(6, 9) and delayed.severe == ()
-    assert close(delayed.score, 100 * (6 / 9) ** (3 / 8 * BETA))
+    assert close(delayed.score, 100 * (6 / 9) ** (1 / 2 * BETA))
 
 
 def test_real_episode_time_bound_counts_exit_capacity() -> None:
@@ -511,7 +561,85 @@ def test_real_episode_time_bound_counts_exit_capacity() -> None:
     scenario = layout([".a", "bE"], termination=TerminationConfig(max_steps=10))
     ev = episode_evidence(scenario, run_episode(scenario, greedy_exit_policy, seed=0))
     assert ev.evacuated == 2 and ev.evacuee_time_bound == 1 + 1 and ev.evacuee_time_queue_bound == 1 + 2
-    assert quality_components(ev)["time"] == F(3, ev.evacuee_time)
+    assert ev.evacuee_time_cut_bound == 3 and quality_components(ev)["time"] == F(3, ev.evacuee_time)
+
+
+DOOR = ["a#..E", "b...E", "c#..E"]  # three people behind a one-cell door; three exits beyond it
+
+
+def east_policy(obs: Observation) -> dict[str, Action]:
+    return {p.id: Action.EAST for p in obs.active}
+
+
+def test_real_episode_unavoidable_door_queue_is_not_charged() -> None:
+    # Free flow 4 + 5 + 5 = 14 and three exits, but one person per step crosses the door:
+    # entries at steps 1, 2, 3 plus 3 more steps each give 15.
+    scenario = layout(DOOR, termination=TerminationConfig(max_steps=20))
+    record = run_episode(scenario, greedy_exit_policy, seed=0)
+    ev = episode_evidence(scenario, record)
+    assert (ev.evacuee_time_bound, ev.evacuee_time_queue_bound, ev.evacuee_time_cut_bound) == (14, 14, 15)
+    assert ev.evacuee_time == 15 and ev.congestion_blocks >= 1  # mild, unavoidable congestion
+    s = score_episode(scenario, record)
+    assert s.component("time") == 1 and s.severe == () and s.score == 100
+
+
+def test_real_episode_avoidable_queue_is_charged() -> None:
+    # Two exits; everyone queues at the east exit. The capacity bound is 2 + 3 + 3 + 2 = 10; the queue gives 14.
+    scenario = layout(["E.abcd.E"], termination=TerminationConfig(max_steps=20))
+    ev = episode_evidence(scenario, run_episode(scenario, east_policy, seed=0))
+    assert ev.evacuee_time_cut_bound == 10 and ev.evacuee_time == 14
+    s = score_evidence(0, ev)
+    assert s.component("time") == F(10, 14) and s.score < 100 - 10
+    assert score_episode(scenario, run_episode(scenario, greedy_exit_policy, seed=0)).score == 100
+
+
+CONGESTION_OUTCOMES = frozenset({MoveOutcome.BLOCKED_OCCUPIED, MoveOutcome.BLOCKED_CONFLICT, MoveOutcome.BLOCKED_CYCLE})
+
+
+def block_scrub(inner: Policy) -> Policy:
+    """The inner policy, but every move the public resolver would block on a person becomes STAY."""
+
+    def policy(obs: Observation) -> dict[str, Action]:
+        acts = dict(inner(obs))
+        positions = {p.id: p.position for p in obs.active}
+        resolved = resolve_movements(
+            positions,
+            acts,
+            width=obs.map.width,
+            height=obs.map.height,
+            walls=obs.map.walls,
+            burning=obs.burning,
+            enter_fire=obs.rules.enter_fire,
+        )
+        for m in resolved:
+            if m.outcome in CONGESTION_OUTCOMES:
+                acts[m.person_id] = Action.STAY
+        return acts
+
+    return policy
+
+
+@pytest.mark.parametrize("scenario_id", ["v1-pub-02-single-exit-dense", "v1-pub-03-corridor-bottleneck"])
+def test_block_scrub_keeps_trajectory_and_score(public: Suite, scenario_id: str) -> None:
+    # Trajectory invariance: identical authenticated state trajectories give identical scores.
+    scenario = public.get(scenario_id)
+    for seed in (0, 1):
+        base = run_episode(scenario, agent_policy(baseline_factory("congestion-aware-v1")()), seed=seed)
+        scrub = run_episode(scenario, block_scrub(agent_policy(baseline_factory("congestion-aware-v1")())), seed=seed)
+        # Identical observations-driving states: positions, statuses, fire, evacuations, casualties, every step.
+        assert [canonical_json(x.state.to_dict()) for x in base.steps] == [canonical_json(x.state.to_dict()) for x in scrub.steps]
+        a, b = episode_evidence(scenario, base), episode_evidence(scenario, scrub)
+        assert a.congestion_blocks > 0 and b.congestion_blocks == 0  # only the action-log labels differ
+        assert (a.evacuated, a.casualties, a.stranded, a.evacuee_time, a.path_cells_moved, a.evacuee_danger_states) == (
+            b.evacuated,
+            b.casualties,
+            b.stranded,
+            b.evacuee_time,
+            b.path_cells_moved,
+            b.evacuee_danger_states,
+        )
+        sa, sb = score_evidence(0, a), score_evidence(0, b)
+        assert sa.score == sb.score and sa.components == sb.components and sa.severe == sb.severe
 
 
 def test_real_episode_nobody_can_escape_is_not_applicable() -> None:
@@ -669,6 +797,16 @@ def test_leaderboard_safety_dominates_ties(small: Suite, greedy: EvaluationResul
     tie_g = dataclasses.replace(g, model_id="z-safer", score=F(500, 10), safety=F(9, 10))
     tie_d = dataclasses.replace(d, model_id="a-less-safe", score=F(5004, 100), safety=F(8, 10))
     assert [r.model_id for r in leaderboard_order([tie_d, tie_g])] == ["z-safer", "a-less-safe"]
+
+
+def test_congestion_diagnostics_are_reported_not_scored(small: Suite, greedy: EvaluationResult) -> None:
+    report = score_result(greedy, small, resamples=RESAMPLES)
+    dg = report.diagnostics
+    assert isinstance(dg, CongestionDiagnostics) and dg.movement_attempts > 0
+    assert dg.congestion_block_rate is not None and 0 <= dg.congestion_block_rate <= 1
+    assert dg.exit_throughput is not None and 0 < dg.exit_throughput <= 1
+    assert set(report.to_dict()["diagnostics"]) >= {"congestion_block_rate", "contested_cell_steps", "hotspot_cells", "exit_throughput"}
+    assert "Congestion diagnostics (not scored)" in format_summary(report)
 
 
 def test_summary_is_points_not_percent(small: Suite, greedy: EvaluationResult) -> None:

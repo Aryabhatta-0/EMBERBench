@@ -6,14 +6,18 @@ Run from the repository root:
 
 It plays the reference baselines and a set of adversarial policies on
 
-- the public V1 suite under the public development seeds 0, 1, 2, and
+- the public V1 suite under the public development seeds 0, 1, 2,
 - a procedurally generated stochastic suite built from a public config and a
-  constant, test-only generator seed (no evaluator secret is involved),
+  constant, test-only generator seed (no evaluator secret is involved), and
+- a fresh held-out generated suite (same config, a second pre-registered
+  seed) that is never used to choose anything, only to validate,
 
 then scores every episode under the official constants, under rejected
-candidate formulas and under a grid of perturbed constants. It prints the
-tables used in the methodology document. Nothing here is part of the score:
-the adversarial policies are study instruments, not baselines.
+candidate formulas, under the coordination candidates and under a grid of
+perturbed constants. It prints the tables used in the methodology document
+and docs/scoring-study-results.md. Nothing here is part of the score: the
+adversarial policies (including the block-scrub adversary) are study
+instruments, not baselines.
 
 The privileged references are evaluator-side; no policy receives them.
 """
@@ -28,13 +32,14 @@ from dataclasses import replace
 from decimal import Decimal
 from fractions import Fraction
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from emberbench import (  # noqa: E402
     Action,
+    EpisodeStatus,
     GeneratorConfig,
     Observation,
     Suite,
@@ -45,7 +50,11 @@ from emberbench import (  # noqa: E402
     run_episode,
 )
 from emberbench.baselines import _descend, _exit_fields, _flee, _heat, _manhattan, _moves, _nearest, _target  # noqa: E402
+from emberbench.canonical import canonical_json  # noqa: E402
 from emberbench.grid import Pos, in_bounds  # noqa: E402
+from emberbench.movement import MoveOutcome, resolve_movements  # noqa: E402
+from emberbench.events import RunRecord  # noqa: E402
+from emberbench.state import PersonStatus  # noqa: E402
 from emberbench.scoring import (  # noqa: E402
     OFFICIAL_CONSTANTS,
     QUALITY_COMPONENTS,
@@ -61,6 +70,7 @@ Policy = Callable[[Observation], Mapping[str, Action]]
 PUBLIC_SEEDS = (0, 1, 2)
 GENERATED_SEEDS = (0, 1, 2)
 STUDY_GENERATOR_SEED = 20261020  # test-only constant: this suite is public study material, never a scored suite
+HELD_OUT_GENERATOR_SEED = 20261021  # pre-registered held-out validation suite: never used to choose anything
 STUDY_CONFIG: dict[str, Any] = {
     "config_version": "1.0",
     "scenario_count": 16,
@@ -283,45 +293,111 @@ POLICIES: dict[str, Callable[[], Policy]] = {
     "adv-fire-hugger": lambda: fire_hugger,
 }
 
+CONGESTION_OUTCOMES = frozenset({MoveOutcome.BLOCKED_OCCUPIED, MoveOutcome.BLOCKED_CONFLICT, MoveOutcome.BLOCKED_CYCLE})
+SCRUB_INNER = "congestion-aware"
+
+
+def block_scrub(make: Callable[[], Policy]) -> Callable[[], Policy]:
+    """The inner policy, but every move the public resolver would block on a person becomes STAY.
+
+    A blocked person stays in its cell, so the trajectory is identical; only
+    the congestion block count drops to 0. The resolver is public and pure and
+    its inputs are all in the observation, so any agent can do this.
+    """
+
+    def factory() -> Policy:
+        inner = make()
+
+        def policy(obs: Observation) -> dict[str, Action]:
+            acts = dict(inner(obs))
+            resolved = resolve_movements(
+                {q.id: q.position for q in obs.active},
+                acts,
+                width=obs.map.width,
+                height=obs.map.height,
+                walls=obs.map.walls,
+                burning=obs.burning,
+                enter_fire=obs.rules.enter_fire,
+            )
+            for m in resolved:
+                if m.outcome in CONGESTION_OUTCOMES:
+                    acts[m.person_id] = Action.STAY
+            return acts
+
+        return policy
+
+    return factory
+
+
+POLICIES["adv-block-scrub"] = block_scrub(POLICIES[SCRUB_INNER])
+
 
 # --------------------------------------------------------------------------- data
 
 
 def study_suites(tmp: Path) -> dict[str, Suite]:
-    public = load_suite(ROOT / "scenarios" / "public" / "v1")
-    generated = generate_suite(GeneratorConfig.from_dict(STUDY_CONFIG), STUDY_GENERATOR_SEED, batch_id="study-batch")
     from emberbench.generator import freeze_generated_suite
 
-    frozen_dir = tmp / "generated"
-    if not frozen_dir.exists():
-        freeze_generated_suite(generated, frozen_dir)
-    return {"public": public, "generated": load_suite(frozen_dir / "suite")}
+    suites = {"public": load_suite(ROOT / "scenarios" / "public" / "v1")}
+    for name, seed, batch in (("generated", STUDY_GENERATOR_SEED, "study-batch"), ("held-out", HELD_OUT_GENERATOR_SEED, "held-out-batch")):
+        frozen_dir = tmp / name
+        if not frozen_dir.exists():
+            freeze_generated_suite(generate_suite(GeneratorConfig.from_dict(STUDY_CONFIG), seed, batch_id=batch), frozen_dir)
+        suites[name] = load_suite(frozen_dir / "suite")
+    return suites
 
 
-Row = tuple[str, str, str, int, EpisodeEvidence]  # (suite, family, scenario, seed, evidence)
+class Extra(NamedTuple):
+    """Action-log evidence that only the rejected coordination candidates G6 and G7 use."""
+
+    evac_blocks: int  # congestion blocks of the people who end evacuated
+    evac_attempts: int  # movement attempts of the people who end evacuated
 
 
-def collect(suites: Mapping[str, Suite], cache: Path) -> dict[str, list[Row]]:
+Row = tuple[str, str, str, int, EpisodeEvidence, Extra]  # (suite, family, scenario, seed, evidence, extra)
+
+
+def _extra(rec: RunRecord) -> Extra:
+    final = {q.id: q.status for q in rec.final_state.people}
+    moves = [m for st in rec.steps for m in st.movements if final[m.person_id] is PersonStatus.EVACUATED and m.action is not Action.STAY]
+    return Extra(sum(1 for m in moves if m.outcome in CONGESTION_OUTCOMES), len(moves))
+
+
+def _states(rec: RunRecord) -> list[str]:
+    return [canonical_json(st.state.to_dict()) for st in rec.steps]
+
+
+def collect(suites: Mapping[str, Suite], cache: Path) -> tuple[dict[str, list[Row]], dict[str, list[int]]]:
+    """Evidence per policy, and per suite the block-scrub check [episodes, identical state trajectories]."""
     cache.mkdir(parents=True, exist_ok=True)
     data: dict[str, list[Row]] = {}
+    checks_path = cache / "scrub-checks.json"
+    checks: dict[str, list[int]] = json.loads(checks_path.read_text()) if checks_path.exists() else {}
     for name, make in POLICIES.items():
         path = cache / f"{name}.json"
         rows: list[Row] = []
         if path.exists():
             for r in json.loads(path.read_text()):
                 fields = {k: (tuple(v) if isinstance(v, list) else v) for k, v in r[4].items()}
-                rows.append((r[0], r[1], r[2], r[3], EpisodeEvidence(**fields)))  # type: ignore[arg-type]
+                rows.append((r[0], r[1], r[2], r[3], EpisodeEvidence(**fields), Extra(*r[5])))  # type: ignore[arg-type]
         else:
             for suite_name, suite in suites.items():
                 seeds = PUBLIC_SEEDS if suite_name == "public" else GENERATED_SEEDS
                 for entry, scenario in zip(suite.manifest.entries, suite.scenarios, strict=True):
                     for seed in seeds:
                         rec = run_episode(scenario, make(), seed=seed)
-                        rows.append((suite_name, entry.primary_family.value, scenario.scenario_id, seed, episode_evidence(scenario, rec)))
-            path.write_text(json.dumps([[a, b, c, d, e.to_dict()] for a, b, c, d, e in rows]))
+                        rows.append((suite_name, entry.primary_family.value, scenario.scenario_id, seed, episode_evidence(scenario, rec), _extra(rec)))
+                        if name == "adv-block-scrub":
+                            inner = run_episode(scenario, POLICIES[SCRUB_INNER](), seed=seed)
+                            tally = checks.setdefault(suite_name, [0, 0])
+                            tally[0] += 1
+                            tally[1] += int(_states(rec) == _states(inner))
+            path.write_text(json.dumps([[a, b, c, d, e.to_dict(), list(x)] for a, b, c, d, e, x in rows]))
+            if name == "adv-block-scrub":
+                checks_path.write_text(json.dumps(checks))
         data[name] = rows
         print(f"  collected {name}: {len(rows)} episodes", file=sys.stderr)
-    return data
+    return data, checks
 
 
 # --------------------------------------------------------------------------- aggregation (as emberbench.scoring)
@@ -331,9 +407,10 @@ def hierarchical(rows: Sequence[Row], values: Sequence[float | None]) -> float |
     """Episode -> scenario -> primary family -> overall unweighted means, skipping undefined values."""
     by_scen: dict[tuple[str, str], list[float]] = {}
     fam_of: dict[tuple[str, str], str] = {}
-    for (suite, fam, scen, _seed, _ev), v in zip(rows, values, strict=True):
+    for row, v in zip(rows, values, strict=True):
         if v is None:
             continue
+        suite, fam, scen = row[0], row[1], row[2]
         by_scen.setdefault((suite, scen), []).append(v)
         fam_of[(suite, scen)] = f"{suite}:{fam}"
     by_fam: dict[str, list[float]] = {}
@@ -439,7 +516,7 @@ def additive(ev: EpisodeEvidence) -> float:
     if ev.max_evacuated == 0:
         return 0.0
     p = _parts(ev)
-    terms = {"evac": (ev.evacuated / ev.max_evacuated, 0.5), **{k: (p[k], w) for k, w in zip(QUALITY_COMPONENTS, (0.15, 0.1, 0.1, 0.05, 0.1), strict=True)}}
+    terms = {"evac": (ev.evacuated / ev.max_evacuated, 0.5), **{k: (p[k], w) for k, w in zip(QUALITY_COMPONENTS, (0.15, 0.1, 0.05, 0.1), strict=True)}}
     num = sum(v * w for v, w in terms.values() if v is not None)
     den = sum(w for v, w in terms.values() if v is not None)
     return 100 * num / den
@@ -468,6 +545,109 @@ CANDIDATES: dict[str, Formula] = {
     "additive": additive,
     "plain-product": plain_product,
 }
+
+
+# --------------------------------------------------------------------------- coordination candidates (docs/scoring.md section 4.2)
+
+
+CoordFormula = Callable[[EpisodeEvidence, Extra], float]
+WEIGHTS_1_0 = {"time": 0.3, "coordination": 0.2, "hazard": 0.2, "path": 0.1, "replanning": 0.2}  # ce5e322
+WEIGHTS_MERGED = {"time": 0.5, "hazard": 0.2, "path": 0.1, "replanning": 0.2}  # G4: the Coordination weight moved to Time
+SEVERE_1_0 = {"time": 0.5, "coordination": 0.5625, "hazard": 0.75, "path": 0.5, "replanning": 0.5}  # component space
+BETA = float(OFFICIAL_CONSTANTS.quality_exponent)
+
+
+def _with_quality(ev: EpisodeEvidence, time_ref: int, coordination: float | None, weights: Mapping[str, float]) -> float:
+    """The official Safety with a re-specified quality term (the ce5e322 structure: geometric mean, beta, severe gates)."""
+    sc = _scored(ev)
+    if sc.status is not EpisodeStatus.SCORED or sc.safety is None:
+        return float(sc.score)
+    parts = _parts(ev)
+    parts["time"] = None if parts["time"] is None or ev.evacuee_time == 0 else time_ref / ev.evacuee_time
+    parts["coordination"] = coordination
+    vals = {k: float(v) for k, v in parts.items() if v is not None and k in weights}
+    if not vals:
+        return float(sc.score)
+    total = sum(weights[k] for k in vals)
+    quality = severity = 1.0
+    for k, v in vals.items():
+        quality *= v ** (weights[k] / total)
+        if v < SEVERE_1_0[k]:
+            severity *= 0.8 * v / SEVERE_1_0[k]
+    return float(100 * float(sc.safety) * quality**BETA * severity)
+
+
+def _coordination(blocks: int, attempts: int) -> float | None:
+    """The ce5e322 Coordination component (1 - block rate)^2; undefined without movement attempts."""
+    return (1 - blocks / attempts) ** 2 if attempts else None
+
+
+def _forced(ev: EpisodeEvidence) -> int:
+    """Capacity-forced delay of the evacuees: cut-capacity bound minus free-flow bound."""
+    return ev.evacuee_time_cut_bound - ev.evacuee_time_bound
+
+
+def k_v1_0(ev: EpisodeEvidence, x: Extra) -> float:
+    """1.0 at ce5e322: exit-capacity Time, Coordination over every person's blocks, block-rate gate 1/4."""
+    return _with_quality(ev, ev.evacuee_time_queue_bound, _coordination(ev.congestion_blocks, ev.movement_attempts), WEIGHTS_1_0)
+
+
+def k_g1(ev: EpisodeEvidence, x: Extra) -> float:
+    """G1: as 1.0, but Time uses the cut-capacity bound."""
+    return _with_quality(ev, ev.evacuee_time_cut_bound, _coordination(ev.congestion_blocks, ev.movement_attempts), WEIGHTS_1_0)
+
+
+def k_g4(ev: EpisodeEvidence, x: Extra) -> float:
+    """G4: Coordination removed and its weight moved to Time; cut-capacity Time."""
+    return _with_quality(ev, ev.evacuee_time_cut_bound, None, WEIGHTS_MERGED)
+
+
+def k_g5(ev: EpisodeEvidence, x: Extra) -> float:
+    """G5 = the official score: Coordination removed, weights renormalized (3/8, 2/8, 1/8, 2/8); cut-capacity Time."""
+    return float(_scored(ev).score)
+
+
+def k_g6(ev: EpisodeEvidence, x: Extra) -> float:
+    """G6: as 1.0, but Coordination counts only the blocks and attempts of people who end evacuated."""
+    return _with_quality(ev, ev.evacuee_time_queue_bound, _coordination(x.evac_blocks, x.evac_attempts), WEIGHTS_1_0)
+
+
+def k_g7(ev: EpisodeEvidence, x: Extra) -> float:
+    """G7: G6 with cut-capacity Time and a credit of the capacity-forced delay against the evacuee blocks."""
+    return _with_quality(ev, ev.evacuee_time_cut_bound, _coordination(max(0, x.evac_blocks - _forced(ev)), x.evac_attempts), WEIGHTS_1_0)
+
+
+def _waiting(ev: EpisodeEvidence) -> float | None:
+    """Trajectory-only Coordination: 1 - (evacuee waiting steps beyond the capacity-forced delay) / person-time.
+
+    Waiting steps are person-time minus cells moved (T - m): a function of the
+    Time and Path inputs, so this is a candidate the contract must reject.
+    """
+    if ev.evacuee_time == 0:
+        return None
+    excess = max(0, ev.evacuee_time - ev.path_cells_moved - _forced(ev))
+    return 1 - excess / ev.evacuee_time
+
+
+def k_wait(ev: EpisodeEvidence, x: Extra) -> float:
+    """T-wait: a trajectory-only Coordination (waiting beyond the forced delay) in the 1.0 structure."""
+    return _with_quality(ev, ev.evacuee_time_cut_bound, _waiting(ev), WEIGHTS_1_0)
+
+
+COORD_CANDIDATES: dict[str, CoordFormula] = {
+    "1.0": k_v1_0,
+    "G1": k_g1,
+    "G4": k_g4,
+    "G5-official": k_g5,
+    "G6": k_g6,
+    "G7": k_g7,
+    "T-wait": k_wait,
+}
+
+
+def _on_synthetic(f: CoordFormula) -> Formula:
+    """Synthetic profiles: every block and attempt belongs to an evacuee."""
+    return lambda ev: f(ev, Extra(ev.congestion_blocks, ev.movement_attempts))
 
 
 # --------------------------------------------------------------------------- reports
@@ -556,6 +736,7 @@ def synthetic(
         evacuee_time=int(steps / time) if evac else 0,
         evacuee_time_bound=steps,
         evacuee_time_queue_bound=steps,
+        evacuee_time_cut_bound=steps,
         movement_attempts=attempts,
         blocked_occupied=int(attempts * blocks),
         blocked_conflict=0,
@@ -577,13 +758,17 @@ def _mixed_identity() -> EpisodeEvidence:
     return replace(synthetic(100, casualties=1, unsavable_stranded=1))
 
 
+def _bottleneck(time: Fraction, blocks: Fraction = Fraction(3, 10)) -> EpisodeEvidence:
+    """Zero loss; a bottleneck with this block rate that leaves Time = ``time`` against the capacity bound."""
+    return synthetic(100, time=time, blocks=blocks)
+
+
 def _threshold_corner(population: int, stranded: int, c: ScoringConstants = OFFICIAL_CONSTANTS) -> EpisodeEvidence:
     """No avoidable casualty; every quality component exactly at its severe threshold (not severe)."""
     return synthetic(
         population,
         stranded=stranded,
         time=c.severe_time,
-        blocks=c.severe_block_rate,
         hazard=c.severe_hazard_rate,
         path=c.severe_path,
         replanning=c.severe_replanning,
@@ -608,12 +793,12 @@ REQUIREMENTS: list[tuple[str, Callable[[Formula], bool]]] = [
     ("R5 10/100 casualties <= 35", lambda f: f(synthetic(100, casualties=10)) <= 35),
     ("R6 one stranded in 100 <= 85 and above one casualty", lambda f: f(synthetic(100, casualties=1)) < f(synthetic(100, stranded=1)) <= 85),
     ("R7 10/100 stranded <= 50", lambda f: f(synthetic(100, stranded=10)) <= 50),
-    ("R8 congestion rate 0.3 costs >= 10 points", lambda f: f(synthetic(100)) - f(synthetic(100, blocks=Fraction(3, 10))) >= 10),
+    ("R8 realized bottleneck (Time 0.5 vs the capacity bound, block rate 0.3) costs >= 10 points", lambda f: f(synthetic(100)) - f(_bottleneck(Fraction(1, 2))) >= 10),
     ("R9 50% avoidable losses score 0 (catastrophic gate)", lambda f: f(synthetic(100, casualties=50)) == 0),
     ("R10 Time 0.1 with everything else perfect scores <= 60", lambda f: f(synthetic(100, time=Fraction(1, 10))) <= 60),
     ("R11 a savable casualty is not hidden by another person's unavoidable loss", lambda f: f(_mixed_identity()) <= 60),
     ("R12 no casualty + no severe failure beats perfect + 1 casualty (M* 2..1000, s 0..1)", _r12),
-    ("R13 severe bottleneck (rate 0.3), no loss: < 80 and >= 20 points lost", lambda f: f(synthetic(100, blocks=Fraction(3, 10))) < 80 and f(synthetic(100)) - f(synthetic(100, blocks=Fraction(3, 10))) >= 20),
+    ("R13 severe realized bottleneck (Time 0.4, block rate 0.3), no loss: < 80 and >= 20 points lost", lambda f: f(_bottleneck(Fraction(2, 5))) < 80 and f(synthetic(100)) - f(_bottleneck(Fraction(2, 5))) >= 20),
     (
         "R14 severe Time 0.4 / Hazard 0.3 / Replanning 0.4 / Path 0.4 alone: each < 80",
         lambda f: all(
@@ -629,17 +814,23 @@ REQUIREMENTS: list[tuple[str, Callable[[Formula], bool]]] = [
     ("R15 failed / missing / timeout episodes score 0 and stay in every mean (structural; tests)", lambda f: True),
 ]
 
+# The 1.0 statements of R8 and R13 in action-log units. Withdrawn: a block count is not a trajectory property.
+WITHDRAWN: list[tuple[str, Callable[[Formula], bool]]] = [
+    ("R8-old block rate 0.3 alone (no delay) costs >= 10 points", lambda f: f(synthetic(100)) - f(synthetic(100, blocks=Fraction(3, 10))) >= 10),
+    ("R13-old block rate 0.3 alone: < 80 and >= 20 points lost", lambda f: f(synthetic(100, blocks=Fraction(3, 10))) < 80 and f(synthetic(100)) - f(synthetic(100, blocks=Fraction(3, 10))) >= 20),
+]
+
 # Pre-registered ordering (written before the study was run): each pair must satisfy left > right.
 ORDERING: list[tuple[str, EpisodeEvidence, str, EpisodeEvidence]] = [
     ("zero-loss, Time 0.6", synthetic(100, time=Fraction(3, 5)), "perfect quality + 1 casualty", synthetic(100, casualties=1)),
     ("perfect", synthetic(100), "zero-loss but slow (Time 0.5)", synthetic(100, time=Fraction(1, 2))),
-    ("perfect", synthetic(100), "zero-loss, severe congestion (0.3)", synthetic(100, blocks=Fraction(3, 10))),
+    ("perfect", synthetic(100), "zero-loss, severe realized bottleneck (Time 0.4)", _bottleneck(Fraction(2, 5))),
     ("perfect", synthetic(100), "zero-loss, high exposure (0.3)", synthetic(100, hazard=Fraction(3, 10))),
     ("perfect", synthetic(100), "zero-loss, inefficient routing (Path 0.6)", synthetic(100, path=Fraction(3, 5))),
     ("replanning 0.9", synthetic(100, replanning=Fraction(9, 10)), "static-good, invalidation failure (0.3)", synthetic(100, replanning=Fraction(3, 10))),
     ("1 stranded", synthetic(100, stranded=1), "1 casualty", synthetic(100, casualties=1)),
     ("1 casualty", synthetic(100, casualties=1), "2 casualties", synthetic(100, casualties=2)),
-    ("mild congestion (0.05)", synthetic(100, blocks=Fraction(1, 20)), "severe congestion (0.4)", synthetic(100, blocks=Fraction(2, 5))),
+    ("mild realized congestion (Time 0.9)", _bottleneck(Fraction(9, 10), Fraction(1, 20)), "severe realized bottleneck (Time 0.4)", _bottleneck(Fraction(2, 5), Fraction(2, 5))),
     ("mild delay (Time 0.8)", synthetic(100, time=Fraction(4, 5)), "extreme delay (Time 0.1)", synthetic(100, time=Fraction(1, 10))),
 ]
 
@@ -650,8 +841,34 @@ def _old_attribution(ev: EpisodeEvidence) -> tuple[int, int]:
     return max(0, ev.casualties - u), max(0, ev.stranded - max(0, u - ev.casualties))
 
 
+def _applicable(ev: EpisodeEvidence) -> bool:
+    """NOT_APPLICABLE episodes (nobody can escape under any policy) are excluded from every mean, as in the score."""
+    return ev.max_evacuated > 0
+
+
+def _mean(rows: Sequence[Row], f: Formula) -> float:
+    return hierarchical(rows, [f(r[4]) if _applicable(r[4]) else None for r in rows]) or 0.0
+
+
 def _scores(data: Mapping[str, list[Row]], f: Formula, names: Sequence[str]) -> dict[str, float]:
-    return {n: hierarchical(data[n], [f(r[4]) for r in data[n]]) or 0.0 for n in names}
+    return {n: _mean(data[n], f) for n in names}
+
+
+def _coord_scores(data: Mapping[str, list[Row]], f: CoordFormula, names: Sequence[str], suite: str | None = None) -> dict[str, float]:
+    out = {}
+    for n in names:
+        rows = [r for r in data[n] if suite is None or r[0] == suite]
+        out[n] = hierarchical(rows, [f(r[4], r[5]) if _applicable(r[4]) else None for r in rows]) or 0.0
+    return out
+
+
+ACTION_LOG_FIELDS = frozenset(
+    {"record_digest", "movement_attempts", "blocked_occupied", "blocked_conflict", "blocked_cycle", "contested_cell_steps", "hotspot_cells", "peak_contested_cells"}
+)
+
+
+def _trajectory_evidence(ev: EpisodeEvidence) -> dict[str, Any]:
+    return {k: v for k, v in ev.to_dict().items() if k not in ACTION_LOG_FIELDS}
 
 
 def main() -> None:
@@ -659,10 +876,64 @@ def main() -> None:
     parser.add_argument("--cache", type=Path, default=ROOT / ".scoring-study")
     args = parser.parse_args()
     suites = study_suites(args.cache)
-    data = collect(suites, args.cache / "evidence")
+    data_all, scrub_checks = collect(suites, args.cache / "evidence")
+    data = {n: [r for r in rows if r[0] != "held-out"] for n, rows in data_all.items()}
+    held = {n: [r for r in rows if r[0] == "held-out"] for n, rows in data_all.items()}
     names = list(POLICIES)
     c = OFFICIAL_CONSTANTS
     print(f"quality exponent beta = {float(c.quality_exponent):.6f}; severe thresholds (component space) " + ", ".join(f"{k} {float(v):.4f}" for k, v in c.severe_thresholds().items()))
+
+    print("\n## Block-scrub reproduction (trajectory invariance)\n")
+    inner_rows, scrub_rows = data_all[SCRUB_INNER], data_all["adv-block-scrub"]
+    scrub_out = []
+    for suite_name in ("public", "generated", "held-out"):
+        pairs = [(a, b) for a, b in zip(inner_rows, scrub_rows, strict=True) if a[0] == suite_name]
+        episodes, identical = scrub_checks.get(suite_name, [0, 0])
+        same_ev = sum(1 for a, b in pairs if _trajectory_evidence(a[4]) == _trajectory_evidence(b[4]))
+        same_score = sum(1 for a, b in pairs if score_evidence(0, a[4]).score == score_evidence(0, b[4]).score)
+        scrub_out.append(
+            [
+                suite_name,
+                episodes,
+                identical,
+                same_ev,
+                same_score,
+                sum(a[4].congestion_blocks for a, _b in pairs),
+                sum(b[4].congestion_blocks for _a, b in pairs),
+                sum(a[5].evac_blocks for a, _b in pairs),
+            ]
+        )
+    print(
+        table(
+            ["suite", "episodes", "identical state trajectories", "identical trajectory evidence", "identical official score", "blocks (inner)", "blocks (scrub)", "evacuee blocks (inner)"],
+            scrub_out,
+        )
+    )
+    print("\nScrub gain (adv-block-scrub minus congestion-aware), per candidate and suite:\n")
+    gain_rows = []
+    for cname, cf in COORD_CANDIDATES.items():
+        gline: list[Any] = [cname]
+        for sk in ("public", "generated", None, "held-out"):
+            src = data_all if sk == "held-out" else data
+            sc = _coord_scores(src, cf, [SCRUB_INNER, "adv-block-scrub"], sk)
+            gline.append(f"{sc['adv-block-scrub'] - sc[SCRUB_INNER]:+.2f}")
+        worst = max(abs(cf(b[4], b[5]) - cf(a[4], a[5])) for a, b in zip(inner_rows, scrub_rows, strict=True) if _applicable(a[4]))
+        gline.append(f"{worst:.2f}")
+        gline.append("pass" if worst == 0 else "FAIL")
+        gain_rows.append(gline)
+    print(table(["candidate", "public", "generated", "both", "held-out", "max episode |delta|", "R16 invariance"], gain_rows))
+
+    print("\n## Cut-capacity bound (Time reference) checks, every policy and suite\n")
+    every_row = [r for rows in data_all.values() for r in rows if r[4].evacuated]
+    print(
+        f"episodes with evacuees: {len(every_row)}; cut bound <= person-time in all: {all(r[4].evacuee_time_cut_bound <= r[4].evacuee_time for r in every_row)}; "
+        f"cut bound > exit-capacity bound in {sum(1 for r in every_row if r[4].evacuee_time_cut_bound > r[4].evacuee_time_queue_bound)}; "
+        f"person-time equal to the cut bound in {sum(1 for r in every_row if r[4].evacuee_time_cut_bound == r[4].evacuee_time)}"
+    )
+    for suite_name in ("public", "generated", "held-out"):
+        sub = [r for r in every_row if r[0] == suite_name]
+        forced = sum(_forced(r[4]) for r in sub)
+        print(f"- {suite_name}: {len(sub)} episodes; cut > exit bound in {sum(1 for r in sub if r[4].evacuee_time_cut_bound > r[4].evacuee_time_queue_bound)}; total capacity-forced delay {forced} person-steps of {sum(r[4].evacuee_time for r in sub)}")
 
     print("\n## Raw components (hierarchical means over both suites; Safety parts and quality parts in [0, 1])\n")
     comp_rows = []
@@ -677,17 +948,37 @@ def main() -> None:
             vals = [None if s.component(comp) is None else 100 * float(s.component(comp)) for s in scored]  # type: ignore[arg-type]
             v = hierarchical(rows, vals)
             line.append("n/a" if v is None else v)
-        line.append(hierarchical(rows, [float(s.score) for s in scored]))
+        line.append(hierarchical(rows, [None if s.safety is None else float(s.score) for s in scored]))
         comp_rows.append(line)
     print(table(["policy", "evac", "casualty", "stranding", "Safety", *QUALITY_COMPONENTS, "EMBER"], comp_rows))
 
-    print("\n## Severe quality failures (share of applicable episodes, %)\n")
-    sev_rows = []
+    for label, src in (("study suites", data), ("held-out suite", held)):
+        print(f"\n## Severe quality failures, {label} (share of applicable episodes, %; any = at least one gate)\n")
+        sev_rows = []
+        for name in names:
+            scored = [score_evidence(0, r[4]) for r in src[name]]
+            applicable = [s for s in scored if s.safety is not None]
+            n_app = max(1, len(applicable))
+            sev_rows.append([name, *(100 * sum(1 for s in applicable if k in s.severe) / n_app for k in QUALITY_COMPONENTS), 100 * sum(1 for s in applicable if s.severe) / n_app])
+        print(table(["policy", *QUALITY_COMPONENTS, "any"], sev_rows))
+
+    print("\n## Congestion diagnostics (reported, never scored; study suites)\n")
+    dg_rows = []
     for name in names:
-        scored = [score_evidence(0, r[4]) for r in data[name]]
-        applicable = [s for s in scored if s.safety is not None]
-        sev_rows.append([name, *(100 * sum(1 for s in applicable if k in s.severe) / max(1, len(applicable)) for k in QUALITY_COMPONENTS)])
-    print(table(["policy", *QUALITY_COMPONENTS], sev_rows))
+        evs = [r[4] for r in data[name]]
+        attempts = sum(e.movement_attempts for e in evs)
+        window = sum(e.exit_active_steps for e in evs)
+        dg_rows.append(
+            [
+                name,
+                f"{sum(e.congestion_blocks for e in evs) / attempts:.3f}" if attempts else "n/a",
+                f"{sum(e.contested_cell_steps for e in evs) / len(evs):.1f}",
+                f"{sum(e.hotspot_cells for e in evs) / len(evs):.1f}",
+                max(e.peak_contested_cells for e in evs),
+                f"{sum(e.evacuated for e in evs) / window:.3f}" if window else "n/a",
+            ]
+        )
+    print(table(["policy", "block rate", "contested cell-steps / episode", "hotspot cells / episode", "peak contested", "exit throughput"], dg_rows))
 
     print("\n## Totals (people over all episodes) and person-level attribution\n")
     tot = []
@@ -727,7 +1018,7 @@ def main() -> None:
         rows_out = []
         for name in names:
             rows = [r for r in data[name] if r[0] == suite_name]
-            rows_out.append([name, hierarchical(rows, [official()(r[4]) for r in rows]) or 0.0, hierarchical(rows, [a_multiplicative(r[4]) for r in rows]) or 0.0])
+            rows_out.append([name, _mean(rows, official()), _mean(rows, a_multiplicative)])
         print(table(["policy", "F-official", "A-multiplicative"], rows_out))
 
     print("\n## Requirement checks per candidate\n")
@@ -739,6 +1030,60 @@ def main() -> None:
         ord_rows.append([f"{left} > {right}", *("pass" if f(lev) > f(rev) else "FAIL" for f in CANDIDATES.values())])
     print(table(["ordering", *CANDIDATES], ord_rows))
     print("\nF-official values: " + "; ".join(f"{left} {official()(lev):.1f} vs {right} {official()(rev):.1f}" for left, lev, right, rev in ORDERING))
+
+    print("\n## Coordination candidates: overall scores (both study suites)\n")
+    coord = {k: _coord_scores(data, cf, names) for k, cf in COORD_CANDIDATES.items()}
+    coord_held = {k: _coord_scores(held, cf, names) for k, cf in COORD_CANDIDATES.items()}
+    print(table(["policy", *COORD_CANDIDATES], [[n, *(coord[k][n] for k in COORD_CANDIDATES)] for n in names]))
+    for suite_name in ("public", "generated"):
+        print(f"\n### Coordination candidates, {suite_name} suite only\n")
+        per = {k: _coord_scores(data, cf, names, suite_name) for k, cf in COORD_CANDIDATES.items()}
+        print(table(["policy", *COORD_CANDIDATES], [[n, *(per[k][n] for k in COORD_CANDIDATES)] for n in names]))
+    print("\n### Coordination candidates, held-out suite\n")
+    print(table(["policy", *COORD_CANDIDATES], [[n, *(coord_held[k][n] for k in COORD_CANDIDATES)] for n in names]))
+    print("\n### Coordination candidates: summary\n")
+    official_both, official_held = coord["G5-official"], coord_held["G5-official"]
+    summary = []
+    for k in COORD_CANDIDATES:
+        rk_both, rk_held = ranks(coord[k]), ranks(coord_held[k])
+        top = sorted(names, key=lambda n: -coord[k][n])[:3]
+        adv_gain = max(coord[k][n] - coord[k][SCRUB_INNER] for n in names if n.startswith("adv-"))
+        summary.append(
+            [
+                k,
+                f"{kendall_tau(official_both, coord[k]):.3f}",
+                f"{kendall_tau(official_held, coord_held[k]):.3f}",
+                f"{kendall_tau(coord[k], coord_held[k]):.3f}",
+                ", ".join(top),
+                f"{rk_both[SCRUB_INNER]} / {rk_held[SCRUB_INNER]}",
+                f"{adv_gain:+.1f}",
+            ]
+        )
+    print(table(["candidate", "tau vs official (study)", "tau vs official (held-out)", "tau study vs held-out", "top 3 (study)", "congestion-aware rank study / held-out", "best adversary - congestion-aware"], summary))
+    print("\n### Coordination candidates: requirement checks (synthetic profiles; every block belongs to an evacuee)\n")
+    req_rows = [[label, *("pass" if check(_on_synthetic(cf)) else "FAIL" for cf in COORD_CANDIDATES.values())] for label, check in [*REQUIREMENTS, *WITHDRAWN]]
+    req_rows.append(["R16 trajectory invariance (scrub delta exactly 0 in every episode)", *(row[-1] for row in gain_rows)])
+    print(table(["requirement", *COORD_CANDIDATES], req_rows))
+    ord_rows_c = [[f"{left} > {right}", *("pass" if _on_synthetic(cf)(lev) > _on_synthetic(cf)(rev) else "FAIL" for cf in COORD_CANDIDATES.values())] for left, lev, right, rev in ORDERING]
+    print("\n" + table(["ordering", *COORD_CANDIDATES], ord_rows_c))
+
+    print("\n### Does a Coordination component carry information beyond Time? (Spearman over episodes, moving policies)\n")
+    cvec: dict[str, list[float]] = {"time": [], "1.0 coordination": [], "G7 coordination": [], "T-wait": [], "path": []}
+    for name in names:
+        if name in ("always-stay", "random-legal"):
+            continue
+        for r in data[name]:
+            ev, x = r[4], r[5]
+            parts = _parts(ev)
+            c10 = _coordination(ev.congestion_blocks, ev.movement_attempts)
+            c7 = _coordination(max(0, x.evac_blocks - _forced(ev)), x.evac_attempts)
+            w = _waiting(ev)
+            if parts["time"] is None or parts["path"] is None or c10 is None or c7 is None or w is None:
+                continue
+            for key, val in (("time", parts["time"]), ("1.0 coordination", c10), ("G7 coordination", c7), ("T-wait", w), ("path", parts["path"])):
+                cvec[key].append(float(val))
+    print(table(["", *cvec], [[a, *(f"{spearman(cvec[a], cvec[b]):.2f}" for b in cvec)] for a in cvec]))
+    print(f"\n(n = {len(cvec['time'])} episodes)")
 
     print("\n## Adversarial checks: adversary minus congestion-aware (gaming check, not a selection criterion)\n")
     adv_rows = [[n, *(f"{results[k][n] - results[k]['congestion-aware']:+.1f}" for k in CANDIDATES)] for n in names if n.startswith("adv-")]
@@ -762,10 +1107,9 @@ def main() -> None:
         ("Time 0.4 (severe)", synthetic(100, time=Fraction(2, 5))),
         ("Time 0.25", synthetic(100, time=Fraction(1, 4))),
         ("Time 0.1", synthetic(100, time=Fraction(1, 10))),
-        ("congestion rate 0.1", synthetic(100, blocks=Fraction(1, 10))),
-        ("congestion rate 0.25 (threshold)", synthetic(100, blocks=Fraction(1, 4))),
-        ("congestion rate 0.3 (severe)", synthetic(100, blocks=Fraction(3, 10))),
-        ("congestion rate 0.5", synthetic(100, blocks=Fraction(1, 2))),
+        ("block rate 0.3, no delay (diagnostic only)", synthetic(100, blocks=Fraction(3, 10))),
+        ("realized bottleneck: Time 0.5, block rate 0.3", _bottleneck(Fraction(1, 2))),
+        ("severe realized bottleneck: Time 0.4, block rate 0.3", _bottleneck(Fraction(2, 5))),
         ("avoidable hazard 0.1", synthetic(100, hazard=Fraction(1, 10))),
         ("avoidable hazard 0.3 (severe)", synthetic(100, hazard=Fraction(3, 10))),
         ("Path 0.6", synthetic(100, path=Fraction(3, 5))),
@@ -806,13 +1150,13 @@ def main() -> None:
         print(f"{k}: range {max(mv) - min(mv):.1f}")
 
     print("\n## Per-family ranking (F-official; family means over seeds)\n")
-    families = sorted({f"{r[0]}:{r[1]}" for r in data[names[0]]})
+    families = sorted({f"{r[0]}:{r[1]}" for r in data_all[names[0]]})
     fam_rows = []
     for name in names:
         line = [name]
         for fam in families:
-            rows = [r for r in data[name] if f"{r[0]}:{r[1]}" == fam]
-            line.append(hierarchical(rows, [official()(r[4]) for r in rows]) or 0.0)
+            rows = [r for r in data_all[name] if f"{r[0]}:{r[1]}" == fam]
+            line.append(_mean(rows, official()))
         fam_rows.append(line)
     print(table(["policy", *families], fam_rows))
     for fam_i, fam in enumerate(families):
@@ -837,7 +1181,6 @@ def main() -> None:
                 "severe_factor": ["0.7", "0.8", "0.9"],
                 "severe_exponent": ["0.5", "1", "2"],
                 "severe_time": ["1/3", "1/2", "2/3"],
-                "severe_block_rate": ["1/5", "1/4", "1/3"],
                 "severe_hazard_rate": ["1/5", "1/4", "1/3"],
             },
         ),
@@ -890,9 +1233,12 @@ def main() -> None:
     print("\n## Rank agreement between candidate designs (Kendall tau vs F-official)\n")
     print(table(["candidate", "Kendall tau"], [[k, f"{kendall_tau(base, results[k]):.3f}"] for k in CANDIDATES]))
 
-    print("\n## Official ranking (F-official, both suites)\n")
+    print("\n## Official ranking (F-official, both study suites) and held-out validation\n")
     rk = ranks(base)
-    print(table(["rank", "policy", "EMBER"], [[rk[n], n, base[n]] for n in sorted(names, key=lambda n: rk[n])]))
+    held_scores = _scores(held, official(), names)
+    rk_held = ranks(held_scores)
+    print(table(["rank", "policy", "EMBER (study)", "EMBER (held-out)", "rank (held-out)"], [[rk[n], n, base[n], held_scores[n], rk_held[n]] for n in sorted(names, key=lambda n: rk[n])]))
+    print(f"\nKendall tau, study vs held-out ranking: {kendall_tau(base, held_scores):.3f}")
 
 
 if __name__ == "__main__":

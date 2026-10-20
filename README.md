@@ -154,10 +154,15 @@ never a percentage of people evacuated. It is
 casualty factor and a stranding factor over losses attributed person by
 person (a loss is avoidable when that person could have escaped), and is 0
 when half of the savable people are lost. Quality is a weighted geometric
-mean of time, coordination, hazard, path and replanning, each relative to a
-privileged optimum of the same episode. An avoidable casualty caps an
-episode below 60; a severe bottleneck, delay, exposure, path or replanning
-failure caps it below 80. Missing, invalid,
+mean of time, hazard, path and replanning, each relative to a privileged
+optimum of the same episode; time is relative to a capacity bound that
+counts unavoidable queues at exits and doors. Every input is a function of
+the replayed state trajectory, so identical trajectories score identically.
+Congestion (block rate, contested cells, hotspots, exit throughput) is
+reported in every score report but is never a score input: a bottleneck is
+charged by the delay, exposure and losses it causes. An avoidable casualty
+caps an episode below 60; a severe delay (including a severe realized
+bottleneck), exposure, path or replanning failure caps it below 80. Missing, invalid,
 failed and timed-out episodes score 0 and are counted. Episodes are averaged
 by scenario, then by primary family; the report gives a stratified
 bootstrap 95% interval, every component, per-family scores and lower-tail

@@ -4,10 +4,15 @@ The full definition, its justification and the sensitivity study are in
 ``docs/scoring.md`` and ``docs/benchmark-methodology.md``. In short, for one
 episode::
 
-    EMBER = 100 * Safety * Quality
+    EMBER = 100 * Safety * Quality ** beta * Severity
 
-    Safety  = E^kE * P_casualty * P_stranding          (0 when the loss rate is catastrophic)
-    Quality = weighted geometric mean of Time, Coordination, Hazard, Path and Replanning
+    Safety   = E^kE * P_casualty * P_stranding          (0 when the loss rate is catastrophic)
+    Quality  = weighted geometric mean of Time, Hazard, Path and Replanning
+    Severity = 0.8 * (q / q_severe) for every quality component below its severe threshold
+
+Every score input is a function of the authenticated state trajectory (positions,
+statuses, fire), never of the action log: two runs with identical trajectories
+get identical scores. Congestion blocks are reported as diagnostics only.
 
 Every component is in ``[0, 1]`` and no component can exceed 1, so good
 performance in one dimension never offsets a failure in another. Episodes are
@@ -52,6 +57,7 @@ from .environment_pack import EnvironmentPack, trajectory_digest
 from .evaluation import EvaluationManifest, EvaluationResult, resolve_scenario, verify_manifest
 from .events import RunRecord
 from .grid import Pos, neighbours
+from .crowd import compute_crowd_diagnostics
 from .metrics import EpisodeMetrics, compute_episode_metrics
 from .oracle import fire_trajectory
 from .scenario import Scenario
@@ -113,16 +119,13 @@ class ScoringConstants:
     stranding_incident_factor: Decimal = Decimal("0.8")
     stranding_rate_exponent: Decimal = Decimal("2")
     catastrophic_loss_rate: Fraction = Fraction(1, 2)
-    congestion_exponent: Decimal = Decimal("2")
     hazard_exponent: Decimal = Decimal("1")
-    weight_time: Fraction = Fraction(3, 10)
-    weight_coordination: Fraction = Fraction(2, 10)
-    weight_hazard: Fraction = Fraction(2, 10)
-    weight_path: Fraction = Fraction(1, 10)
-    weight_replanning: Fraction = Fraction(2, 10)
+    weight_time: Fraction = Fraction(3, 8)
+    weight_hazard: Fraction = Fraction(2, 8)
+    weight_path: Fraction = Fraction(1, 8)
+    weight_replanning: Fraction = Fraction(2, 8)
     # Severe quality failures (docs/scoring.md section 4.3). Each threshold is in natural units.
-    severe_time: Fraction = Fraction(1, 2)  # Time below this: person-time above 2x the privileged bound
-    severe_block_rate: Fraction = Fraction(1, 4)  # congestion block rate above this
+    severe_time: Fraction = Fraction(1, 2)  # Time below this: person-time above 2x the capacity bound
     severe_hazard_rate: Fraction = Fraction(1, 4)  # avoidable danger-zone rate above this
     severe_path: Fraction = Fraction(1, 2)  # Path below this: more than 2x the fewest moves
     severe_replanning: Fraction = Fraction(1, 2)  # Replanning below this: recovery above 2x the privileged bound
@@ -152,7 +155,6 @@ class ScoringConstants:
         """Per quality component: a value strictly below the threshold is a severe failure."""
         return {
             "time": _dec(self.severe_time),
-            "coordination": _pow(_dec(1 - self.severe_block_rate), self.congestion_exponent),
             "hazard": _pow(_dec(1 - self.severe_hazard_rate), self.hazard_exponent),
             "path": _dec(self.severe_path),
             "replanning": _dec(self.severe_replanning),
@@ -173,7 +175,6 @@ class ScoringConstants:
     def weights(self) -> dict[str, Fraction]:
         return {
             "time": self.weight_time,
-            "coordination": self.weight_coordination,
             "hazard": self.weight_hazard,
             "path": self.weight_path,
             "replanning": self.weight_replanning,
@@ -190,7 +191,7 @@ class ScoringConstants:
 
 OFFICIAL_CONSTANTS = ScoringConstants()
 
-QUALITY_COMPONENTS = ("time", "coordination", "hazard", "path", "replanning")
+QUALITY_COMPONENTS = ("time", "hazard", "path", "replanning")
 SAFETY_COMPONENTS = ("evacuation", "casualty", "stranding")
 
 
@@ -345,6 +346,161 @@ def _queue_bound(releases: Sequence[int], scenario: Scenario, refs: _References,
     raise _fail("the evacuees cannot all leave within the horizon")
 
 
+def _list_schedule(releases: Sequence[int], capacity: Sequence[int]) -> int | None:
+    """Least sum of entry steps of unit jobs with release steps and per-step capacity (steps ``1..len - 1``)."""
+    rel = sorted(releases)
+    total = waiting = i = 0
+    for step in range(1, len(capacity)):
+        while i < len(rel) and rel[i] <= step:
+            waiting += 1
+            i += 1
+        take = min(waiting, capacity[step])
+        total += take * step
+        waiting -= take
+        if i == len(rel) and waiting == 0:
+            return total
+    return None
+
+
+def _cut_bound(scenario: Scenario, refs: _References, starts: Sequence[Pos], exit_bound: int) -> int:
+    """Least possible sum of evacuation steps of evacuees with these start cells, under exit AND cut capacity. PRIVILEGED.
+
+    Let ``w`` be the wall-only distance to the nearest exit. For a threshold
+    ``d >= 1``, take a connected component ``C`` of the open cells with
+    ``w > d``. A move changes ``w`` by at most 1 and exits have ``w = 0``, so
+    every escape from ``C`` first leaves it onto ``N(C)``, the cells next to
+    ``C`` with ``w = d``. Positions after movement are distinct, so in step
+    ``s`` at most ``k_s`` people stand on ``N(C)``: the cut cells that burn
+    neither at the start nor at the end of the step (entering one of those is
+    refused or fatal). An evacuee ``i`` starting in ``C`` first enters ``N(C)``
+    in a step ``s_i >= r_i``, its single-person first arrival on a cut cell from
+    which escape is still possible, and from there needs at least ``q_i`` more
+    steps (the least single-person remaining time over the cut cells and
+    snapshots it can reach). So ``T_i >= s_i + q_i`` and ``T_i >= e_i``. A list
+    schedule of the entries minimizes ``sum s_i`` for unit jobs with release
+    steps. Groups whose cuts share cells are merged, so groups have disjoint
+    people; people outside every group add ``e_i``. Every relaxation only
+    lowers the value, so the maximum over thresholds and the exit bound is a
+    lower bound on the evacuees' person-time for every policy.
+    """
+    horizon = scenario.termination.max_steps
+    width, height, walls = scenario.width, scenario.height, scenario.walls
+    exits = frozenset(scenario.exit_positions)
+    cells = sorted(refs.index, key=refs.index.__getitem__)
+    n = len(cells)
+    adj = [tuple(refs.index[q] for q in (c, *neighbours(c, width, height)) if q not in walls) for c in cells]
+    is_exit = [c in exits for c in cells]
+    wall = [-1] * n
+    frontier = [refs.index[e] for e in sorted(exits)]
+    for i in frontier:
+        wall[i] = 0
+    while frontier:
+        nxt: list[int] = []
+        for i in frontier:
+            for j in adj[i]:
+                if wall[j] < 0:
+                    wall[j] = wall[i] + 1
+                    nxt.append(j)
+        frontier = nxt
+    top = max(wall, default=0)
+    if top < 2 or not starts:
+        return exit_bound
+    burning = [frozenset(refs.index[c] for c in b if c in refs.index) for b in refs.trajectory]
+    earliest = refs.earliest
+    e = [earliest[0][refs.index[c]] for c in starts]
+
+    # Single-person forward reachability: first snapshot at which each cell can be held with escape still possible.
+    arrivals: list[dict[int, int]] = []
+    for origin in starts:
+        first: dict[int, int] = {}
+        reach = {refs.index[origin]}
+        for t in range(horizon):
+            row = earliest[t]
+            for i in reach:
+                if i not in first and row[i] != _UNREACHABLE:
+                    first[i] = t
+            now, after = burning[t], burning[t + 1]
+            reach = {j for i in reach for j in adj[i] if j not in now and j not in after and not is_exit[j]}
+            if not reach:
+                break
+        arrivals.append(first)
+
+    tail_cache: dict[int, list[int]] = {}
+
+    def tail(i: int) -> list[int]:
+        """tail(i)[a]: least single-person remaining time ``earliest[t][i] - t`` over snapshots ``t >= a``."""
+        if i not in tail_cache:
+            row = [_UNREACHABLE] * (horizon + 1)
+            for t in range(horizon - 1, -1, -1):
+                g = earliest[t][i]
+                row[t] = min(row[t + 1], g - t if g != _UNREACHABLE else _UNREACHABLE)
+            tail_cache[i] = row
+        return tail_cache[i]
+
+    start_idx = [refs.index[c] for c in starts]
+    best = exit_bound
+    for d in range(1, top):
+        comp: dict[int, int] = {}
+        cuts: list[set[int]] = []
+        for i in range(n):
+            if wall[i] <= d or i in comp:
+                continue
+            k = len(cuts)
+            comp[i] = k
+            stack, cut = [i], set()
+            while stack:
+                a = stack.pop()
+                for b in adj[a]:
+                    if wall[b] > d and b not in comp:
+                        comp[b] = k
+                        stack.append(b)
+                    elif wall[b] == d:
+                        cut.add(b)
+            cuts.append(cut)
+        parent = list(range(len(cuts)))
+
+        def root(x: int) -> int:
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        owner: dict[int, int] = {}
+        for k, cut in enumerate(cuts):
+            for x in cut:
+                if x in owner:
+                    parent[root(k)] = root(owner[x])
+                else:
+                    owner[x] = k
+        groups: dict[int, tuple[set[int], list[int]]] = {}
+        for k, cut in enumerate(cuts):
+            groups.setdefault(root(k), (set(), []))[0].update(cut)
+        total = 0
+        for i, si in enumerate(start_idx):
+            if si in comp:
+                groups[root(comp[si])][1].append(i)
+            else:
+                total += e[i]
+        for cut, members in groups.values():
+            if not members:
+                continue
+            capacity = [0] + [sum(1 for c in cut if c not in burning[s - 1] and c not in burning[s]) for s in range(1, horizon + 1)]
+            releases: list[int] = []
+            tails = 0
+            for i in members:
+                first = {c: a for c, a in arrivals[i].items() if c in cut}
+                if not first:
+                    raise _fail("an evacuee cannot reach a cut it must cross")
+                releases.append(min(first.values()))
+                tails += min(tail(c)[a] for c, a in first.items())
+            entries = _list_schedule(releases, capacity)
+            if entries is None:
+                raise _fail("the evacuees cannot all cross a cut within the horizon")
+            total += max(entries + tails, sum(e[i] for i in members))
+        best = max(best, total)
+    return best
+
+
 # --------------------------------------------------------------------------- evidence
 
 
@@ -372,7 +528,10 @@ class EpisodeEvidence:
     unavoidable_stranded_ids: tuple[str, ...]  # unsavable people still inside at the end
     evacuee_time: int  # sum of evacuation steps over evacuees
     evacuee_time_bound: int  # sum of each evacuee's earliest possible evacuation step (single person; diagnostic)
-    evacuee_time_queue_bound: int  # the same, with at most one evacuation per open exit cell per step
+    evacuee_time_queue_bound: int  # the same, with at most one evacuation per open exit cell per step (diagnostic)
+    evacuee_time_cut_bound: int  # the same, with exit AND vertex-cut capacity (the Time reference)
+    # Congestion diagnostics. They come from the action log or the crowd diagnostics and are NEVER score
+    # inputs: a blocked move and STAY give the same trajectory (docs/scoring.md section 4.2).
     movement_attempts: int
     blocked_occupied: int
     blocked_conflict: int
@@ -386,6 +545,10 @@ class EpisodeEvidence:
     unrecoverable_invalidations: int
     replanning_remaining: int  # sum over recoverable events of (censored resolution step - t)
     replanning_remaining_bound: int  # sum over recoverable events of (earliest escape step - t)
+    contested_cell_steps: int = 0  # diagnostic: target cells with two or more contenders, summed over steps
+    hotspot_cells: int = 0  # diagnostic: cells with at least one congestion block
+    peak_contested_cells: int = 0  # diagnostic: most contested cells in one step
+    exit_active_steps: int = 0  # diagnostic: sum over exits of (last - first evacuation step + 1)
 
     def __post_init__(self) -> None:
         groups = (self.avoidable_casualty_ids, self.avoidable_stranded_ids, self.unavoidable_casualty_ids, self.unavoidable_stranded_ids)
@@ -400,9 +563,10 @@ class EpisodeEvidence:
         ):
             raise _fail("loss identities do not match the outcome counts")
         if not (
-            0 <= self.evacuee_time_bound <= self.evacuee_time_queue_bound <= self.evacuee_time
+            0 <= self.evacuee_time_bound <= self.evacuee_time_queue_bound <= self.evacuee_time_cut_bound <= self.evacuee_time
             and 0 <= self.evacuee_danger_bound <= self.evacuee_danger_states <= self.evacuee_time
             and 0 <= self.congestion_blocks <= self.movement_attempts
+            and min(self.contested_cell_steps, self.hotspot_cells, self.peak_contested_cells, self.exit_active_steps) >= 0
         ):
             raise _fail("evidence bounds are inconsistent")
 
@@ -479,6 +643,9 @@ def episode_evidence(
     queue_bound = _queue_bound(sorted(earliest0[pid] for pid in evacuees), scenario, refs, horizon)
     if time_actual < queue_bound:
         raise _fail("evacuation person-time below the privileged exit-capacity bound")
+    cut_bound = _cut_bound(scenario, refs, [start[pid] for pid in sorted(evacuees)], queue_bound)
+    if time_actual < cut_bound:
+        raise _fail("evacuation person-time below the privileged cut-capacity bound")
 
     # Danger zone: active evacuee person-states with a burning cell within HAZARD_RADIUS.
     evac_set = frozenset(evacuees)
@@ -535,6 +702,8 @@ def episode_evidence(
         raise _fail("replanning time below its privileged bound")
 
     mv = dict(m.movement.blocked_by_outcome)
+    crowd = compute_crowd_diagnostics(scenario, record)
+    exit_window = sum(x.last_evacuation_step - x.first_evacuation_step + 1 for x in crowd.exits.exits if x.first_evacuation_step is not None and x.last_evacuation_step is not None)
     return EpisodeEvidence(
         scenario_id=record.scenario_id,
         scenario_hash=record.scenario_hash,
@@ -552,6 +721,7 @@ def episode_evidence(
         evacuee_time=time_actual,
         evacuee_time_bound=time_bound,
         evacuee_time_queue_bound=queue_bound,
+        evacuee_time_cut_bound=cut_bound,
         movement_attempts=m.movement.movement_attempts,
         blocked_occupied=mv.get("blocked_occupied", 0),
         blocked_conflict=mv.get("blocked_conflict", 0),
@@ -565,6 +735,10 @@ def episode_evidence(
         unrecoverable_invalidations=unrecoverable,
         replanning_remaining=remaining,
         replanning_remaining_bound=remaining_bound,
+        contested_cell_steps=crowd.totals.contested_cell_steps,
+        hotspot_cells=crowd.totals.hotspot_cells,
+        peak_contested_cells=crowd.totals.peak_contested_cells,
+        exit_active_steps=exit_window,
     )
 
 
@@ -660,11 +834,9 @@ def quality_components(ev: EpisodeEvidence, constants: ScoringConstants = OFFICI
     """The five quality components in ``[0, 1]``; ``None`` where the episode gives no evidence."""
     out: dict[str, Fraction | None] = {name: None for name in QUALITY_COMPONENTS}
     if ev.evacuated:
-        out["time"] = Fraction(ev.evacuee_time_queue_bound, ev.evacuee_time)
+        out["time"] = Fraction(ev.evacuee_time_cut_bound, ev.evacuee_time)
         out["path"] = Fraction(ev.path_moves_bound, ev.path_cells_moved)
         out["hazard"] = _q(_pow(_dec(1 - _hazard_rate(ev)), constants.hazard_exponent))
-    if ev.movement_attempts:
-        out["coordination"] = _q(_pow(_dec(1 - _block_rate(ev)), constants.congestion_exponent))
     if ev.replanning_remaining:
         out["replanning"] = Fraction(ev.replanning_remaining_bound, ev.replanning_remaining)
     return out
@@ -675,16 +847,11 @@ def _hazard_rate(ev: EpisodeEvidence) -> Fraction:
     return Fraction(ev.evacuee_danger_states - ev.evacuee_danger_bound, ev.evacuee_time)
 
 
-def _block_rate(ev: EpisodeEvidence) -> Fraction:
-    """Movement attempts blocked by other people (occupied, conflict, cycle) per movement attempt."""
-    return Fraction(ev.congestion_blocks, ev.movement_attempts)
-
-
 def severe_failures(ev: EpisodeEvidence, constants: ScoringConstants = OFFICIAL_CONSTANTS) -> dict[str, Decimal]:
     """Per severe quality component, ``component / threshold`` (in ``[0, 1)``). Compared exactly in natural units."""
     out: dict[str, Decimal] = {}
     if ev.evacuated:
-        time = Fraction(ev.evacuee_time_queue_bound, ev.evacuee_time)
+        time = Fraction(ev.evacuee_time_cut_bound, ev.evacuee_time)
         if time < constants.severe_time:
             out["time"] = _dec(time / constants.severe_time)
         rate = _hazard_rate(ev)
@@ -693,10 +860,6 @@ def severe_failures(ev: EpisodeEvidence, constants: ScoringConstants = OFFICIAL_
         path = Fraction(ev.path_moves_bound, ev.path_cells_moved)
         if path < constants.severe_path:
             out["path"] = _dec(path / constants.severe_path)
-    if ev.movement_attempts:
-        rate = _block_rate(ev)
-        if rate > constants.severe_block_rate:
-            out["coordination"] = _pow(_dec((1 - rate) / (1 - constants.severe_block_rate)), constants.congestion_exponent)
     if ev.replanning_remaining:
         replan = Fraction(ev.replanning_remaining_bound, ev.replanning_remaining)
         if replan < constants.severe_replanning:
@@ -1001,6 +1164,39 @@ class SafetyTotals:
 
 
 @dataclass(frozen=True)
+class CongestionDiagnostics:
+    """Bottleneck and congestion diagnostics, summed over applicable scored episode-trials. NOT score inputs.
+
+    Blocked moves are action-log events: replacing a blocked move with STAY
+    gives the same trajectory, so they cannot be part of the score. Their
+    realized effects (delay, losses, exposure) are in Time and Safety.
+    """
+
+    movement_attempts: int
+    congestion_blocks: int
+    contested_cell_steps: int
+    hotspot_cells: int
+    peak_contested_cells: int  # largest single-step value over the episodes
+    evacuations: int
+    exit_active_steps: int  # sum over exits of (last - first evacuation step + 1)
+
+    @property
+    def congestion_block_rate(self) -> Fraction | None:
+        return Fraction(self.congestion_blocks, self.movement_attempts) if self.movement_attempts else None
+
+    @property
+    def exit_throughput(self) -> Fraction | None:
+        """Evacuations per exit-step inside each exit's active window (at most 1 under V1)."""
+        return Fraction(self.evacuations, self.exit_active_steps) if self.exit_active_steps else None
+
+    def to_dict(self) -> dict[str, Any]:
+        out: dict[str, Any] = {f.name: getattr(self, f.name) for f in fields(self)}
+        out["congestion_block_rate"] = _out(self.congestion_block_rate)
+        out["exit_throughput"] = _out(self.exit_throughput)
+        return out
+
+
+@dataclass(frozen=True)
 class ScoreReport:
     """The EMBER Score of one model on one schedule. Built only by :func:`score_results`.
 
@@ -1028,6 +1224,7 @@ class ScoreReport:
     scenarios: tuple[GroupScore, ...]
     robustness: Robustness
     totals: SafetyTotals
+    diagnostics: CongestionDiagnostics
     not_applicable_episodes: tuple[int, ...]
     episode_scores: tuple[tuple[int, Fraction], ...]  # applicable index -> trial-mean score
     episodes: tuple[EpisodeScore, ...]  # every applicable episode-trial, trial-major
@@ -1081,6 +1278,7 @@ class ScoreReport:
             "scenarios": [g.to_dict() for g in self.scenarios],
             "robustness": self.robustness.to_dict(),
             "totals": self.totals.to_dict(),
+            "diagnostics": self.diagnostics.to_dict(),
             "not_applicable_episodes": list(self.not_applicable_episodes),
             "episodes": [e.to_dict() for e in self.episodes],
         }
@@ -1227,6 +1425,15 @@ def score_results(
         avoidable_stranded=sum(ev.avoidable_stranded for ev in evidence),
         unavoidable_losses=sum(ev.unavoidable_losses for ev in evidence),
     )
+    diagnostics = CongestionDiagnostics(
+        movement_attempts=sum(ev.movement_attempts for ev in evidence),
+        congestion_blocks=sum(ev.congestion_blocks for ev in evidence),
+        contested_cell_steps=sum(ev.contested_cell_steps for ev in evidence),
+        hotspot_cells=sum(ev.hotspot_cells for ev in evidence),
+        peak_contested_cells=max((ev.peak_contested_cells for ev in evidence), default=0),
+        evacuations=sum(ev.evacuated for ev in evidence),
+        exit_active_steps=sum(ev.exit_active_steps for ev in evidence),
+    )
     return ScoreReport(
         scoring_version=SCORING_VERSION,
         constants=constants,
@@ -1252,6 +1459,7 @@ def score_results(
         scenarios=scenarios,
         robustness=robustness,
         totals=totals,
+        diagnostics=diagnostics,
         not_applicable_episodes=tuple(spec.index for spec in manifest.episodes if not applicable[spec.index]),
         episode_scores=tuple((i, episode_values[i]) for i in ordered),
         episodes=tuple(flat),
@@ -1519,7 +1727,7 @@ def _fmt(value: Fraction | None, digits: int = 1) -> str:
 def format_summary(report: ScoreReport) -> str:
     """A plain-text summary. The headline is in benchmark-performance points, never a percentage of people."""
     r = report
-    rb, t = r.robustness, r.totals
+    rb, t, dg = r.robustness, r.totals, r.diagnostics
     lines = [f"EMBER Score {_fmt(r.score)} / 100 benchmark-performance points under EMBER scoring version {r.scoring_version}"]
     if r.ci is not None:
         lines.append(f"95% CI [{_fmt(r.ci.lower)}, {_fmt(r.ci.upper)}] (stratified two-stage bootstrap, {r.ci.resamples} resamples; this sample only)")
@@ -1538,6 +1746,9 @@ def format_summary(report: ScoreReport) -> str:
         "Severe quality failures (episode-trials): " + "; ".join(f"{k} {n}" for k, n in rb.severe_episode_trials),
         f"People per trial: escapable {_fmt(t.per_trial(t.escapable))}; evacuated {_fmt(t.per_trial(t.evacuated))};"
         f" avoidable casualties {_fmt(t.per_trial(t.avoidable_casualties))}; avoidable stranded {_fmt(t.per_trial(t.avoidable_stranded))}",
+        f"Congestion diagnostics (not scored): block rate {_fmt(dg.congestion_block_rate, 3)}; contested cell-steps per trial"
+        f" {_fmt(t.per_trial(dg.contested_cell_steps))}; hotspot cells per trial {_fmt(t.per_trial(dg.hotspot_cells))};"
+        f" peak contested cells {dg.peak_contested_cells}; exit throughput {_fmt(dg.exit_throughput, 3)}",
         "The EMBER Score is not a percentage of people evacuated.",
     ]
     return "\n".join(lines) + "\n"
