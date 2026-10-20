@@ -211,6 +211,7 @@ src/emberbench/
   integrity.py  held-out protocol: asset classes, submission identity, provenance, verification
   leakguard.py  path allowlist and leak checks for the repository, wheel and sdist
   canonical.py  canonical JSON and SHA-256 hashing
+  cli.py        the `emberbench` command line (also `python -m emberbench`)
   errors.py     explicit exception types
 ```
 
@@ -250,6 +251,27 @@ A `RunRecord` holds everything needed to replay and audit a run:
 
 All records serialise to canonical JSON (`record.to_json()`) and load back with no
 loss (`RunRecord.from_json`).
+
+## Command-line interface
+
+The package installs an `emberbench` command (also `python -m emberbench`). It is a thin,
+deterministic, provider-free front end to the library: no network access, no ambient
+configuration, no generated seeds and no implicit code loading.
+
+```bash
+emberbench suite validate scenarios/public/v1
+```
+
+```bash
+emberbench evaluation manifest --suite scenarios/public/v1 --seed 0 --seed 1 --seed 2 --out manifest.json
+```
+
+```bash
+emberbench evaluation run --suite scenarios/public/v1 --manifest manifest.json --model-id my-model --agent my_agents:make_agent --agent-path . --out result.json
+```
+
+Every command supports `--json`, refuses to overwrite files and exits with a stable code.
+See [docs/cli.md](docs/cli.md).
 
 ## Running the tests
 

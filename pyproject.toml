@@ -10,8 +10,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
 
+[project.scripts]
+emberbench = "emberbench.cli:main"
+
 [project.optional-dependencies]
-# build and setuptools: the leak-guard test and CI build the wheel and sdist without network isolation.
+# build and setuptools: the leak-guard and CLI wheel tests and CI build the wheel and sdist without network isolation.
 dev = ["pytest>=8", "mypy>=1.10", "build>=1", "setuptools>=69"]
 
 [tool.setuptools.packages.find]
