@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, NoReturn, TextIO
 
 from . import SIMULATOR_VERSION
+from ._version import __version__
 from .agent import ACTION_SCHEMA_VERSION, ActionOutput, Agent, AgentFactory, agent_policy, agent_policy_factory
 from .canonical import canonical_json, sha256_hex
 from .crowd import CROWD_DIAGNOSTICS_VERSION
@@ -125,6 +126,7 @@ def version_info() -> dict[str, str]:
     from .integrity import BENCHMARK_REVISION, INTEGRITY_PROTOCOL_VERSION
 
     return {
+        "package_version": __version__,
         "cli_version": CLI_VERSION,
         "simulator_version": SIMULATOR_VERSION,
         "schema_version": SCHEMA_VERSION,

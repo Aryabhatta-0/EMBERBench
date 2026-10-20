@@ -1,9 +1,5 @@
 """Repository and package leak guard: only public assets in the checkout, the wheel and the sdist."""
 
-import importlib.util
-import shutil
-import subprocess
-import sys
 import tarfile
 import zipfile
 from pathlib import Path
@@ -119,29 +115,8 @@ def test_wheel_and_sdist_member_rules() -> None:
         assert check_sdist_members([*sdist, planted]), planted
 
 
-def _tracked_copy(destination: Path) -> None:
-    # Untracked, not ignored files are copied too, so the build sees work that is not committed yet.
-    for rel in repository_paths(REPO_ROOT, include_untracked=True):
-        target = destination / rel
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(REPO_ROOT / rel, target)
-
-
-@pytest.mark.skipif(
-    importlib.util.find_spec("build") is None or importlib.util.find_spec("setuptools") is None,
-    reason="needs the 'build' and 'setuptools' dev dependencies",
-)
-def test_built_distributions_hold_no_heldout_assets(tmp_path: Path) -> None:
-    source = tmp_path / "source"
-    _tracked_copy(source)
-    dist = tmp_path / "dist"
-    subprocess.run(
-        [sys.executable, "-m", "build", "--no-isolation", "--sdist", "--wheel", "--outdir", str(dist), str(source)],
-        check=True,
-        capture_output=True,
-    )
-    (wheel,) = dist.glob("*.whl")
-    (sdist,) = dist.glob("*.tar.gz")
+def test_built_distributions_hold_no_heldout_assets(built_distributions: tuple[Path, Path]) -> None:
+    wheel, sdist = built_distributions
     assert check_distribution(wheel) == []
     assert check_distribution(sdist) == []
     with zipfile.ZipFile(wheel) as z:

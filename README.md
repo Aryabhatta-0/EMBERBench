@@ -275,10 +275,11 @@ See [docs/cli.md](docs/cli.md).
 
 ## Running the tests
 
-Requires Python 3.12+ and has no runtime dependencies.
+Requires Python 3.12+ and has no runtime dependencies. The development tools are pinned
+in `tools/dev-constraints.txt`, the same versions CI uses.
 
 ```bash
-python -m pip install -e ".[dev]"
+python -m pip install -c tools/dev-constraints.txt -e ".[dev]"
 ```
 
 ```bash
@@ -310,3 +311,12 @@ metrics, hotspots in the public crowd scenarios, 50/100/200-person stress
 runs and golden diagnostic digests).
 Any change to simulator output fails the golden test until you bump
 `SIMULATOR_VERSION` on purpose.
+
+## Versions and releases
+
+The package version (`emberbench.__version__`), the benchmark revision
+(`BENCHMARK_REVISION`) and the component contract versions are separate; `emberbench
+version --json` reports all of them. The rules are in [docs/versioning.md](docs/versioning.md),
+the history in [docs/changelog.md](docs/changelog.md) and the release steps, including the
+regression digest registry and `tools/check_release.py`, in
+[docs/release-checklist.md](docs/release-checklist.md).

@@ -1,3 +1,7 @@
+import importlib.util
+import shutil
+import subprocess
+import sys
 from collections import deque
 from collections.abc import Iterable
 from pathlib import Path
@@ -14,6 +18,31 @@ FIXTURE_NAMES = sorted(p.stem for p in FIXTURE_DIR.glob("*.json"))
 
 def fixture_scenario(name: str) -> Scenario:
     return load_scenario(FIXTURE_DIR / f"{name}.json")
+
+
+@pytest.fixture(scope="session")
+def built_distributions(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
+    """One wheel and one sdist of the working tree, built once per test session without network isolation."""
+    if importlib.util.find_spec("build") is None or importlib.util.find_spec("setuptools") is None:
+        pytest.skip("needs the 'build' and 'setuptools' dev dependencies")
+    from emberbench.leakguard import repository_paths
+
+    root = Path(__file__).resolve().parent.parent
+    source = tmp_path_factory.mktemp("source")
+    # Untracked, not ignored files are copied too, so the build sees work that is not committed yet.
+    for rel in repository_paths(root, include_untracked=True):
+        target = source / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(root / rel, target)
+    dist = tmp_path_factory.mktemp("dist")
+    subprocess.run(
+        [sys.executable, "-m", "build", "--no-isolation", "--sdist", "--wheel", "--outdir", str(dist), str(source)],
+        check=True,
+        capture_output=True,
+    )
+    (wheel,) = dist.glob("*.whl")
+    (sdist,) = dist.glob("*.tar.gz")
+    return wheel, sdist
 
 
 @pytest.fixture(params=FIXTURE_NAMES)

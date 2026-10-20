@@ -70,7 +70,9 @@ Commands that take a suite accept exactly one of:
 emberbench version --json
 ```
 
-Prints every contract version of this build: `cli_version`,
+Prints the package version (`package_version`, from
+`src/emberbench/_version.py`, see [versioning.md](versioning.md)) and every
+contract version of this build: `cli_version`,
 `simulator_version`, `schema_version`, `observation_version`,
 `action_schema_version`, `metrics_version`, `statistics_version`,
 `generator_version`, `generator_config_version`,
@@ -79,6 +81,7 @@ Prints every contract version of this build: `cli_version`,
 `baselines_version`, `integrity_protocol_version` and `benchmark_revision`
 (see `docs/baselines.md` and `docs/integrity.md`). No field depends
 on the environment (no paths, platform, interpreter or install location).
+`package_version` was added before any release, so `CLI_VERSION` stays `1.0`.
 
 ### `scenario validate FILE`
 

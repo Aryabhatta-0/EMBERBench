@@ -1,5 +1,7 @@
 """EMBERBench: a deterministic benchmark for decision-making in fire evacuation."""
 
+from ._version import __version__
+
 # Bump this whenever any rule changes simulator output for the same inputs.
 # Run records from another version are rejected by ``verify_record``.
 SIMULATOR_VERSION = "0.2.0"
@@ -138,6 +140,7 @@ from .integrity import (  # noqa: E402
 )
 
 __all__ = [
+    "__version__",
     "ACTION_SCHEMA_VERSION",
     "ALLOWED_ACTIONS",
     "BENCHMARK_REVISION",

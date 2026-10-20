@@ -1,0 +1,111 @@
+{
+  "_comment": [
+    "Regression digest registry: one frozen digest per release-critical contract.",
+    "tests/release_digests.py recomputes every entry; tests/test_release.py checks it in-process against the test pins and in fresh interpreters.",
+    "Change an entry only with a deliberate bump of its owner version (docs/versioning.md, section 4) and a changelog entry."
+  ],
+  "entries": {
+    "baseline.fire-aware-shortest-path-v1.config_digest": {
+      "digest": "983691b4d94c29854afdc4e3cbb58c5c66b6969649cfaac42906befa3c7ce0c7",
+      "owner": "BASELINES_VERSION",
+      "mirrors": "tests/test_baselines.py GOLDEN_CONFIG_DIGESTS",
+      "what": "Baseline descriptor digest."
+    },
+    "baseline.fire-aware-shortest-path-v1.result_digest": {
+      "digest": "bcc4bae71f28831eb343417e5cc081a7c25251613911f38cc7bbb1ebfd96caa1",
+      "owner": "BASELINES_VERSION; SIMULATOR_VERSION",
+      "mirrors": "tests/test_baselines.py GOLDEN_RESULT_DIGESTS",
+      "what": "Record digests of every episode of the baseline development manifest (the baseline's actions)."
+    },
+    "cli.evaluation-manifest.file_sha256": {
+      "digest": "ff0241d11732ab899dc256c851f6240e6a66b44cc414d00707c86d9a1a49b004",
+      "owner": "CLI_VERSION; EVALUATION_MANIFEST_VERSION",
+      "mirrors": "this registry only",
+      "what": "SHA-256 of the file bytes of 'emberbench evaluation manifest --suite scenarios/public/v1 --seed 0 --seed 1 --seed 2'."
+    },
+    "evaluation.public-v1-dev-seeds.manifest_hash": {
+      "digest": "7b9aae45e5e2828f881b2f14d8e5585627e5f8bdbb137a1ed2331bf10ce8c876",
+      "owner": "EVALUATION_MANIFEST_VERSION",
+      "mirrors": "tests/test_evaluation.py PUBLIC_DEV_MANIFEST_HASH",
+      "what": "Public suite under development seeds 0, 1, 2."
+    },
+    "generator.test-config.config_hash": {
+      "digest": "a464c56981fbfcfe976ec4114a9194ce408aebf53348e135d3515a3902f12704",
+      "owner": "GENERATOR_CONFIG_VERSION",
+      "mirrors": "tests/test_generator.py GOLDEN_CONFIG_HASH",
+      "what": "Test-only generator config."
+    },
+    "generator.test-config.generation_hash": {
+      "digest": "f9fac2b98f45fb36186504cff4826e26eda2a9780470727507f5ca69cfe9271d",
+      "owner": "GENERATOR_VERSION; GENERATION_MANIFEST_VERSION",
+      "mirrors": "tests/test_generator.py GOLDEN_GENERATION_HASH",
+      "what": "Generation record of the test-only config, seed and batch."
+    },
+    "generator.test-config.suite_hash": {
+      "digest": "78319258f35ba44a6139a370233350ca25830cacad2181e16c625b9ef20ae1dd",
+      "owner": "GENERATOR_VERSION",
+      "mirrors": "tests/test_generator.py GOLDEN_SUITE_HASH",
+      "what": "Generated suite manifest hash."
+    },
+    "hazard.stochastic-golden-traces": {
+      "digest": "d22fb3a55d3a67bb7d5d70f03167f0e81ce3cd8150f873a87bd36fc7b9772063",
+      "owner": "SIMULATOR_VERSION",
+      "mirrors": "tests/fixtures/golden/stochastic_fire_traces.json",
+      "what": "sha256_hex of the recomputed list of stochastic golden fire traces."
+    },
+    "integrity.test-run.provenance_digest": {
+      "digest": "1d1665e11bd36631d9d35b5ef06e64dd486548629b8e054b447068a7752d56bd",
+      "owner": "INTEGRITY_PROTOCOL_VERSION; BENCHMARK_REVISION; every version in benchmark_versions()",
+      "mirrors": "this registry only",
+      "what": "Provenance of the tests/test_integrity.py run fixture (test-only seeds and identity)."
+    },
+    "scenario.v1-pub-01-single-exit-sparse.content_hash": {
+      "digest": "d70b5c78b24e3020ebd7c3b3ddd7cd6ccc5ec6232c051cd2aaea2d007b84e59e",
+      "owner": "SCHEMA_VERSION",
+      "mirrors": "tests/test_suite.py PINNED_HASHES",
+      "what": "Canonical sparse single-exit scenario."
+    },
+    "scenario.v1-pub-09-crowd-100-split-flow.content_hash": {
+      "digest": "4cae3e2f63610053571e764305adec41f0820dc7ebd0dc658fc1760bbecf9964",
+      "owner": "SCHEMA_VERSION",
+      "mirrors": "tests/test_suite.py PINNED_HASHES",
+      "what": "100-person crowd scenario."
+    },
+    "scenario.v1-pub-10-route-invalidation.content_hash": {
+      "digest": "ee407099e5a8900e0d1d0fd7987e375aefda31d74bf31f74d6040e2f50e0ebef",
+      "owner": "SCHEMA_VERSION",
+      "mirrors": "tests/test_suite.py PINNED_HASHES",
+      "what": "Stochastic route-invalidation scenario."
+    },
+    "simulator.golden-record.one_person_one_exit": {
+      "digest": "a91d691f64731ee2d5b5184b95d1313bbd294d6fbd06d44ac91bea2f95a3c990",
+      "owner": "SIMULATOR_VERSION",
+      "mirrors": "tests/test_determinism.py GOLDEN_DIGESTS",
+      "what": "Run record digest, greedy policy, deterministic fire."
+    },
+    "simulator.golden-record.stochastic_room": {
+      "digest": "9ee082d50fc30fb2f6c8617c8d55053ff30af958c66eb6eb22f28fb2db6e3a84",
+      "owner": "SIMULATOR_VERSION",
+      "mirrors": "tests/test_determinism.py GOLDEN_DIGESTS",
+      "what": "Run record digest, greedy policy, stochastic fire."
+    },
+    "statistics.aggregate": {
+      "digest": "ee5e6b8f179a90aa30d65380297404d90df0a9c91a70c569e9e7a07f6e8abe31",
+      "owner": "STATISTICS_VERSION",
+      "mirrors": "tests/test_statistics.py GOLDEN_STATISTICS_DIGESTS",
+      "what": "Aggregate statistics of the tiny fixed input."
+    },
+    "statistics.paired": {
+      "digest": "f7a2726b2d6f2177266ec877a59e3f541184b65bb03e596f2001e96c95339d13",
+      "owner": "STATISTICS_VERSION",
+      "mirrors": "tests/test_statistics.py GOLDEN_STATISTICS_DIGESTS",
+      "what": "Paired statistics of the tiny fixed input."
+    },
+    "suite.public-v1.suite_hash": {
+      "digest": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+      "owner": "SCHEMA_VERSION; suite_version 1.0.0",
+      "mirrors": "tests/test_suite.py SUITE_HASH",
+      "what": "Manifest hash of scenarios/public/v1."
+    }
+  }
+}

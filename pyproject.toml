@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=69,<85"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "emberbench"
-version = "0.1.0"
+dynamic = ["version"]  # from src/emberbench/_version.py, see docs/versioning.md
 description = "A deterministic benchmark for decision-making models on dynamic fire-evacuation tasks"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -15,7 +15,12 @@ emberbench = "emberbench.cli:main"
 
 [project.optional-dependencies]
 # build and setuptools: the leak-guard and CLI wheel tests and CI build the wheel and sdist without network isolation.
-dev = ["pytest>=8", "mypy>=1.10", "build>=1", "setuptools>=69"]
+# Ranges stop before the next incompatible release; CI installs the exact pins in
+# tools/dev-constraints.txt (see docs/release-checklist.md, "Development tool constraints").
+dev = ["pytest>=8,<10", "mypy>=1.10,<3", "build>=1,<2", "setuptools>=69,<85"]
+
+[tool.setuptools.dynamic]
+version = { attr = "emberbench._version.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

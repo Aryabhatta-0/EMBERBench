@@ -182,6 +182,7 @@ def test_version_json_lists_every_contract_version() -> None:
     assert o.code == 0 and o.err == ""
     assert o.json() == {
         "command": "version",
+        "package_version": emberbench.__version__,
         "cli_version": "1.0",
         "simulator_version": emberbench.SIMULATOR_VERSION,
         "schema_version": emberbench.SCHEMA_VERSION,
