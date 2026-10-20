@@ -14,8 +14,11 @@ leaderboards are out of scope here (see Issue #12).
 1. **Raw metrics are canonical.** Every field is a count, a step number, a
    cell distance or a ratio of named counts. Each ratio states its
    numerator and denominator.
-2. **No composite score.** There is no single EMBER score in this version.
-   See [section 11](#11-rules-for-any-future-composite-or-ranking).
+2. **No composite score in the metrics.** The metrics have no single score
+   and `METRICS_VERSION` does not change. The EMBER Score is a separate,
+   separately versioned layer on top of these metrics: see
+   [scoring.md](scoring.md) and
+   [section 11](#11-rules-for-any-future-composite-or-ranking).
 3. **Safety first.** Speed fields that only cover evacuees always come with
    the counts of people who did not evacuate. The person-time-to-safety
    metric counts every person.
@@ -306,8 +309,12 @@ Per person: `blocked_moves` and `max_consecutive_blocks`.
 
 ## 11. Rules for any future composite or ranking
 
-This version deliberately has no single score. Any future ranking or
-composite score MUST:
+The metrics deliberately have no single score. Any ranking or composite
+score built on them MUST meet the rules below. The EMBER Score
+([scoring.md](scoring.md), scoring version 1.0) states how it meets each
+rule in its section 13.
+
+Any ranking or composite score MUST:
 
 1. be **versioned**, separately from `METRICS_VERSION`, and state the exact
    raw fields and formula it uses;

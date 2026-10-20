@@ -197,6 +197,8 @@ def test_version_json_lists_every_contract_version() -> None:
         "crowd_diagnostics_version": emberbench.CROWD_DIAGNOSTICS_VERSION,
         "baselines_version": emberbench.BASELINES_VERSION,
         "integrity_protocol_version": emberbench.INTEGRITY_PROTOCOL_VERSION,
+        "scoring_version": emberbench.SCORING_VERSION,
+        "environment_pack_version": emberbench.ENVIRONMENT_PACK_VERSION,
         "benchmark_revision": emberbench.BENCHMARK_REVISION,
     }
 

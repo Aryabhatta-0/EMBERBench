@@ -5,7 +5,8 @@ evaluation results. The code is in
 [`src/emberbench/statistics.py`](../src/emberbench/statistics.py). The tests are
 in [`tests/test_statistics.py`](../tests/test_statistics.py).
 
-**There is no EMBER score or global winner in this module.** It does not rank
+**There is no EMBER score or global winner in this module.** (The EMBER
+Score is a separate module: see [scoring.md](scoring.md).) This module does not rank
 models, combine metrics or produce a leaderboard. Every number belongs to one
 named metric. Win/loss/tie counts exist per metric only.
 

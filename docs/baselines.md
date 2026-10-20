@@ -6,7 +6,8 @@ EMBERBench ships five deterministic, non-LLM reference agents. They make
 benchmark results readable: a model that does no better than
 `static-shortest-path-v1` on a scenario family has not shown more than a
 textbook routing rule. The baselines are not tuned to win, and no result here
-is a leaderboard entry, a composite score or a ranking.
+is a leaderboard entry or a ranking. Their EMBER Scores
+([scoring.md](scoring.md)) are reference anchors, not entries.
 
 The module is `emberbench.baselines`. A separate, **privileged** upper-bound
 analysis is in `emberbench.oracle` (section 5). It is not a baseline and not a

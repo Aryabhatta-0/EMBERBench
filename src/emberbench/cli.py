@@ -120,9 +120,11 @@ def _mismatch(message: str) -> CliError:
 
 def version_info() -> dict[str, str]:
     """Every contract version this build implements. Nothing here depends on the environment."""
-    # Imported here: only version reporting needs the baseline and integrity modules.
+    # Imported here: only version reporting needs the baseline, integrity, scoring and pack modules.
     from .baselines import BASELINES_VERSION
+    from .environment_pack import ENVIRONMENT_PACK_VERSION
     from .integrity import BENCHMARK_REVISION, INTEGRITY_PROTOCOL_VERSION
+    from .scoring import SCORING_VERSION
 
     return {
         "cli_version": CLI_VERSION,
@@ -140,6 +142,8 @@ def version_info() -> dict[str, str]:
         "crowd_diagnostics_version": CROWD_DIAGNOSTICS_VERSION,
         "baselines_version": BASELINES_VERSION,
         "integrity_protocol_version": INTEGRITY_PROTOCOL_VERSION,
+        "scoring_version": SCORING_VERSION,
+        "environment_pack_version": ENVIRONMENT_PACK_VERSION,
         "benchmark_revision": BENCHMARK_REVISION,
     }
 
