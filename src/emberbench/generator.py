@@ -25,15 +25,16 @@ constraint is never weakened. See ``docs/procedural-generation.md``.
 import hashlib
 import json
 import math
-from collections import Counter, deque
-from collections.abc import Callable, Iterable
+from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, TypeVar
 
 from .canonical import sha256_hex
 from .errors import GenerationError
-from .grid import Pos, neighbours
+from .families import descriptive_primary, structural_tags
+from .grid import Pos
 from .rng import MASK64, SplitMix64
 from .scenario import (
     ID_PATTERN,
@@ -48,11 +49,18 @@ from .scenario import (
     Scenario,
     TerminationConfig,
 )
+from .structure import ROUTE_REDUNDANCY_CAP, GenerationProxies, _bfs, measure_proxies, profile_structure
 from .suite import HASH_PATTERN, MANIFEST_NAME, ScenarioFamily, SeedRole, Suite, SuiteEntry, SuiteManifest, Visibility, load_suite
 
-GENERATOR_VERSION = "1.0.0"
-GENERATOR_CONFIG_VERSION = "1.0"
-GENERATION_MANIFEST_VERSION = "1.0"
+# 1.1.0: family labels follow the frozen V1 family rules (emberbench.families,
+# family-rule version 1.0); new structural proxies and constraints.
+GENERATOR_VERSION = "1.1.0"
+# 1.1 adds the optional split_pressure, deceptive_share and bottleneck_severity
+# constraints. A 1.0 config is still accepted and has the same canonical form.
+GENERATOR_CONFIG_VERSION = "1.1"
+SUPPORTED_CONFIG_VERSIONS: tuple[str, ...] = ("1.0", GENERATOR_CONFIG_VERSION)
+# 1.1: the pinned proxies hold the new structural measurements.
+GENERATION_MANIFEST_VERSION = "1.1"
 GENERATION_MANIFEST_NAME = "generation.json"
 SUITE_DIR_NAME = "suite"
 GENERATED_SUITE_VERSION = "1.0.0"
@@ -63,16 +71,10 @@ MIN_GENERATED_GRID_SIDE = 5
 MAX_GENERATED_GRID_SIDE = 128
 MAX_SCENARIO_COUNT = 9999
 MAX_ATTEMPTS_LIMIT = 100_000
-# A person has at most four neighbours, so at most four vertex-disjoint routes.
-ROUTE_REDUNDANCY_CAP = 4
 # Scatter density is drawn in steps of 1/1000.
 DENSITY_RESOLUTION = 1000
-
-# Thresholds for the descriptive family labels in the suite manifest.
-HIGH_CROWD_DENSITY = 0.15
-NARROW_PASSAGE_WIDTH = 1
-MAZE_OBSTACLE_DENSITY = 0.25
-CROWD_100_POPULATION = 100
+# Upper limit of the unbounded ratio constraints (split pressure, bottleneck severity).
+MAX_RATIO_CONSTRAINT = 1_000_000.0
 
 _DOMAIN = b"emberbench/generator/"
 _E = TypeVar("_E")
@@ -217,6 +219,11 @@ class GenerationConstraints:
     These are generation constraints, not a difficulty truth. Route existence
     (every person has a fire-free route of at most ``max_steps`` cells) is
     always required and is not configurable.
+
+    The three optional constraints (config version 1.1) let a recipe target a
+    structural family: ``split_pressure`` (``None`` counts as 0),
+    ``deceptive_share`` and ``bottleneck_severity`` (population / min cut;
+    infinite when no route exists). ``None`` means unconstrained.
     """
 
     route_length: IntRange
@@ -227,9 +234,17 @@ class GenerationConstraints:
     route_redundancy: IntRange
     ignition_person_distance: IntRange
     ignition_exit_distance: IntRange
+    split_pressure: FloatRange | None = None
+    deceptive_share: FloatRange | None = None
+    bottleneck_severity: FloatRange | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {name: getattr(self, name).to_dict() for name in _CONSTRAINT_NAMES}
+        out = {name: getattr(self, name).to_dict() for name in _CONSTRAINT_NAMES}
+        for name in _OPTIONAL_CONSTRAINT_NAMES:
+            value = getattr(self, name)
+            if value is not None:
+                out[name] = value.to_dict()
+        return out
 
 
 _CONSTRAINT_NAMES = (
@@ -243,6 +258,9 @@ _CONSTRAINT_NAMES = (
     "ignition_exit_distance",
 )
 _FLOAT_CONSTRAINTS = frozenset({"obstacle_density", "crowd_density"})
+# Config version 1.1 only. Float ranges; split pressure and bottleneck severity are unbounded ratios.
+_OPTIONAL_CONSTRAINT_NAMES = ("split_pressure", "deceptive_share", "bottleneck_severity")
+_RATIO_CONSTRAINTS = frozenset({"split_pressure", "bottleneck_severity"})
 
 
 @dataclass(frozen=True)
@@ -379,7 +397,8 @@ def _parse_config(data: Any) -> GeneratorConfig:
     lay = _expect_object(obj["layout"], "layout", {"partition_count", "doors_per_partition", "door_width", "scatter_density"})
     fire = _expect_object(obj["fire"], "fire", {"model", "spread_interval", "exits_flammable"}, frozenset({"spread_probability_choices"}))
     movement = _expect_object(obj["movement"], "movement", {"enter_fire"})
-    cons = _expect_object(obj["constraints"], "constraints", set(_CONSTRAINT_NAMES))
+    optional = frozenset(_OPTIONAL_CONSTRAINT_NAMES) if obj["config_version"] != "1.0" else frozenset()
+    cons = _expect_object(obj["constraints"], "constraints", set(_CONSTRAINT_NAMES), optional)
 
     try:
         model = FireModelName(_expect_str(fire["model"], "fire.model"))
@@ -407,6 +426,8 @@ def _parse_config(data: Any) -> GeneratorConfig:
             return _parse_float_range(cons[name], f"constraints.{name}")
         return _parse_int_range(cons[name], f"constraints.{name}")
 
+    constraint_ranges: dict[str, Any] = {name: parse_constraint(name) for name in _CONSTRAINT_NAMES}
+    constraint_ranges.update({name: _parse_float_range(cons[name], f"constraints.{name}") for name in _OPTIONAL_CONSTRAINT_NAMES if name in cons})
     return GeneratorConfig(
         config_version=_expect_str(obj["config_version"], "config_version"),
         scenario_count=_expect_int(obj["scenario_count"], "scenario_count"),
@@ -430,7 +451,7 @@ def _parse_config(data: Any) -> GeneratorConfig:
         enter_fire=enter_fire,
         max_steps=_expect_int(obj["max_steps"], "max_steps"),
         max_attempts=_expect_int(obj["max_attempts"], "max_attempts"),
-        constraints=GenerationConstraints(**{name: parse_constraint(name) for name in _CONSTRAINT_NAMES}),
+        constraints=GenerationConstraints(**constraint_ranges),
     )
 
 
@@ -453,12 +474,12 @@ def _check_int_range(r: object, where: str, lo: int, hi: int) -> IntRange:
     return r
 
 
-def _check_float_range(r: object, where: str) -> FloatRange:
+def _check_float_range(r: object, where: str, cap: float = 1.0) -> FloatRange:
     if not isinstance(r, FloatRange):
         raise _fail(where, "expected a FloatRange")
     for name, value in (("min", r.lo), ("max", r.hi)):
-        if not isinstance(value, float) or not 0.0 <= value <= 1.0:
-            raise _fail(f"{where}.{name}", f"must be a float in [0, 1], got {value!r}")
+        if not isinstance(value, float) or not 0.0 <= value <= cap:
+            raise _fail(f"{where}.{name}", f"must be a float in [0, {cap:g}], got {value!r}")
     if r.lo > r.hi:
         raise _fail(where, f"min {r.lo} is greater than max {r.hi}")
     return r
@@ -466,8 +487,8 @@ def _check_float_range(r: object, where: str) -> FloatRange:
 
 def _validate_config(c: GeneratorConfig) -> None:
     """Reject malformed configs and constraint sets that can never be met, before any draw."""
-    if c.config_version != GENERATOR_CONFIG_VERSION:
-        raise _fail("config_version", f"unsupported version {c.config_version!r}; supported: [{GENERATOR_CONFIG_VERSION!r}]")
+    if c.config_version not in SUPPORTED_CONFIG_VERSIONS:
+        raise _fail("config_version", f"unsupported version {c.config_version!r}; supported: {list(SUPPORTED_CONFIG_VERSIONS)}")
     _check_int(c.scenario_count, "scenario_count", 1, MAX_SCENARIO_COUNT)
     w = _check_int(c.width, "grid.width", MIN_GENERATED_GRID_SIDE, MAX_GENERATED_GRID_SIDE)
     h = _check_int(c.height, "grid.height", MIN_GENERATED_GRID_SIDE, MAX_GENERATED_GRID_SIDE)
@@ -536,224 +557,20 @@ def _validate_config(c: GeneratorConfig) -> None:
         raise _fail("constraints.route_redundancy", f"min {redundancy.lo} exceeds exit_count.max {exits.hi}")
     _check_int_range(k.ignition_person_distance, "constraints.ignition_person_distance", 1, big)
     _check_int_range(k.ignition_exit_distance, "constraints.ignition_exit_distance", 1, big)
-
-
-# --------------------------------------------------------------------------- measured proxies
-
-
-@dataclass(frozen=True)
-class GenerationProxies:
-    """Deterministic measurements of one scenario, used as generation constraints.
-
-    All values are computed from the scenario alone, so anyone can re-derive
-    them. "Interior" means every cell that is not on the grid border.
-
-    - ``obstacle_density``: interior wall cells / interior cells.
-    - ``crowd_density``: people / free interior cells.
-    - ``exit_separation``: smallest Manhattan distance between two exits
-      (``None`` with one exit).
-    - ``passage_width``: the narrowest passage that some person cannot avoid.
-      A cell's width is the shorter of its horizontal and vertical free runs;
-      each person takes the route whose narrowest cell is widest, and the
-      value is the minimum over people (0 if a person has no route).
-    - ``route_redundancy``: the minimum over people of the number of
-      vertex-disjoint routes to the exits on the static map, capped at
-      :data:`ROUTE_REDUNDANCY_CAP`. A value of 1 means one blocked cell can
-      cut a person off from every exit.
-    - ``ignition_person_distance`` / ``ignition_exit_distance``: shortest
-      wall-free distance from any ignition to any person / exit (``None`` if
-      the fire can never reach one).
-    - ``route_length``: the longest shortest fire-free route over people,
-      avoiding ignition cells (``None`` if a person has no such route).
-    """
-
-    obstacle_density: float
-    crowd_density: float
-    exit_separation: int | None
-    passage_width: int
-    route_redundancy: int
-    ignition_person_distance: int | None
-    ignition_exit_distance: int | None
-    route_length: int | None
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "obstacle_density": self.obstacle_density,
-            "crowd_density": self.crowd_density,
-            "exit_separation": self.exit_separation,
-            "passage_width": self.passage_width,
-            "route_redundancy": self.route_redundancy,
-            "ignition_person_distance": self.ignition_person_distance,
-            "ignition_exit_distance": self.ignition_exit_distance,
-            "route_length": self.route_length,
-        }
-
-
-def _bfs(sources: Iterable[Pos], passable: Callable[[Pos], bool], width: int, height: int) -> dict[Pos, int]:
-    dist: dict[Pos, int] = {}
-    queue: deque[Pos] = deque()
-    for s in sources:
-        if s not in dist:
-            dist[s] = 0
-            queue.append(s)
-    while queue:
-        cell = queue.popleft()
-        for nb in neighbours(cell, width, height):
-            if nb not in dist and passable(nb):
-                dist[nb] = dist[cell] + 1
-                queue.append(nb)
-    return dist
-
-
-def _passage_width(s: Scenario) -> int:
-    walls = s.walls
-    exits = set(s.exit_positions)
-    free = [Pos(r, c) for r in range(s.height) for c in range(s.width) if Pos(r, c) not in walls]
-    run_h: dict[Pos, int] = {}
-    run_v: dict[Pos, int] = {}
-    for r in range(s.height):
-        _assign_runs([Pos(r, c) for c in range(s.width)], walls, run_h)
-    for c in range(s.width):
-        _assign_runs([Pos(r, c) for r in range(s.height)], walls, run_v)
-    width = {p: min(run_h[p], run_v[p]) for p in free if p not in exits}
-
-    parent: dict[Pos, Pos] = {}
-    has_exit: dict[Pos, bool] = {}
-
-    def find(p: Pos) -> Pos:
-        while parent[p] != p:
-            parent[p] = parent[parent[p]]
-            p = parent[p]
-        return p
-
-    def add(p: Pos, is_exit: bool) -> None:
-        parent[p] = p
-        has_exit[p] = is_exit
-        for nb in neighbours(p, s.width, s.height):
-            if nb in parent:
-                a, b = find(p), find(nb)
-                if a != b:
-                    parent[b] = a
-                    has_exit[a] = has_exit[a] or has_exit[b]
-
-    for e in sorted(exits):
-        add(e, True)
-    unresolved = {p.position for p in s.people}
-    order = sorted(width, key=lambda p: (-width[p], p))
-    i = 0
-    while i < len(order) and unresolved:
-        level = width[order[i]]
-        while i < len(order) and width[order[i]] == level:
-            add(order[i], False)
-            i += 1
-        unresolved = {p for p in unresolved if not (p in parent and has_exit[find(p)])}
-        if not unresolved:
-            return level
-    return 0
-
-
-def _assign_runs(line: list[Pos], walls: frozenset[Pos], out: dict[Pos, int]) -> None:
-    run: list[Pos] = []
-    for p in [*line, None]:
-        if p is not None and p not in walls:
-            run.append(p)
+    for name in _OPTIONAL_CONSTRAINT_NAMES:
+        value = getattr(k, name)
+        if value is None:
             continue
-        for q in run:
-            out[q] = len(run)
-        run = []
+        if c.config_version == "1.0":
+            raise _fail(f"constraints.{name}", "needs config_version '1.1'")
+        _check_float_range(value, f"constraints.{name}", MAX_RATIO_CONSTRAINT if name in _RATIO_CONSTRAINTS else 1.0)
+    if k.deceptive_share is not None and k.deceptive_share.lo > 0 and exits.hi < 2:
+        raise _fail("constraints.deceptive_share", "a positive minimum needs exit_count.max >= 2")
+    if k.split_pressure is not None and k.split_pressure.lo > 0 and exits.hi < 2:
+        raise _fail("constraints.split_pressure", "a positive minimum needs exit_count.max >= 2")
 
 
-def _route_redundancy(s: Scenario) -> int:
-    """Minimum over people of vertex-disjoint routes to the exit set (unit vertex capacities)."""
-    walls = s.walls
-    exits = set(s.exit_positions)
-    free = [Pos(r, c) for r in range(s.height) for c in range(s.width) if Pos(r, c) not in walls]
-    index = {p: k for k, p in enumerate(free)}
-    sink = 2 * len(free)
-    big = 1 << 30
-    heads: list[list[int]] = [[] for _ in range(sink + 1)]
-    to: list[int] = []
-    base: list[int] = []
-
-    def edge(u: int, v: int, cap: int) -> None:
-        heads[u].append(len(to))
-        to.append(v)
-        base.append(cap)
-        heads[v].append(len(to))
-        to.append(u)
-        base.append(0)
-
-    for k, p in enumerate(free):
-        if p in exits:
-            edge(2 * k, sink, big)
-            continue
-        edge(2 * k, 2 * k + 1, 1)
-        for nb in neighbours(p, s.width, s.height):
-            if nb in index:
-                edge(2 * k + 1, 2 * index[nb], big)
-
-    best = ROUTE_REDUNDANCY_CAP
-    for person in sorted(p.position for p in s.people):
-        cap = list(base)
-        source = 2 * index[person] + 1
-        flow = 0
-        while flow < best:
-            via = {source: -1}
-            queue = deque([source])
-            while queue and sink not in via:
-                u = queue.popleft()
-                for e in heads[u]:
-                    if cap[e] > 0 and to[e] not in via:
-                        via[to[e]] = e
-                        queue.append(to[e])
-            if sink not in via:
-                break
-            v = sink
-            while v != source:
-                e = via[v]
-                cap[e] -= 1
-                cap[e ^ 1] += 1
-                v = to[e ^ 1]
-            flow += 1
-        best = min(best, flow)
-        if best == 0:
-            break
-    return best
-
-
-def measure_proxies(scenario: Scenario) -> GenerationProxies:
-    """Measure every generation proxy of ``scenario``. Pure and deterministic."""
-    s = scenario
-    walls = s.walls
-    exits = s.exit_positions
-    interior = [Pos(r, c) for r in range(1, s.height - 1) for c in range(1, s.width - 1)]
-    interior_walls = sum(1 for p in interior if p in walls)
-    free_interior = len(interior) - interior_walls
-    exit_list = sorted(exits)
-    separations = [abs(a.row - b.row) + abs(a.col - b.col) for i, a in enumerate(exit_list) for b in exit_list[i + 1 :]]
-
-    def open_cell(p: Pos) -> bool:
-        return p not in walls
-
-    from_fire = _bfs(s.ignitions, open_cell, s.width, s.height)
-    person_cells = [p.position for p in s.people]
-    to_person = [from_fire[p] for p in person_cells if p in from_fire]
-    to_exit = [from_fire[e] for e in exit_list if e in from_fire]
-
-    ignitions = set(s.ignitions)
-    route = _bfs(exit_list, lambda p: p not in walls and p not in ignitions and p not in exits, s.width, s.height)
-    route_lengths = [route.get(p) for p in person_cells]
-
-    return GenerationProxies(
-        obstacle_density=interior_walls / len(interior) if interior else 0.0,
-        crowd_density=len(s.people) / free_interior if free_interior else 0.0,
-        exit_separation=min(separations) if separations else None,
-        passage_width=_passage_width(s),
-        route_redundancy=_route_redundancy(s),
-        ignition_person_distance=min(to_person) if to_person else None,
-        ignition_exit_distance=min(to_exit) if to_exit else None,
-        route_length=None if any(d is None for d in route_lengths) else max(d for d in route_lengths if d is not None),
-    )
+# --------------------------------------------------------------------------- constraints and family labels
 
 
 def constraint_violations(proxies: GenerationProxies, config: GeneratorConfig) -> tuple[str, ...]:
@@ -784,30 +601,29 @@ def constraint_violations(proxies: GenerationProxies, config: GeneratorConfig) -
         bounds: IntRange = getattr(k, name)
         if value is None or not bounds.contains(value):
             out.append(name)
+    if k.split_pressure is not None and not k.split_pressure.contains(proxies.split_pressure or 0.0):
+        out.append("split_pressure")
+    if k.deceptive_share is not None and not k.deceptive_share.contains(proxies.deceptive_share):
+        out.append("deceptive_share")
+    if k.bottleneck_severity is not None:
+        severity = proxies.bottleneck_severity
+        if severity is None or not k.bottleneck_severity.contains(severity):
+            out.append("bottleneck_severity")
     return tuple(out)
 
 
 def describe_families(scenario: Scenario, proxies: GenerationProxies) -> tuple[ScenarioFamily, tuple[ScenarioFamily, ...]]:
-    """Descriptive family labels for the suite manifest: ``(primary, sorted families)``.
+    """Structural family labels for the suite manifest: ``(primary, sorted families)``.
 
-    The labels follow fixed thresholds on counts and proxies. They describe
-    the scenario; they are not a claim about its difficulty.
+    The tags are the seed-free part of the frozen V1 family rules
+    (:func:`emberbench.families.structural_tags`). The fire-dependent families
+    (threatened nearest exit, route invalidation) are never generator labels:
+    they need a fire trajectory, so the evaluator tags them on the selected
+    worlds. ``primary`` is :func:`emberbench.families.descriptive_primary`.
+    The labels describe the scenario; they are not a claim about its difficulty.
     """
-    labels: list[ScenarioFamily] = []
-    if len(scenario.exits) == 1:
-        dense = proxies.crowd_density >= HIGH_CROWD_DENSITY
-        labels.append(ScenarioFamily.SINGLE_EXIT_HIGH_DENSITY if dense else ScenarioFamily.SINGLE_EXIT_LOW_DENSITY)
-    else:
-        labels.append(ScenarioFamily.SPLIT_FLOW_ACROSS_EXITS)
-    if len(scenario.people) >= CROWD_100_POPULATION:
-        labels.append(ScenarioFamily.CROWD_100)
-    if len(scenario.ignitions) >= 2:
-        labels.append(ScenarioFamily.MULTIPLE_IGNITIONS)
-    if proxies.passage_width <= NARROW_PASSAGE_WIDTH:
-        labels.append(ScenarioFamily.NARROW_CORRIDOR_BOTTLENECK)
-    if proxies.obstacle_density >= MAZE_OBSTACLE_DENSITY:
-        labels.append(ScenarioFamily.MAZE_OBSTACLE_ROUTING)
-    return labels[0], tuple(sorted(set(labels)))
+    tags = structural_tags(profile_structure(scenario, proxies))
+    return descriptive_primary(tags), tuple(sorted(tags))
 
 
 # --------------------------------------------------------------------------- generation
@@ -1047,7 +863,19 @@ def _parse_proxies(value: Any, where: str) -> GenerationProxies:
         ignition_person_distance=_expect_optional_int(obj["ignition_person_distance"], f"{where}.ignition_person_distance"),
         ignition_exit_distance=_expect_optional_int(obj["ignition_exit_distance"], f"{where}.ignition_exit_distance"),
         route_length=_expect_optional_int(obj["route_length"], f"{where}.route_length"),
+        min_cut=_expect_int(obj["min_cut"], f"{where}.min_cut"),
+        bottleneck_severity=_expect_optional_float(obj["bottleneck_severity"], f"{where}.bottleneck_severity"),
+        max_nearest_exit_load=_expect_int(obj["max_nearest_exit_load"], f"{where}.max_nearest_exit_load"),
+        split_pressure=_expect_optional_float(obj["split_pressure"], f"{where}.split_pressure"),
+        deceptive_share=_expect_float(obj["deceptive_share"], f"{where}.deceptive_share"),
+        exit_gap_median=_expect_optional_float(obj["exit_gap_median"], f"{where}.exit_gap_median"),
+        detour_ratio=_expect_optional_float(obj["detour_ratio"], f"{where}.detour_ratio"),
+        ignition_centrality=_expect_float(obj["ignition_centrality"], f"{where}.ignition_centrality"),
     )
+
+
+def _expect_optional_float(value: Any, where: str) -> float | None:
+    return None if value is None else _expect_float(value, where)
 
 
 def _parse_generation(data: Any) -> GenerationManifest:

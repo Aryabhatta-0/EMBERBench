@@ -44,8 +44,11 @@ from typing import Any
 
 from . import SIMULATOR_VERSION
 from .agent import ACTION_SCHEMA_VERSION
+from .calibration import ADMISSION_RULES_VERSION, CALIBRATION_PANEL_VERSION, DIFFICULTY_RULES_VERSION
 from .canonical import canonical_bytes, canonical_json, sha256_hex
+from .composition import COMPOSITION_VERSION, RECIPE_CATALOG_VERSION, SELECTION_RULES_VERSION, SUITE_FREEZE_RECORD_VERSION
 from .crowd import CROWD_DIAGNOSTICS_VERSION
+from .environment_pack import ENVIRONMENT_PACK_VERSION
 from .errors import EmberBenchError, IntegrityError
 from .evaluation import (
     EVALUATION_MANIFEST_VERSION,
@@ -57,6 +60,7 @@ from .evaluation import (
     load_evaluation_result,
     verify_manifest,
 )
+from .families import FAMILY_RULES_VERSION
 from .generator import (
     GENERATION_MANIFEST_VERSION,
     GENERATOR_CONFIG_VERSION,
@@ -72,16 +76,21 @@ from .generator import (
 from .metrics import METRICS_VERSION
 from .observation import OBSERVATION_VERSION
 from .scenario import ID_PATTERN, SCHEMA_VERSION
+from .scoring import SCORING_VERSION
 from .statistics import STATISTICS_VERSION
 from .statistics import _authenticate as _authenticate_result
 from .suite import HASH_PATTERN, Visibility
+from .worlds import ENVIRONMENT_WORLD_VERSION
 
 INTEGRITY_PROTOCOL_VERSION = "1.0"
 
 # The benchmark revision. Bump it for any change listed under "Benchmark
 # revision policy" in docs/integrity.md. A new held-out batch under the same
-# rules is not a new revision.
-BENCHMARK_REVISION = "1"
+# rules is not a new revision. Revision 2 is the one pre-release step that
+# takes in the official scoring contract (scoring 1.0, environment packs) and
+# the generator 1.1 suite-definition contracts (families, calibration,
+# admission, composition).
+BENCHMARK_REVISION = "2"
 
 IMAGE_DIGEST_PREFIX = "sha256:"
 MAX_KEY_ID_LENGTH = 256
@@ -98,7 +107,12 @@ def _fail(where: str, message: str) -> IntegrityError:
 
 
 def benchmark_versions() -> dict[str, str]:
-    """Every version that defines what a score means. Provenance pins all of them."""
+    """Every version that defines what a score means. Provenance pins all of them.
+
+    The values are the authoritative constants of each owning module; no
+    version string is repeated here. :func:`verify_evaluation_provenance`
+    fails closed when any recorded value differs from these.
+    """
     return {
         "benchmark_revision": BENCHMARK_REVISION,
         "simulator": SIMULATOR_VERSION,
@@ -113,6 +127,18 @@ def benchmark_versions() -> dict[str, str]:
         "generation_manifest": GENERATION_MANIFEST_VERSION,
         "evaluation_manifest": EVALUATION_MANIFEST_VERSION,
         "evaluation_result": EVALUATION_RESULT_VERSION,
+        "scoring": SCORING_VERSION,
+        "environment_pack": ENVIRONMENT_PACK_VERSION,
+        "environment_world": ENVIRONMENT_WORLD_VERSION,
+        # Suite-definition contracts: they decide which worlds are admitted, selected and evaluated.
+        "family_rules": FAMILY_RULES_VERSION,
+        "calibration_panel": CALIBRATION_PANEL_VERSION,
+        "difficulty_rules": DIFFICULTY_RULES_VERSION,
+        "admission_rules": ADMISSION_RULES_VERSION,
+        "composition": COMPOSITION_VERSION,
+        "selection_rules": SELECTION_RULES_VERSION,
+        "recipe_catalog": RECIPE_CATALOG_VERSION,
+        "suite_freeze_record": SUITE_FREEZE_RECORD_VERSION,
     }
 
 

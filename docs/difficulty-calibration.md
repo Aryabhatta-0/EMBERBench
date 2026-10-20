@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | Status | **Research design. Not merged.** Uses the official EMBER Score (scoring version 1.0). |
-| Code | `CALIBRATION_PANEL`, `calibrate`, `difficulty_band`, `capacity_savable`, `capacity_ceiling`, `family_tags`, `select_suite` in [`tools/analyze_suite_design.py`](../tools/analyze_suite_design.py) |
+| Code | Library since Phase 11: `CALIBRATION_PANEL`, `measure_world`, `calibrate`, `difficulty_band`, `capacity_savable`, `capacity_ceiling`, `fire_evidence` in [`emberbench.calibration`](../src/emberbench/calibration.py) (calibration panel 1.0, difficulty rules 1.0, admission rules 1.0); `family_tags` in [`emberbench.families`](../src/emberbench/families.py); `select_suite` and the pool workflow in [`emberbench.composition`](../src/emberbench/composition.py). The research tool [`tools/analyze_suite_design.py`](../tools/analyze_suite_design.py) imports them. See [generator.md](generator.md). |
 | Evidence | [suite-design-results.md](suite-design-results.md) (development pool: 1,120 generated scenarios, 2,320 unique worlds) |
 | Score used | The official EMBER Score from `emberbench.scoring` (`score_episode`, `score_evidence`). The tool has no other score. |
 
@@ -226,6 +226,15 @@ pub-02 and pub-10 Moderate; pub-06, pub-07 and pub-09 Hard; pub-05 Stress.
 4. The fire-model quota (stochastic slots per family) is applied in the same
    way, as part of the cell key.
 
+Phase 11 implements this rule as `emberbench.composition.select_suite`
+(selection rules 1.0). Inside a family the bands are filled Easy..Stress and
+the stochastic cell of a band before its deterministic cell. The stochastic
+slots follow the PR #33 even-spread rule: Moderate 1, Hard 2, Stress 1 per
+family. Calibration and fire tags of a stochastic candidate are measured on
+exactly the 3 unique worlds that `build_unique_world_manifest` schedules for
+it. The targeted top-up of step 3 is `compose_pool` with the `V1_TOP_UP`
+recipe table ([generator.md](generator.md), section 5).
+
 ## 9. Known limits
 
 - Bands are relative to V1 heuristics. A strong model can find Stress worlds
@@ -233,9 +242,10 @@ pub-02 and pub-10 Moderate; pub-06, pub-07 and pub-09 Hard; pub-05 Stress.
   version (evaluation-suite-design.md, section 16).
 - `M_cap` is a relaxation. Some admitted Stress worlds can still be harder than
   any policy can solve. The filter removes the clear capacity artifacts only.
-- Family tags use fixed thresholds on measured properties. The generator's own
-  `describe_families` names fewer families; the evaluator-side tags are the
-  stratification key (see the gap table in evaluation-suite-design.md).
+- Family tags use fixed thresholds on measured properties. Since generator
+  1.1.0, `describe_families` uses the same rules (family rules 1.0) for its
+  structural labels; the two fire-dependent families stay evaluator-side. The
+  evaluator-side tags are the stratification key.
 - The noisy comparators share their base policy with a panel member. They test
   rank stability; they are not independent agents.
 
@@ -248,3 +258,5 @@ reported numbers are recomputed from the final code. `tests/test_suite_design.py
 checks the band thresholds, the admission order, the capacity bound on a
 scenario with `M_cap < M*`, Glover's greedy, the capacity ceiling against the
 official score, the official scoring of panel runs and the selector rules.
+`tests/test_calibration.py` checks the library rules, and
+`tests/test_composition.py` checks the composition pipeline.

@@ -1,0 +1,570 @@
+{
+  "candidates": 4000,
+  "cells": [
+    {
+      "band": "easy",
+      "eligible": 53,
+      "family": "crowd_100",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 20,
+      "family": "crowd_100",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 21,
+      "family": "crowd_100",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "hard",
+      "eligible": 18,
+      "family": "crowd_100",
+      "quota": 4,
+      "selected": 4,
+      "stochastic": false
+    },
+    {
+      "band": "hard",
+      "eligible": 16,
+      "family": "crowd_100",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": true
+    },
+    {
+      "band": "stress",
+      "eligible": 27,
+      "family": "crowd_100",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "stress",
+      "eligible": 30,
+      "family": "crowd_100",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "easy",
+      "eligible": 191,
+      "family": "deceptive_nearest_exit",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 38,
+      "family": "deceptive_nearest_exit",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 73,
+      "family": "deceptive_nearest_exit",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "hard",
+      "eligible": 26,
+      "family": "deceptive_nearest_exit",
+      "quota": 4,
+      "selected": 4,
+      "stochastic": false
+    },
+    {
+      "band": "hard",
+      "eligible": 16,
+      "family": "deceptive_nearest_exit",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": true
+    },
+    {
+      "band": "stress",
+      "eligible": 22,
+      "family": "deceptive_nearest_exit",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "stress",
+      "eligible": 16,
+      "family": "deceptive_nearest_exit",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "easy",
+      "eligible": 182,
+      "family": "maze_obstacle_routing",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 26,
+      "family": "maze_obstacle_routing",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 47,
+      "family": "maze_obstacle_routing",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "hard",
+      "eligible": 25,
+      "family": "maze_obstacle_routing",
+      "quota": 4,
+      "selected": 4,
+      "stochastic": false
+    },
+    {
+      "band": "hard",
+      "eligible": 6,
+      "family": "maze_obstacle_routing",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": true
+    },
+    {
+      "band": "stress",
+      "eligible": 10,
+      "family": "maze_obstacle_routing",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "stress",
+      "eligible": 4,
+      "family": "maze_obstacle_routing",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "easy",
+      "eligible": 66,
+      "family": "multiple_ignitions",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 21,
+      "family": "multiple_ignitions",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 85,
+      "family": "multiple_ignitions",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "hard",
+      "eligible": 25,
+      "family": "multiple_ignitions",
+      "quota": 4,
+      "selected": 4,
+      "stochastic": false
+    },
+    {
+      "band": "hard",
+      "eligible": 32,
+      "family": "multiple_ignitions",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": true
+    },
+    {
+      "band": "stress",
+      "eligible": 34,
+      "family": "multiple_ignitions",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "stress",
+      "eligible": 27,
+      "family": "multiple_ignitions",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "easy",
+      "eligible": 405,
+      "family": "narrow_corridor_bottleneck",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 107,
+      "family": "narrow_corridor_bottleneck",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 166,
+      "family": "narrow_corridor_bottleneck",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "hard",
+      "eligible": 66,
+      "family": "narrow_corridor_bottleneck",
+      "quota": 4,
+      "selected": 4,
+      "stochastic": false
+    },
+    {
+      "band": "hard",
+      "eligible": 49,
+      "family": "narrow_corridor_bottleneck",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": true
+    },
+    {
+      "band": "stress",
+      "eligible": 74,
+      "family": "narrow_corridor_bottleneck",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "stress",
+      "eligible": 66,
+      "family": "narrow_corridor_bottleneck",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "easy",
+      "eligible": 30,
+      "family": "route_invalidation_replanning",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 21,
+      "family": "route_invalidation_replanning",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 52,
+      "family": "route_invalidation_replanning",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "hard",
+      "eligible": 43,
+      "family": "route_invalidation_replanning",
+      "quota": 4,
+      "selected": 4,
+      "stochastic": false
+    },
+    {
+      "band": "hard",
+      "eligible": 39,
+      "family": "route_invalidation_replanning",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": true
+    },
+    {
+      "band": "stress",
+      "eligible": 59,
+      "family": "route_invalidation_replanning",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "stress",
+      "eligible": 58,
+      "family": "route_invalidation_replanning",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "easy",
+      "eligible": 26,
+      "family": "single_exit_high_density",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 21,
+      "family": "single_exit_high_density",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 18,
+      "family": "single_exit_high_density",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "hard",
+      "eligible": 14,
+      "family": "single_exit_high_density",
+      "quota": 4,
+      "selected": 4,
+      "stochastic": false
+    },
+    {
+      "band": "hard",
+      "eligible": 9,
+      "family": "single_exit_high_density",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": true
+    },
+    {
+      "band": "stress",
+      "eligible": 13,
+      "family": "single_exit_high_density",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "stress",
+      "eligible": 14,
+      "family": "single_exit_high_density",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "easy",
+      "eligible": 79,
+      "family": "single_exit_low_density",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 12,
+      "family": "single_exit_low_density",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 53,
+      "family": "single_exit_low_density",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "hard",
+      "eligible": 5,
+      "family": "single_exit_low_density",
+      "quota": 4,
+      "selected": 4,
+      "stochastic": false
+    },
+    {
+      "band": "hard",
+      "eligible": 13,
+      "family": "single_exit_low_density",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": true
+    },
+    {
+      "band": "stress",
+      "eligible": 8,
+      "family": "single_exit_low_density",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "stress",
+      "eligible": 7,
+      "family": "single_exit_low_density",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "easy",
+      "eligible": 160,
+      "family": "split_flow_across_exits",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 52,
+      "family": "split_flow_across_exits",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 60,
+      "family": "split_flow_across_exits",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "hard",
+      "eligible": 48,
+      "family": "split_flow_across_exits",
+      "quota": 4,
+      "selected": 4,
+      "stochastic": false
+    },
+    {
+      "band": "hard",
+      "eligible": 36,
+      "family": "split_flow_across_exits",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": true
+    },
+    {
+      "band": "stress",
+      "eligible": 56,
+      "family": "split_flow_across_exits",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "stress",
+      "eligible": 51,
+      "family": "split_flow_across_exits",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "easy",
+      "eligible": 69,
+      "family": "threatened_nearest_exit",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 25,
+      "family": "threatened_nearest_exit",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "moderate",
+      "eligible": 41,
+      "family": "threatened_nearest_exit",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    },
+    {
+      "band": "hard",
+      "eligible": 37,
+      "family": "threatened_nearest_exit",
+      "quota": 4,
+      "selected": 4,
+      "stochastic": false
+    },
+    {
+      "band": "hard",
+      "eligible": 46,
+      "family": "threatened_nearest_exit",
+      "quota": 2,
+      "selected": 2,
+      "stochastic": true
+    },
+    {
+      "band": "stress",
+      "eligible": 60,
+      "family": "threatened_nearest_exit",
+      "quota": 3,
+      "selected": 3,
+      "stochastic": false
+    },
+    {
+      "band": "stress",
+      "eligible": 68,
+      "family": "threatened_nearest_exit",
+      "quota": 1,
+      "selected": 1,
+      "stochastic": true
+    }
+  ],
+  "coverage_validation_version": "1.0.0",
+  "rounds": 1,
+  "rule_set_digest": "61985f4711e28ebd68c7d58140f015e9569ed4eeda819420a1b7e7f8ced0f8e1",
+  "selected": 160,
+  "shortfall_slots": 0
+}

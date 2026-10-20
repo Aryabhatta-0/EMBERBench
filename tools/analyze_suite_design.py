@@ -33,7 +33,6 @@ never be used for a scored evaluation.
 
 import argparse
 import hashlib
-import heapq
 import itertools
 import json
 import math
@@ -44,7 +43,7 @@ import time
 from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -64,23 +63,40 @@ from emberbench import (
     run_episode,
 )
 from emberbench.agent import ActionOutput, Agent, AgentFactory, serialize_observation
-from emberbench.generator import GENERATOR_VERSION, measure_proxies
-from emberbench.grid import Pos, neighbours
+from emberbench.generator import GENERATOR_VERSION
 from emberbench.observation import Observation
-from emberbench.oracle import fire_trajectory
 from emberbench.rng import SplitMix64
 from emberbench.scoring import (
     OFFICIAL_CONSTANTS,
     SCORING_VERSION,
-    EpisodeEvidence,
     EpisodeScore,
-    EpisodeStatus,
-    _UNREACHABLE,
-    _references,
     score_episode,
-    score_evidence,
 )
 from emberbench.simulator import Simulator
+from emberbench.calibration import (
+    ADMITTED,
+    BANDS,
+    CALIBRATION_PANEL,
+    CALIBRATION_PANEL_VERSION,
+    CEILING_MIN,
+    EASY_MIN_BEST,
+    EXCLUSIONS,
+    FLOOR,
+    FLOOR_AGENT,
+    HARD_MIN_BEST,
+    MODERATE_MIN_BEST,
+    SATURATED,
+    Calibration,
+    calibrate,
+    capacity_ceiling,
+    capacity_savable,
+    difficulty_band,
+    fire_evidence,
+)
+from emberbench.families import PRIMARY_FAMILIES, family_tags
+from emberbench.families import FireEvidence as FireProfile
+from emberbench.structure import StructuralProfile as ScenarioProfile
+from emberbench.structure import profile_structure
 
 ANALYSIS_VERSION = "1.0.0"
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -90,30 +106,8 @@ PUBLIC_SUITE_DIR = REPO_ROOT / "scenarios" / "public" / "v1"
 # so can never be scored seeds.
 DEVELOPMENT_SEED_DOMAIN = "emberbench/suite-design/development/"
 
-# The frozen calibration panel (calibration panel version 1.0). Four fixed,
-# deterministic reference policies with different competences; no submitted
-# model is ever a member. ``random-legal-v1`` is the floor: it is reported on
-# the public suite but never sets a band. The privileged references (the
-# savable count M* and the capacity ceiling) are bounds, never panel members.
-CALIBRATION_PANEL_VERSION = "1.0"
-CALIBRATION_PANEL: tuple[str, ...] = (
-    "nearest-exit-greedy-v1",
-    "static-shortest-path-v1",
-    "fire-aware-shortest-path-v1",
-    "congestion-aware-v1",
-)
-FLOOR_AGENT = "random-legal-v1"
-
-# Difficulty cutpoints (official EMBER points) on B, the best panel score of a
-# world, and the admission rules. Frozen with the calibration panel; derived in
-# docs/difficulty-calibration.md sections 4 and 5 from the development pool.
-EASY_MIN_BEST = 80.0  # Easy: the best panel member keeps >= 80 points
-MODERATE_MIN_BEST = 30.0  # Moderate: 30 <= B < 80
-HARD_MIN_BEST = 10.0  # Hard: 10 <= B < 30; Stress: B < 10
-SATURATED = 95.0  # every panel member >= 95: no information, never selected
-FLOOR = 1.0  # every panel member < 1 point: no information, never selected
-CEILING_MIN = 50.0  # capacity ceiling below this: practically unsolvable, never selected
-BANDS: tuple[str, ...] = ("easy", "moderate", "hard", "stress")
+# The frozen calibration panel, difficulty cutpoints and admission rules (calibration panel 1.0,
+# difficulty rules 1.0, admission rules 1.0) are imported from emberbench.calibration.
 
 
 def development_seed(label: str) -> int:
@@ -182,442 +176,18 @@ def distinct_world_seeds(scenario: Scenario, candidate_seeds: Iterable[int], cou
     return tuple(chosen)
 
 
-# --------------------------------------------------------------------------- static structure
-
-
-def _bfs(sources: Iterable[Pos], walls: frozenset[Pos], width: int, height: int) -> dict[Pos, int]:
-    dist: dict[Pos, int] = {}
-    frontier: list[Pos] = []
-    for s in sources:
-        if s not in dist:
-            dist[s] = 0
-            frontier.append(s)
-    while frontier:
-        nxt: list[Pos] = []
-        for cell in frontier:
-            for n in neighbours(cell, width, height):
-                if n not in walls and n not in dist:
-                    dist[n] = dist[cell] + 1
-                    nxt.append(n)
-        frontier = nxt
-    return dist
-
-
-def _manhattan(a: Pos, b: Pos) -> int:
-    return abs(a.row - b.row) + abs(a.col - b.col)
-
-
-def exit_fields(scenario: Scenario) -> dict[str, dict[Pos, int]]:
-    """Per exit ID, the static walking distance (walls only) from every reachable cell."""
-    return {e.id: _bfs([e.position], scenario.walls, scenario.width, scenario.height) for e in scenario.exits}
-
-
-def _min_vertex_cut(scenario: Scenario) -> int:
-    """Max number of vertex-disjoint person-to-exit paths on the static map (unit cell capacity)."""
-    width, height, walls = scenario.width, scenario.height, scenario.walls
-    exits = {e.position for e in scenario.exits}
-    cells = [Pos(r, c) for r in range(height) for c in range(width) if Pos(r, c) not in walls]
-    capacity: dict[tuple[object, object], int] = defaultdict(int)
-    adjacency: dict[object, list[object]] = defaultdict(list)
-
-    def edge(u: object, v: object) -> None:
-        capacity[(u, v)] += 1
-        adjacency[u].append(v)
-        adjacency[v].append(u)
-
-    for cell in cells:
-        edge((cell, 0), (cell, 1))
-        if cell in exits:
-            edge((cell, 1), "T")
-            continue
-        for n in neighbours(cell, width, height):
-            if n not in walls:
-                edge((cell, 1), (n, 0))
-    for p in scenario.people:
-        edge("S", (p.position, 0))
-    total = 0
-    while True:
-        parent: dict[object, object] = {"S": "S"}
-        frontier: list[object] = ["S"]
-        while frontier and "T" not in parent:
-            nxt: list[object] = []
-            for u in frontier:
-                for w in adjacency[u]:
-                    if w not in parent and capacity[(u, w)] > 0:
-                        parent[w] = u
-                        nxt.append(w)
-            frontier = nxt
-        if "T" not in parent:
-            return total
-        v: object = "T"
-        while v != "S":
-            u = parent[v]
-            capacity[(u, v)] -= 1
-            capacity[(v, u)] += 1
-            v = u
-        total += 1
-
-
-@dataclass(frozen=True)
-class ScenarioProfile:
-    """Seed-free structural measurements of one scenario. Public-safe for public scenarios."""
-
-    scenario_id: str
-    scenario_hash: str
-    width: int
-    height: int
-    free_cells: int
-    population: int
-    exit_count: int
-    ignition_count: int
-    fire_model: str
-    spread_interval: int
-    spread_probability: float | None
-    max_steps: int
-    obstacle_density: float
-    crowd_density: float
-    passage_width: int
-    route_redundancy: int
-    route_length: int | None
-    ignition_person_distance: int | None
-    ignition_exit_distance: int | None
-    min_cut: int
-    bottleneck_severity: float  # population / min_cut: drain steps through the narrowest cut
-    max_nearest_exit_load: int
-    split_pressure: float | None  # busiest nearest-exit queue / (1 + median detour to the next exit)
-    deceptive_share: float  # people whose straight-line-nearest exit is >= 2 steps worse by path
-    exit_gap_median: float | None  # median (second - first) path distance to exits
-    detour_ratio: float  # mean path / Manhattan distance to the path-nearest exit
-    ignition_centrality: float  # 0 = an ignition at the grid centre, 1 = on the border
+# --------------------------------------------------------------------------- static structure and privileged world measurements
+#
+# Phase 11 promoted these rules to the library (emberbench.structure, emberbench.calibration,
+# emberbench.families). The study imports them, so the study and the composition pipeline cannot drift.
 
 
 def profile_scenario(scenario: Scenario) -> ScenarioProfile:
-    proxies = measure_proxies(scenario)
-    fields_ = exit_fields(scenario)
-    exit_ids = sorted(fields_)
-    pos_of = {e.id: e.position for e in scenario.exits}
-    people = sorted(scenario.people, key=lambda p: p.id)
-    nearest: dict[str, str] = {}
-    gaps: list[int] = []
-    detours: list[float] = []
-    deceptive = 0
-    for p in people:
-        dists = sorted((fields_[e].get(p.position, math.inf), e) for e in exit_ids)
-        d0, e0 = dists[0]
-        nearest[p.id] = e0
-        if len(dists) > 1 and math.isfinite(dists[1][0]) and math.isfinite(d0):
-            gaps.append(int(dists[1][0] - d0))
-        if math.isfinite(d0):
-            man = _manhattan(p.position, pos_of[e0])
-            detours.append(d0 / man if man else 1.0)
-            man_best = min(_manhattan(p.position, pos_of[e]) for e in exit_ids)
-            man_nearest = [e for e in exit_ids if _manhattan(p.position, pos_of[e]) == man_best]
-            if min(fields_[e].get(p.position, math.inf) for e in man_nearest) - d0 >= 2:
-                deceptive += 1
-    load = Counter(nearest.values())
-    q_max = max(load.values()) if load else 0
-    split: float | None = None
-    if len(exit_ids) > 1 and load:
-        busiest = min(e for e, n in load.items() if n == q_max)
-        extra = []
-        for p in people:
-            if nearest[p.id] != busiest:
-                continue
-            d = sorted(fields_[e].get(p.position, math.inf) for e in exit_ids)
-            if math.isfinite(d[1]):
-                extra.append(d[1] - d[0])
-        split = q_max / (1 + statistics.median(extra)) if extra else None
-    cut = _min_vertex_cut(scenario)
-    h, w = scenario.height, scenario.width
-    centrality = min(
-        max(abs(i.row - (h - 1) / 2) / ((h - 1) / 2), abs(i.col - (w - 1) / 2) / ((w - 1) / 2)) for i in scenario.ignitions
-    )
-    free = sum(1 for r in range(h) for c in range(w) if Pos(r, c) not in scenario.walls)
-    return ScenarioProfile(
-        scenario_id=scenario.scenario_id,
-        scenario_hash=scenario.content_hash(),
-        width=w,
-        height=h,
-        free_cells=free,
-        population=len(people),
-        exit_count=len(scenario.exits),
-        ignition_count=len(scenario.ignitions),
-        fire_model=scenario.fire.model.value,
-        spread_interval=scenario.fire.spread_interval,
-        spread_probability=scenario.fire.spread_probability,
-        max_steps=scenario.termination.max_steps,
-        obstacle_density=proxies.obstacle_density,
-        crowd_density=proxies.crowd_density,
-        passage_width=proxies.passage_width,
-        route_redundancy=proxies.route_redundancy,
-        route_length=proxies.route_length,
-        ignition_person_distance=proxies.ignition_person_distance,
-        ignition_exit_distance=proxies.ignition_exit_distance,
-        min_cut=cut,
-        bottleneck_severity=len(people) / cut if cut else math.inf,
-        max_nearest_exit_load=q_max,
-        split_pressure=split,
-        deceptive_share=deceptive / len(people) if people else 0.0,
-        exit_gap_median=float(statistics.median(gaps)) if gaps else None,
-        detour_ratio=statistics.fmean(detours) if detours else math.inf,
-        ignition_centrality=centrality,
-    )
-
-
-# --------------------------------------------------------------------------- privileged world measurements
-
-
-def _static_plan_survives(scenario: Scenario, start: Pos, field_: Mapping[Pos, int], trajectory: Sequence[frozenset[Pos]]) -> bool:
-    """Can one person, alone, follow SOME static shortest route to the given exit without burning?"""
-    exits = set(scenario.exit_positions)
-    if start in trajectory[0] or start not in field_:
-        return False
-    frontier = {start}
-    for t in range(scenario.termination.max_steps):
-        now, after = trajectory[t], trajectory[t + 1]
-        reached: set[Pos] = set()
-        for cell in frontier:
-            for nxt in neighbours(cell, scenario.width, scenario.height):
-                if field_.get(nxt) != field_[cell] - 1 or nxt in scenario.walls or nxt in now:
-                    continue
-                if nxt in exits:
-                    return True
-                if nxt not in after:
-                    reached.add(nxt)
-        if not reached:
-            return False
-        frontier = reached
-    return False
-
-
-def _glover(intervals: Sequence[tuple[int, int]], capacity: Sequence[int]) -> int:
-    """Most unit jobs that fit: job ``i`` takes one slot in steps ``[lo_i, hi_i]``, step ``s`` has ``capacity[s]`` slots.
-
-    Earliest-deadline-first over the steps (Glover's greedy). It is optimal for
-    this convex bipartite matching.
-    """
-    jobs = sorted(intervals)
-    heap: list[int] = []
-    k = placed = 0
-    for step in range(1, len(capacity)):
-        while k < len(jobs) and jobs[k][0] <= step:
-            heapq.heappush(heap, jobs[k][1])
-            k += 1
-        while heap and heap[0] < step:
-            heapq.heappop(heap)
-        take = capacity[step]
-        while take and heap:
-            heapq.heappop(heap)
-            placed += 1
-            take -= 1
-    return placed
-
-
-def capacity_savable(scenario: Scenario, seed: int) -> tuple[int, int]:
-    """``(M*, M_cap)``: the official savable count and a capacity-aware upper bound on evacuations. PRIVILEGED.
-
-    ``M*`` (the official ``max_evacuated``) counts people who can escape ALONE.
-    It ignores that people share exits and cuts. ``M_cap <= M*`` adds the two
-    capacity facts behind the official Time reference ``Q_cut``: at most one
-    person leaves through an open exit cell per step, and at most ``k_s``
-    people stand on the cut ``N(C)`` of a component ``C`` of the cells with
-    wall distance ``> d`` in step ``s``. Each savable person needs one exit
-    slot inside its single-person evacuation window and one cut slot inside its
-    single-person window on every cut it must cross; the windows are relaxed
-    to intervals, and Glover's greedy gives the exact maximum of every relaxed
-    problem. Every relaxation only enlarges the feasible set, so ``M_cap`` is an
-    upper bound on the evacuees of every policy. ``M* - M_cap`` savable people
-    are lost by every policy: the official score charges them as avoidable.
-    This is the deterministic input of the practical-unsolvability filter.
-    """
-    refs = _references(scenario, seed)
-    unreachable = _UNREACHABLE
-    horizon = scenario.termination.max_steps
-    width, height, walls = scenario.width, scenario.height, scenario.walls
-    cells = sorted(refs.index, key=refs.index.__getitem__)
-    n = len(cells)
-    adj = [tuple(refs.index[q] for q in (c, *neighbours(c, width, height)) if q not in walls) for c in cells]
-    exits = frozenset(scenario.exit_positions)
-    is_exit = [c in exits for c in cells]
-    exit_idx = [i for i in range(n) if is_exit[i]]
-    burning = [frozenset(refs.index[c] for c in b if c in refs.index) for b in refs.trajectory]
-    earliest = refs.earliest
-    wall = [-1] * n
-    frontier = list(exit_idx)
-    for i in frontier:
-        wall[i] = 0
-    while frontier:
-        nxt: list[int] = []
-        for i in frontier:
-            for j in adj[i]:
-                if wall[j] < 0:
-                    wall[j] = wall[i] + 1
-                    nxt.append(j)
-        frontier = nxt
-    # Cells from which a person evacuates in step t + 1: next to an exit that does not burn at the start of the step.
-    exit_adjacent = [frozenset(j for x in exit_idx if x not in burning[t] for j in adj[x] if not is_exit[j]) for t in range(horizon)]
-    starts = [refs.index[p.position] for p in sorted(scenario.people, key=lambda p: p.id)]
-    savable = [s for s in starts if earliest[0][s] != unreachable]
-    if not savable:
-        return 0, 0
-
-    exit_windows: list[tuple[int, int]] = []
-    first_at: list[dict[int, int]] = []  # per person: d -> first snapshot with wall distance <= d
-    last_at: list[dict[int, int]] = []  # per person: d -> last snapshot on a cell with wall distance == d
-    for s0 in savable:
-        reach = {s0}
-        latest = 0
-        first: dict[int, int] = {}
-        last: dict[int, int] = {}
-        low = wall[s0] + 1
-        for t in range(horizon):
-            levels = {wall[i] for i in reach}
-            for d in levels:
-                last[d] = t
-            m = min(levels)
-            for d in range(m, low):
-                first[d] = t
-            low = min(low, m)
-            if reach & exit_adjacent[t]:
-                latest = t + 1
-            now, after, row = burning[t], burning[t + 1], earliest[t + 1]
-            reach = {j for i in reach for j in adj[i] if j not in now and j not in after and not is_exit[j] and row[j] != unreachable}
-            if not reach:
-                break
-        exit_windows.append((earliest[0][s0], latest))
-        first_at.append(first)
-        last_at.append(last)
-
-    exit_capacity = [0] + [sum(1 for x in exit_idx if x not in burning[s - 1]) for s in range(1, horizon + 1)]
-    best = min(len(savable), _glover(exit_windows, exit_capacity))
-    for d in range(1, max(wall, default=0)):
-        comp: dict[int, int] = {}
-        cuts: list[set[int]] = []
-        for i in range(n):
-            if wall[i] <= d or i in comp:
-                continue
-            k = len(cuts)
-            comp[i] = k
-            stack, cut = [i], set()
-            while stack:
-                a = stack.pop()
-                for b in adj[a]:
-                    if wall[b] > d and b not in comp:
-                        comp[b] = k
-                        stack.append(b)
-                    elif wall[b] == d:
-                        cut.add(b)
-            cuts.append(cut)
-        parent = list(range(len(cuts)))
-
-        def root(x: int) -> int:
-            while parent[x] != x:
-                parent[x] = parent[parent[x]]
-                x = parent[x]
-            return x
-
-        owner: dict[int, int] = {}
-        for k, cut in enumerate(cuts):
-            for x in cut:
-                if x in owner:
-                    parent[root(k)] = root(owner[x])
-                else:
-                    owner[x] = k
-        groups: dict[int, tuple[set[int], list[int]]] = {}
-        for k, cut in enumerate(cuts):
-            groups.setdefault(root(k), (set(), []))[0].update(cut)
-        total = 0
-        for p, s0 in enumerate(savable):
-            if s0 in comp:
-                groups[root(comp[s0])][1].append(p)
-            else:
-                total += 1
-        for cut, members in groups.values():
-            if not members:
-                continue
-            capacity = [0] + [sum(1 for c in cut if c not in burning[s - 1] and c not in burning[s]) for s in range(1, horizon + 1)]
-            windows = [(first_at[p][d], last_at[p][d]) for p in members if d in first_at[p] and d in last_at[p]]
-            total += _glover(windows, capacity)
-        best = min(best, total)
-    return len(savable), best
-
-
-def capacity_ceiling(population: int, savable: int, capacity: int) -> float | None:
-    """The best official score with ``savable - capacity`` avoidable stranded people and perfect quality.
-
-    Computed by the official ``score_evidence`` on synthetic evidence (no
-    second implementation of the formula). ``None`` when nobody is savable.
-    """
-    if savable == 0:
-        return None
-    lost = savable - capacity
-    ev = EpisodeEvidence(
-        scenario_id="capacity-ceiling",
-        scenario_hash="0" * 64,
-        seed=0,
-        record_digest="0" * 64,
-        population=population,
-        max_evacuated=savable,
-        evacuated=capacity,
-        casualties=0,
-        stranded=population - capacity,
-        avoidable_casualty_ids=(),
-        avoidable_stranded_ids=tuple(f"a{i:05d}" for i in range(lost)),
-        unavoidable_casualty_ids=(),
-        unavoidable_stranded_ids=tuple(f"u{i:05d}" for i in range(population - savable)),
-        evacuee_time=capacity,
-        evacuee_time_bound=capacity,
-        evacuee_time_queue_bound=capacity,
-        evacuee_time_cut_bound=capacity,
-        movement_attempts=0,
-        blocked_occupied=0,
-        blocked_conflict=0,
-        blocked_cycle=0,
-        path_cells_moved=capacity,
-        path_moves_bound=capacity,
-        path_static_bound=capacity,
-        evacuee_danger_states=0,
-        evacuee_danger_bound=0,
-        invalidation_events=0,
-        unrecoverable_invalidations=0,
-        replanning_remaining=0,
-        replanning_remaining_bound=0,
-    )
-    return float(score_evidence(0, ev, OFFICIAL_CONSTANTS).score)
-
-
-@dataclass(frozen=True)
-class FireProfile:
-    """Fire-dependent, privileged measurements of one world, used only for family tags."""
-
-    threatened_share: float  # people whose nearest exit burns before they can use it
-    invalidation_share: float  # people whose every static shortest route is cut by fire
-    recoverable_invalidation_share: float  # ... and who can still escape another way
-    final_burn_share: float
+    return profile_structure(scenario)
 
 
 def fire_profile(scenario: Scenario, seed: int, savable_ids: frozenset[str]) -> FireProfile:
-    trajectory = fire_trajectory(scenario, seed)
-    fields_ = exit_fields(scenario)
-    exit_ids = sorted(fields_)
-    pos_of = {e.id: e.position for e in scenario.exits}
-    burn_step = {e: next((t for t, b in enumerate(trajectory) if pos_of[e] in b), None) for e in exit_ids}
-    people = sorted(scenario.people, key=lambda p: p.id)
-    nearest = {p.id: min((fields_[e].get(p.position, math.inf), e) for e in exit_ids) for p in people}
-    load = Counter(e for _, e in nearest.values())
-    threatened = invalidated = recoverable = 0
-    for p in people:
-        d, e = nearest[p.id]
-        b = burn_step[e]
-        if b is not None and math.isfinite(d) and b <= max(d, load[e]):
-            threatened += 1
-        if not (math.isfinite(d) and _static_plan_survives(scenario, p.position, fields_[e], trajectory)):
-            invalidated += 1
-            if p.id in savable_ids:
-                recoverable += 1
-    free = sum(1 for r in range(scenario.height) for c in range(scenario.width) if Pos(r, c) not in scenario.walls)
-    n = len(people)
-    return FireProfile(threatened / n, invalidated / n, recoverable / n, len(trajectory[-1]) / free)
+    return fire_evidence(scenario, seed, savable_ids)
 
 
 # --------------------------------------------------------------------------- official scoring of panel runs
@@ -970,123 +540,10 @@ def surrogate_name(epsilon: float) -> str:
 # --------------------------------------------------------------------------- difficulty, admission and families
 
 
-@dataclass(frozen=True)
-class Calibration:
-    """The frozen calibration of one scenario: admission decision and difficulty band."""
-
-    panel: Mapping[str, float]  # panel member -> mean official score over the scenario's applicable worlds
-    best: float
-    worst: float
-    spread: float
-    ceiling: float | None  # mean capacity ceiling over applicable worlds
-    capacity_limited: bool  # some world has M_cap < M*
-    admission: str  # ADMITTED or the exclusion reason
-    band: str | None
-
-
-ADMITTED = "admitted"
-EXCLUSIONS: tuple[str, ...] = ("not_applicable", "capacity_artifact", "saturated", "floor", "no_separation")
-
-
-def difficulty_band(best: float) -> str:
-    """Easy / Moderate / Hard / Stress from ``B``, the best calibration-panel score (official points)."""
-    if best >= EASY_MIN_BEST:
-        return "easy"
-    if best >= MODERATE_MIN_BEST:
-        return "moderate"
-    if best >= HARD_MIN_BEST:
-        return "hard"
-    return "stress"
-
-
-def calibrate(worlds: Sequence[WorldRecord]) -> Calibration:
-    """The deterministic admission and band rule (docs/difficulty-calibration.md section 5).
-
-    In order: a scenario without a savable person in any world is not
-    applicable; a mean capacity ceiling below ``CEILING_MIN`` is a capacity
-    artifact (difficulty that comes from the relaxed savable count, not from
-    the policy); every panel member >= ``SATURATED`` is saturated; every panel
-    member < ``FLOOR`` is at the floor; a panel spread below the official
-    practical difference (1 point) carries no ranking information. Every other
-    scenario is admitted and banded by the best panel score.
-    """
-    applicable = [w for w in worlds if w.savable > 0]
-    if not applicable:
-        return Calibration({}, 0.0, 0.0, 0.0, None, False, "not_applicable", None)
-    panel = {a: statistics.fmean(w.score(a) for w in applicable) for a in CALIBRATION_PANEL}
-    best, worst = max(panel.values()), min(panel.values())
-    ceilings = [w.capacity_ceiling for w in applicable if w.capacity_ceiling is not None]
-    ceiling = statistics.fmean(ceilings) if ceilings else None
-    limited = any(w.capacity_savable < w.savable for w in applicable)
-    spread = best - worst
-    if ceiling is not None and ceiling < CEILING_MIN:
-        admission = "capacity_artifact"
-    elif worst >= SATURATED:
-        admission = "saturated"
-    elif best < FLOOR:
-        admission = "floor"
-    elif spread < float(OFFICIAL_CONSTANTS.practical_difference):
-        admission = "no_separation"
-    else:
-        admission = ADMITTED
-    band = difficulty_band(best) if admission == ADMITTED else None
-    return Calibration(panel, best, worst, spread, ceiling, limited, admission, band)
-
-
-def family_tags(profile: ScenarioProfile, fires: Sequence[FireProfile]) -> frozenset[ScenarioFamily]:
-    """Every V1 family whose challenge a scenario measurably contains (fixed, published thresholds).
-
-    Structural tags come from :class:`ScenarioProfile`; the fire-dependent tags
-    (threatened exit, route invalidation) use the mean over the scenario's worlds.
-    """
-    F = ScenarioFamily
-    tags: set[ScenarioFamily] = set()
-
-    def mean(xs: Sequence[float]) -> float:
-        return statistics.fmean(xs) if xs else 0.0
-
-    if profile.exit_count == 1:
-        tags.add(F.SINGLE_EXIT_HIGH_DENSITY if profile.crowd_density >= 0.15 else F.SINGLE_EXIT_LOW_DENSITY)
-    else:
-        if profile.exit_gap_median is not None and profile.exit_gap_median >= 4:
-            tags.add(F.MULTIPLE_EXITS_UNEQUAL_DISTANCE)
-        if profile.split_pressure is not None and profile.split_pressure > 1 and profile.population >= 20:
-            tags.add(F.SPLIT_FLOW_ACROSS_EXITS)
-    if profile.population >= 100:
-        tags.add(F.CROWD_100)
-    if profile.ignition_count >= 2:
-        tags.add(F.MULTIPLE_IGNITIONS)
-    if profile.passage_width <= 1 and profile.bottleneck_severity >= 4:
-        tags.add(F.NARROW_CORRIDOR_BOTTLENECK)
-    if profile.obstacle_density >= 0.25 or profile.detour_ratio >= 1.5:
-        tags.add(F.MAZE_OBSTACLE_ROUTING)
-    if profile.exit_count > 1 and profile.deceptive_share >= 0.25:
-        tags.add(F.DECEPTIVE_NEAREST_EXIT)
-    if profile.ignition_centrality <= 0.34:
-        tags.add(F.CENTRAL_IGNITION)
-    if profile.exit_count > 1 and mean([f.threatened_share for f in fires]) >= 0.2:
-        tags.add(F.THREATENED_NEAREST_EXIT)
-    if mean([f.recoverable_invalidation_share for f in fires]) >= 0.2:
-        tags.add(F.ROUTE_INVALIDATION_REPLANNING)
-    if not tags and profile.exit_count > 1:
-        tags.add(F.MULTIPLE_EXITS_UNEQUAL_DISTANCE)
-    return frozenset(tags)
-
 
 # The final V1 primary families (docs/evaluation-suite-design.md section 4). The two other V1 family
 # values stay valid secondary tags but are not primary strata.
-FINAL_FAMILIES: tuple[ScenarioFamily, ...] = (
-    ScenarioFamily.SINGLE_EXIT_LOW_DENSITY,
-    ScenarioFamily.SINGLE_EXIT_HIGH_DENSITY,
-    ScenarioFamily.NARROW_CORRIDOR_BOTTLENECK,
-    ScenarioFamily.SPLIT_FLOW_ACROSS_EXITS,
-    ScenarioFamily.CROWD_100,
-    ScenarioFamily.MAZE_OBSTACLE_ROUTING,
-    ScenarioFamily.DECEPTIVE_NEAREST_EXIT,
-    ScenarioFamily.THREATENED_NEAREST_EXIT,
-    ScenarioFamily.MULTIPLE_IGNITIONS,
-    ScenarioFamily.ROUTE_INVALIDATION_REPLANNING,
-)
+FINAL_FAMILIES: tuple[ScenarioFamily, ...] = PRIMARY_FAMILIES
 SECONDARY_ONLY: tuple[ScenarioFamily, ...] = tuple(f for f in ScenarioFamily if f not in FINAL_FAMILIES)
 
 
