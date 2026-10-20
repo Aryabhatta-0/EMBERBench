@@ -150,11 +150,14 @@ the wheel and the sdist. Hashes prove content identity, not authorship. See
 `score_results(trials, pack)` gives one failure-sensitive number in
 `[0, 100]`: **benchmark-performance points under EMBER scoring version 1.0**,
 never a percentage of people evacuated. It is
-`100 * Safety * Quality`. Safety multiplies evacuation, a casualty factor and
-a stranding factor, and is 0 when half of the savable people are lost.
-Quality is a weighted geometric mean of time, coordination, hazard, path and
-replanning, each relative to a privileged single-person optimum of the same
-episode. An avoidable casualty caps an episode at 60. Missing, invalid,
+`100 * Safety * Quality^beta * Severity`. Safety multiplies evacuation, a
+casualty factor and a stranding factor over losses attributed person by
+person (a loss is avoidable when that person could have escaped), and is 0
+when half of the savable people are lost. Quality is a weighted geometric
+mean of time, coordination, hazard, path and replanning, each relative to a
+privileged optimum of the same episode. An avoidable casualty caps an
+episode below 60; a severe bottleneck, delay, exposure, path or replanning
+failure caps it below 80. Missing, invalid,
 failed and timed-out episodes score 0 and are counted. Episodes are averaged
 by scenario, then by primary family; the report gives a stratified
 bootstrap 95% interval, every component, per-family scores and lower-tail

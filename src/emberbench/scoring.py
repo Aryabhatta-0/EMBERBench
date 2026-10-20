@@ -79,6 +79,19 @@ _UNREACHABLE = 1 << 62
 HAZARD_RADIUS = 2  # cells (Manhattan); see docs/scoring.md section 3
 
 
+def _dec(value: Fraction | int) -> Decimal:
+    v = Fraction(value)
+    return _CTX.divide(Decimal(v.numerator), Decimal(v.denominator))
+
+
+def _pow(base: Decimal, exponent: Decimal) -> Decimal:
+    if base == 0:
+        return Decimal(0) if exponent > 0 else Decimal(1)
+    if base == 1 or exponent == 0:
+        return Decimal(1)
+    return _CTX.exp(_CTX.multiply(exponent, _CTX.ln(base)))
+
+
 def _fail(message: str) -> ScoringInputError:
     return ScoringInputError(message)
 
@@ -107,23 +120,55 @@ class ScoringConstants:
     weight_hazard: Fraction = Fraction(2, 10)
     weight_path: Fraction = Fraction(1, 10)
     weight_replanning: Fraction = Fraction(2, 10)
+    # Severe quality failures (docs/scoring.md section 4.3). Each threshold is in natural units.
+    severe_time: Fraction = Fraction(1, 2)  # Time below this: person-time above 2x the privileged bound
+    severe_block_rate: Fraction = Fraction(1, 4)  # congestion block rate above this
+    severe_hazard_rate: Fraction = Fraction(1, 4)  # avoidable danger-zone rate above this
+    severe_path: Fraction = Fraction(1, 2)  # Path below this: more than 2x the fewest moves
+    severe_replanning: Fraction = Fraction(1, 2)  # Replanning below this: recovery above 2x the privileged bound
+    severe_factor: Decimal = Decimal("0.8")  # paid once per severe component
+    severe_exponent: Decimal = Decimal("1")  # on (component / threshold) below the threshold
     practical_difference: Fraction = Fraction(1)  # points; smaller paired differences are never "better"
 
     def __post_init__(self) -> None:
         for f in fields(self):
             value = getattr(self, f.name)
-            if f.name.startswith("weight_") or f.name in ("catastrophic_loss_rate", "practical_difference"):
+            if f.type in (Fraction, "Fraction"):
                 if not isinstance(value, Fraction) or value < 0:
                     raise ValueError(f"{f.name} must be a non-negative Fraction")
             elif not isinstance(value, Decimal) or not value.is_finite() or value < 0:
                 raise ValueError(f"{f.name} must be a finite non-negative Decimal")
-        for name in ("casualty_incident_factor", "stranding_incident_factor"):
+        for name in ("casualty_incident_factor", "stranding_incident_factor", "severe_factor"):
             if not 0 < getattr(self, name) <= 1:
                 raise ValueError(f"{name} must be in (0, 1]")
         if not 0 < self.catastrophic_loss_rate <= 1:
             raise ValueError("catastrophic_loss_rate must be in (0, 1]")
         if sum(self.weights().values(), Fraction(0)) != 1:
             raise ValueError("the quality weights must sum to 1")
+        if not all(0 < v < 1 for v in self.severe_thresholds().values()):
+            raise ValueError("every severe threshold must be in (0, 1)")
+
+    def severe_thresholds(self) -> dict[str, Decimal]:
+        """Per quality component: a value strictly below the threshold is a severe failure."""
+        return {
+            "time": _dec(self.severe_time),
+            "coordination": _pow(_dec(1 - self.severe_block_rate), self.congestion_exponent),
+            "hazard": _pow(_dec(1 - self.severe_hazard_rate), self.hazard_exponent),
+            "path": _dec(self.severe_path),
+            "replanning": _dec(self.severe_replanning),
+        }
+
+    @property
+    def quality_exponent(self) -> Decimal:
+        """``beta = ln(casualty_incident_factor) / ln(lowest severe threshold)``, capped at 1. Derived, not tuned.
+
+        Quality enters the score as ``Q ** beta``. Every non-severe component is
+        at or above its threshold, so ``Q ** beta >= casualty_incident_factor``:
+        a run without avoidable casualties and without a severe failure always
+        outscores the same run with an avoidable casualty and perfect quality.
+        """
+        lowest = min(self.severe_thresholds().values())
+        return min(Decimal(1), _CTX.divide(_CTX.ln(self.casualty_incident_factor), _CTX.ln(lowest)))
 
     def weights(self) -> dict[str, Fraction]:
         return {
@@ -135,7 +180,9 @@ class ScoringConstants:
         }
 
     def to_dict(self) -> dict[str, str]:
-        return {f.name: str(getattr(self, f.name)) for f in fields(self)}
+        out = {f.name: str(getattr(self, f.name)) for f in fields(self)}
+        out["quality_exponent"] = str(self.quality_exponent)
+        return out
 
     def digest(self) -> str:
         return sha256_hex(self.to_dict())
@@ -273,6 +320,31 @@ def _fire_aware_field(scenario: Scenario, burning: frozenset[Pos]) -> dict[Pos, 
     return dist
 
 
+def _queue_bound(releases: Sequence[int], scenario: Scenario, refs: _References, horizon: int) -> int:
+    """Least possible sum of evacuation steps for people with these earliest steps. PRIVILEGED.
+
+    Positions after movement are distinct, so in step ``s`` at most one person
+    leaves through each exit cell that is not burning at the start of the
+    step. Ignoring which exit each person uses, filling the open exit slots of
+    every step with released people (a list schedule) minimizes the sum for
+    unit jobs with release dates, so the result is a lower bound for every
+    policy and is never below the sum of the releases.
+    """
+    exits = scenario.exit_positions
+    total = waiting = 0
+    i = 0
+    for step in range(1, horizon + 1):
+        while i < len(releases) and releases[i] <= step:
+            waiting += 1
+            i += 1
+        leave = min(waiting, sum(1 for e in exits if e not in refs.trajectory[step - 1]))
+        total += leave * step
+        waiting -= leave
+        if i == len(releases) and waiting == 0:
+            return total
+    raise _fail("the evacuees cannot all leave within the horizon")
+
+
 # --------------------------------------------------------------------------- evidence
 
 
@@ -290,12 +362,17 @@ class EpisodeEvidence:
     seed: int
     record_digest: str
     population: int
-    max_evacuated: int  # privileged: people who can escape at all
+    max_evacuated: int  # privileged: people who can escape at all (the savable people)
     evacuated: int
     casualties: int
     stranded: int
+    avoidable_casualty_ids: tuple[str, ...]  # savable people who died
+    avoidable_stranded_ids: tuple[str, ...]  # savable people still inside at the end
+    unavoidable_casualty_ids: tuple[str, ...]  # unsavable people who died
+    unavoidable_stranded_ids: tuple[str, ...]  # unsavable people still inside at the end
     evacuee_time: int  # sum of evacuation steps over evacuees
-    evacuee_time_bound: int  # sum of each evacuee's earliest possible evacuation step
+    evacuee_time_bound: int  # sum of each evacuee's earliest possible evacuation step (single person; diagnostic)
+    evacuee_time_queue_bound: int  # the same, with at most one evacuation per open exit cell per step
     movement_attempts: int
     blocked_occupied: int
     blocked_conflict: int
@@ -310,18 +387,39 @@ class EpisodeEvidence:
     replanning_remaining: int  # sum over recoverable events of (censored resolution step - t)
     replanning_remaining_bound: int  # sum over recoverable events of (earliest escape step - t)
 
+    def __post_init__(self) -> None:
+        groups = (self.avoidable_casualty_ids, self.avoidable_stranded_ids, self.unavoidable_casualty_ids, self.unavoidable_stranded_ids)
+        ids = [pid for group in groups for pid in group]
+        if any(list(group) != sorted(set(group)) for group in groups) or len(set(ids)) != len(ids):
+            raise _fail("loss identities must be sorted, unique and disjoint")
+        if (
+            self.casualties != len(self.avoidable_casualty_ids) + len(self.unavoidable_casualty_ids)
+            or self.stranded != len(self.avoidable_stranded_ids) + len(self.unavoidable_stranded_ids)
+            or self.population != self.evacuated + self.casualties + self.stranded
+            or self.max_evacuated != self.population - self.unavoidable_losses
+        ):
+            raise _fail("loss identities do not match the outcome counts")
+        if not (
+            0 <= self.evacuee_time_bound <= self.evacuee_time_queue_bound <= self.evacuee_time
+            and 0 <= self.evacuee_danger_bound <= self.evacuee_danger_states <= self.evacuee_time
+            and 0 <= self.congestion_blocks <= self.movement_attempts
+        ):
+            raise _fail("evidence bounds are inconsistent")
+
     @property
     def unavoidable_losses(self) -> int:
-        return self.population - self.max_evacuated
+        """Lost people whom no policy could have saved (privileged, per person)."""
+        return len(self.unavoidable_casualty_ids) + len(self.unavoidable_stranded_ids)
 
     @property
     def avoidable_casualties(self) -> int:
-        """Casualties beyond the people nobody could save. Unavoidable losses are charged to casualties first."""
-        return max(0, self.casualties - self.unavoidable_losses)
+        """Savable people who died. Never offset by another person's unavoidable loss."""
+        return len(self.avoidable_casualty_ids)
 
     @property
     def avoidable_stranded(self) -> int:
-        return max(0, self.stranded - max(0, self.unavoidable_losses - self.casualties))
+        """Savable people still inside at the end. Never offset by another person's unavoidable loss."""
+        return len(self.avoidable_stranded_ids)
 
     @property
     def congestion_blocks(self) -> int:
@@ -358,7 +456,17 @@ def episode_evidence(
     resolved = {p.person_id: p for p in m.people}
     evacuees = [pid for pid, p in resolved.items() if p.status is PersonStatus.EVACUATED]
     earliest0 = {pid: refs.earliest[0][refs.index[pos]] for pid, pos in start.items()}
-    max_evacuated = sum(1 for e in earliest0.values() if e != _UNREACHABLE)
+    savable = frozenset(pid for pid, e in earliest0.items() if e != _UNREACHABLE)
+    max_evacuated = len(savable)
+
+    # Person-level attribution: a loss is avoidable exactly when that person was savable.
+    losses: dict[tuple[PersonStatus, bool], list[str]] = {}
+    for pid, outcome in resolved.items():
+        if outcome.status is not PersonStatus.EVACUATED:
+            losses.setdefault((outcome.status, pid in savable), []).append(pid)
+
+    def lost(status: PersonStatus, is_savable: bool) -> tuple[str, ...]:
+        return tuple(sorted(losses.get((status, is_savable), ())))
 
     time_actual = time_bound = 0
     for pid in evacuees:
@@ -368,8 +476,9 @@ def episode_evidence(
             raise _fail(f"{pid} evacuated at step {step}, before the privileged bound {bound}")
         time_actual += step
         time_bound += bound
-    if m.safety.evacuated > max_evacuated:
-        raise _fail("more evacuees than the privileged escape bound allows")
+    queue_bound = _queue_bound(sorted(earliest0[pid] for pid in evacuees), scenario, refs, horizon)
+    if time_actual < queue_bound:
+        raise _fail("evacuation person-time below the privileged exit-capacity bound")
 
     # Danger zone: active evacuee person-states with a burning cell within HAZARD_RADIUS.
     evac_set = frozenset(evacuees)
@@ -436,8 +545,13 @@ def episode_evidence(
         evacuated=m.safety.evacuated,
         casualties=m.safety.casualties,
         stranded=m.safety.stranded,
+        avoidable_casualty_ids=lost(PersonStatus.CASUALTY, True),
+        avoidable_stranded_ids=lost(PersonStatus.ACTIVE, True),
+        unavoidable_casualty_ids=lost(PersonStatus.CASUALTY, False),
+        unavoidable_stranded_ids=lost(PersonStatus.ACTIVE, False),
         evacuee_time=time_actual,
         evacuee_time_bound=time_bound,
+        evacuee_time_queue_bound=queue_bound,
         movement_attempts=m.movement.movement_attempts,
         blocked_occupied=mv.get("blocked_occupied", 0),
         blocked_conflict=mv.get("blocked_conflict", 0),
@@ -469,19 +583,6 @@ class FailureKind(StrEnum):
     INVALID_OUTPUT = "invalid_output"  # ModelOutputError or another rejected action set
     MODEL_ERROR = "model_error"  # the model or its adapter raised
     TIMEOUT = "timeout"  # the adapter's own deadline expired
-
-
-def _dec(value: Fraction | int) -> Decimal:
-    v = Fraction(value)
-    return _CTX.divide(Decimal(v.numerator), Decimal(v.denominator))
-
-
-def _pow(base: Decimal, exponent: Decimal) -> Decimal:
-    if base == 0:
-        return Decimal(0) if exponent > 0 else Decimal(1)
-    if base == 1 or exponent == 0:
-        return Decimal(1)
-    return _CTX.exp(_CTX.multiply(exponent, _CTX.ln(base)))
 
 
 def _q(value: Decimal) -> Fraction:
@@ -517,9 +618,11 @@ class EpisodeScore:
     failure: FailureKind | None
     score: Fraction  # points in [0, 100], rounded half-even to 1e-9
     safety: Fraction | None
-    quality: Fraction | None
+    quality: Fraction | None  # the weighted geometric mean, before the quality exponent
     components: tuple[tuple[str, Fraction | None], ...]  # SAFETY_COMPONENTS + QUALITY_COMPONENTS, in that order
     evidence: EpisodeEvidence | None
+    severity: Fraction | None = None  # product of the severe-failure factors; 1 without a severe failure
+    severe: tuple[str, ...] = ()  # quality components below their severe threshold
 
     def component(self, name: str) -> Fraction | None:
         return dict(self.components)[name]
@@ -528,6 +631,11 @@ class EpisodeScore:
     def safety_ceiling(self) -> Fraction | None:
         """The best score this episode could have reached with perfect quality: ``100 * Safety``."""
         return None if self.safety is None else 100 * self.safety
+
+    @property
+    def ceiling(self) -> Fraction | None:
+        """The best score this episode could have reached with the same failures: ``100 * Safety * severity``."""
+        return None if self.safety is None or self.severity is None else 100 * self.safety * self.severity
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -539,7 +647,10 @@ class EpisodeScore:
             "score": float(self.score),
             "safety": _out(self.safety),
             "quality": _out(self.quality),
+            "severity": _out(self.severity),
+            "severe": list(self.severe),
             "safety_ceiling": _out(self.safety_ceiling),
+            "ceiling": _out(self.ceiling),
             "components": {name: _out(v) for name, v in self.components},
             "evidence": None if self.evidence is None else self.evidence.to_dict(),
         }
@@ -549,16 +660,48 @@ def quality_components(ev: EpisodeEvidence, constants: ScoringConstants = OFFICI
     """The five quality components in ``[0, 1]``; ``None`` where the episode gives no evidence."""
     out: dict[str, Fraction | None] = {name: None for name in QUALITY_COMPONENTS}
     if ev.evacuated:
-        out["time"] = Fraction(ev.evacuee_time_bound, ev.evacuee_time)
+        out["time"] = Fraction(ev.evacuee_time_queue_bound, ev.evacuee_time)
         out["path"] = Fraction(ev.path_moves_bound, ev.path_cells_moved)
-        avoidable = Fraction(ev.evacuee_danger_states - ev.evacuee_danger_bound, ev.evacuee_time)
-        out["hazard"] = _q(_pow(_dec(1 - avoidable), constants.hazard_exponent))
+        out["hazard"] = _q(_pow(_dec(1 - _hazard_rate(ev)), constants.hazard_exponent))
     if ev.movement_attempts:
-        free = Fraction(ev.movement_attempts - ev.congestion_blocks, ev.movement_attempts)
-        out["coordination"] = _q(_pow(_dec(free), constants.congestion_exponent))
+        out["coordination"] = _q(_pow(_dec(1 - _block_rate(ev)), constants.congestion_exponent))
     if ev.replanning_remaining:
         out["replanning"] = Fraction(ev.replanning_remaining_bound, ev.replanning_remaining)
     return out
+
+
+def _hazard_rate(ev: EpisodeEvidence) -> Fraction:
+    """Avoidable danger-zone person-states per evacuee person-step."""
+    return Fraction(ev.evacuee_danger_states - ev.evacuee_danger_bound, ev.evacuee_time)
+
+
+def _block_rate(ev: EpisodeEvidence) -> Fraction:
+    """Movement attempts blocked by other people (occupied, conflict, cycle) per movement attempt."""
+    return Fraction(ev.congestion_blocks, ev.movement_attempts)
+
+
+def severe_failures(ev: EpisodeEvidence, constants: ScoringConstants = OFFICIAL_CONSTANTS) -> dict[str, Decimal]:
+    """Per severe quality component, ``component / threshold`` (in ``[0, 1)``). Compared exactly in natural units."""
+    out: dict[str, Decimal] = {}
+    if ev.evacuated:
+        time = Fraction(ev.evacuee_time_queue_bound, ev.evacuee_time)
+        if time < constants.severe_time:
+            out["time"] = _dec(time / constants.severe_time)
+        rate = _hazard_rate(ev)
+        if rate > constants.severe_hazard_rate:
+            out["hazard"] = _pow(_dec((1 - rate) / (1 - constants.severe_hazard_rate)), constants.hazard_exponent)
+        path = Fraction(ev.path_moves_bound, ev.path_cells_moved)
+        if path < constants.severe_path:
+            out["path"] = _dec(path / constants.severe_path)
+    if ev.movement_attempts:
+        rate = _block_rate(ev)
+        if rate > constants.severe_block_rate:
+            out["coordination"] = _pow(_dec((1 - rate) / (1 - constants.severe_block_rate)), constants.congestion_exponent)
+    if ev.replanning_remaining:
+        replan = Fraction(ev.replanning_remaining_bound, ev.replanning_remaining)
+        if replan < constants.severe_replanning:
+            out["replanning"] = _dec(replan / constants.severe_replanning)
+    return {k: out[k] for k in QUALITY_COMPONENTS if k in out}
 
 
 def safety_components(ev: EpisodeEvidence, constants: ScoringConstants = OFFICIAL_CONSTANTS) -> dict[str, Fraction]:
@@ -571,7 +714,7 @@ def safety_components(ev: EpisodeEvidence, constants: ScoringConstants = OFFICIA
 
 
 def score_evidence(index: int, ev: EpisodeEvidence, constants: ScoringConstants = OFFICIAL_CONSTANTS) -> EpisodeScore:
-    """Score one authenticated episode from its evidence."""
+    """Score one authenticated episode: ``100 * Safety * Quality ** beta * severity`` (docs/scoring.md section 4)."""
     if ev.max_evacuated == 0:
         empty = tuple((name, None) for name in (*SAFETY_COMPONENTS, *QUALITY_COMPONENTS))
         return EpisodeScore(index, ev.scenario_id, ev.seed, EpisodeStatus.NOT_APPLICABLE, None, Fraction(0), None, None, empty, ev)
@@ -597,7 +740,13 @@ def score_evidence(index: int, ev: EpisodeEvidence, constants: ScoringConstants 
         for k, v in defined.items():
             log_sum = _CTX.add(log_sum, _CTX.multiply(_dec(weights[k] / total_weight), _CTX.ln(_dec(v))))
         quality = _CTX.exp(log_sum)
-    points = _CTX.multiply(Decimal(100), _CTX.multiply(safety, quality))
+
+    severe = severe_failures(ev, constants)
+    severity = Decimal(1)
+    for ratio in severe.values():
+        severity = _CTX.multiply(severity, _CTX.multiply(constants.severe_factor, _pow(ratio, constants.severe_exponent)))
+
+    points = _CTX.multiply(Decimal(100), _CTX.multiply(_CTX.multiply(safety, _pow(quality, constants.quality_exponent)), severity))
     score = Fraction(points.quantize(_SCORE_QUANTUM, rounding=ROUND_HALF_EVEN, context=_CTX))
     comps = tuple((name, safety_parts[name]) for name in SAFETY_COMPONENTS) + tuple((name, quality_parts[name]) for name in QUALITY_COMPONENTS)
     return EpisodeScore(
@@ -611,6 +760,8 @@ def score_evidence(index: int, ev: EpisodeEvidence, constants: ScoringConstants 
         quality=_q(quality),
         components=comps,
         evidence=ev,
+        severity=_q(severity),
+        severe=tuple(severe),
     )
 
 
@@ -815,6 +966,7 @@ class Robustness:
     zero_score_episode_trials: int
     catastrophic_episode_trials: int
     failed_episode_trials: tuple[tuple[str, int], ...]  # per FailureKind, in enum order
+    severe_episode_trials: tuple[tuple[str, int], ...] = ()  # per quality component, in QUALITY_COMPONENTS order
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -826,6 +978,7 @@ class Robustness:
             "zero_score_episode_trials": self.zero_score_episode_trials,
             "catastrophic_episode_trials": self.catastrophic_episode_trials,
             "failed_episode_trials": dict(self.failed_episode_trials),
+            "severe_episode_trials": dict(self.severe_episode_trials),
         }
 
 
@@ -1063,6 +1216,7 @@ def score_results(
         zero_score_episode_trials=sum(1 for e in flat if e.score == 0),
         catastrophic_episode_trials=sum(1 for e in flat if e.status is EpisodeStatus.CATASTROPHIC),
         failed_episode_trials=tuple((k.value, sum(1 for e in flat if e.failure is k)) for k in FailureKind),
+        severe_episode_trials=tuple((k, sum(1 for e in flat if k in e.severe)) for k in QUALITY_COMPONENTS),
     )
     evidence = [e.evidence for e in flat if e.evidence is not None]
     totals = SafetyTotals(
@@ -1264,6 +1418,66 @@ def leaderboard_order(reports: Iterable[ScoreReport]) -> list[ScoreReport]:
 # --------------------------------------------------------------------------- operational view
 
 
+def inference_config_digest(config: Mapping[str, Any]) -> str:
+    """SHA-256 of the canonical JSON of a model's pinned inference configuration (model, version, sampling, prompt)."""
+    return sha256_hex(dict(config))
+
+
+@dataclass(frozen=True)
+class OperationalRecord:
+    """Evaluator-measured operational facts of one submission. Never an input to the EMBER Score.
+
+    Every value is measured or configured by the evaluator, never taken from a
+    provider's own report of success, accuracy or safety. ``None`` means not
+    measured (for example, tokens of a local policy).
+    """
+
+    model_id: str
+    provider_id: str
+    inference_config_digest: str
+    trials: int
+    episodes: int  # scheduled episode-trials, including failed ones
+    latency_seconds: float  # total wall-clock time of every decision call
+    input_tokens: int | None
+    output_tokens: int | None
+    cost: Fraction | None
+    cost_unit: str | None
+    retries: int
+    timeouts: int
+
+    def __post_init__(self) -> None:
+        if not self.model_id or not self.provider_id:
+            raise _fail("model_id and provider_id must be non-empty")
+        if len(self.inference_config_digest) != 64 or any(c not in "0123456789abcdef" for c in self.inference_config_digest):
+            raise _fail("inference_config_digest must be a lowercase SHA-256 hex digest")
+        counts = (self.trials, self.episodes, self.retries, self.timeouts, self.input_tokens or 0, self.output_tokens or 0)
+        if any(isinstance(v, bool) or not isinstance(v, int) or v < 0 for v in counts) or self.trials < 1:
+            raise _fail("operational counts must be non-negative integers and trials >= 1")
+        if not math.isfinite(self.latency_seconds) or self.latency_seconds < 0:
+            raise _fail("latency_seconds must be finite and non-negative")
+        if (self.cost is None) != (self.cost_unit is None) or (self.cost is not None and self.cost < 0):
+            raise _fail("cost and cost_unit go together, and cost is non-negative")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "model_id": self.model_id,
+            "provider_id": self.provider_id,
+            "inference_config_digest": self.inference_config_digest,
+            "trials": self.trials,
+            "episodes": self.episodes,
+            "latency_seconds": self.latency_seconds,
+            "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+            "cost": None if self.cost is None else str(self.cost),
+            "cost_unit": self.cost_unit,
+            "retries": self.retries,
+            "timeouts": self.timeouts,
+        }
+
+    def digest(self) -> str:
+        return sha256_hex(self.to_dict())
+
+
 @dataclass(frozen=True)
 class EfficiencyView:
     """EMBER-Efficiency: an optional view that sets the score beside a decision cost. Never part of the score."""
@@ -1321,6 +1535,7 @@ def format_summary(report: ScoreReport) -> str:
         f" p10 episode {_fmt(rb.p10_episode)}; CVaR10 {_fmt(rb.cvar10_episode)}",
         f"Zero-score episode-trials {rb.zero_score_episode_trials} of {len(r.episodes)}: catastrophic {rb.catastrophic_episode_trials}; "
         + "; ".join(f"{k} {n}" for k, n in rb.failed_episode_trials),
+        "Severe quality failures (episode-trials): " + "; ".join(f"{k} {n}" for k, n in rb.severe_episode_trials),
         f"People per trial: escapable {_fmt(t.per_trial(t.escapable))}; evacuated {_fmt(t.per_trial(t.evacuated))};"
         f" avoidable casualties {_fmt(t.per_trial(t.avoidable_casualties))}; avoidable stranded {_fmt(t.per_trial(t.avoidable_stranded))}",
         "The EMBER Score is not a percentage of people evacuated.",

@@ -127,12 +127,20 @@ adapter of [model-interface.md](model-interface.md):
 5. A timeout is the adapter's own deadline. A timed-out episode is declared
    `timeout` and scores 0. Provider retries are an adapter policy, recorded
    in the run's configuration, not hidden.
+6. A model error (the provider or the adapter raised) is declared
+   `model_error` and scores 0. A failure can never disappear: an episode
+   without a result and without a declaration is `missing` and scores 0.
+7. Operational data is recorded separately in an `OperationalRecord`
+   ([scoring.md](scoring.md), section 11): model ID, provider ID, the
+   inference configuration digest, latency, input tokens, output tokens,
+   cost and its unit, retries and timeouts. It is never a score input.
 
 **Stochasticity protocol.**
 
 - Pin the inference configuration (model name and version or snapshot,
   temperature, top-p, max tokens, system prompt, adapter version) and record
-  it with the submission.
+  it with the submission as `inference_config_digest(config)`. All trials of
+  one submission use the same digest.
 - `temperature = 0` is not a determinism guarantee. Batching, numerics and
   provider-side changes can change outputs.
 - Run `K >= 3` trials of the full pack for any sampled model (`K = 1` only
@@ -154,6 +162,9 @@ submitted result.
 ## 8. Versioning
 
 `ENVIRONMENT_PACK_VERSION = "1.0"`. It changes when the layout, the record
-or the fire-world digest changes. A pack is valid only under the exact
+or the fire-world digest changes. The scoring correction pass (person-level
+attribution, severe quality gates, the exit-capacity time bound) changed
+none of these, so the version stays `"1.0"`: the privileged references are
+recomputed by the scorer from the pack, and are not stored in it. A pack is valid only under the exact
 versions in its `versions` entry; a simulator or schema change invalidates
 every pack, by design.

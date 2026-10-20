@@ -53,6 +53,7 @@ from emberbench.scoring import (  # noqa: E402
     ScoringConstants,
     episode_evidence,
     score_evidence,
+    severe_failures,
 )
 
 Policy = Callable[[Observation], Mapping[str, Action]]
@@ -239,6 +240,23 @@ def hider(obs: Observation) -> dict[str, Action]:
     return acts
 
 
+def fire_hugger(obs: Observation) -> dict[str, Action]:
+    """Congestion-aware, but among free shortest-route moves it always takes the one closest to the fire."""
+    acts = congestion(obs)
+    if not obs.burning:
+        return acts
+    fields = _safe_fields(obs)
+    occupied = frozenset(p.position for p in obs.active)
+    for p in obs.active:
+        f = _nearest(fields, p.position)
+        if f is None:
+            continue
+        downhill = [a for a in _moves(obs) if f.get(_target(p.position, a)) == f[p.position] - 1 and _target(p.position, a) not in occupied]
+        if downhill:
+            acts[p.id] = min(downhill, key=lambda a: (min(_manhattan(_target(p.position, a), b) for b in obs.burning), a.value))
+    return acts
+
+
 def always_stay(obs: Observation) -> dict[str, Action]:
     return {p.id: Action.STAY for p in obs.active}
 
@@ -262,6 +280,7 @@ POLICIES: dict[str, Callable[[], Policy]] = {
     "adv-herd": lambda: herd,
     "adv-wanderer": lambda: wanderer,
     "adv-hider": lambda: hider,
+    "adv-fire-hugger": lambda: fire_hugger,
 }
 
 
@@ -290,7 +309,8 @@ def collect(suites: Mapping[str, Suite], cache: Path) -> dict[str, list[Row]]:
         rows: list[Row] = []
         if path.exists():
             for r in json.loads(path.read_text()):
-                rows.append((r[0], r[1], r[2], r[3], EpisodeEvidence(**r[4])))
+                fields = {k: (tuple(v) if isinstance(v, list) else v) for k, v in r[4].items()}
+                rows.append((r[0], r[1], r[2], r[3], EpisodeEvidence(**fields)))  # type: ignore[arg-type]
         else:
             for suite_name, suite in suites.items():
                 seeds = PUBLIC_SEEDS if suite_name == "public" else GENERATED_SEEDS
@@ -329,23 +349,93 @@ def hierarchical(rows: Sequence[Row], values: Sequence[float | None]) -> float |
 
 
 Formula = Callable[[EpisodeEvidence], float]
+BETA_STRANDING = math.log(0.8) / math.log(0.5)  # F-strand-floor: the floor is the stranding factor
 
 
 def official(constants: ScoringConstants = OFFICIAL_CONSTANTS) -> Formula:
+    """F (adopted): constrained geometric quality and severe-failure gates."""
+
     def f(ev: EpisodeEvidence) -> float:
-        s = score_evidence(0, ev, constants)
-        return float(s.score)
+        return float(score_evidence(0, ev, constants).score)
 
     return f
 
 
+def _scored(ev: EpisodeEvidence) -> Any:
+    return score_evidence(0, ev, OFFICIAL_CONSTANTS)
+
+
 def _parts(ev: EpisodeEvidence) -> dict[str, float | None]:
-    s = score_evidence(0, ev, OFFICIAL_CONSTANTS)
-    return {k: (None if v is None else float(v)) for k, v in s.components}
+    return {k: (None if v is None else float(v)) for k, v in _scored(ev).components}
+
+
+def _sq(ev: EpisodeEvidence) -> tuple[float, float]:
+    """(Safety, unexponentiated weighted geometric quality) under the official constants."""
+    s = _scored(ev)
+    return (0.0 if s.safety is None else float(s.safety), 0.0 if s.quality is None else float(s.quality))
+
+
+def a_multiplicative(ev: EpisodeEvidence) -> float:
+    """A (rejected): 100 * Safety * Quality, no gates (the first draft of this PR)."""
+    s, q = _sq(ev)
+    return 100 * s * q
+
+
+def b_hard_ceilings(ev: EpisodeEvidence) -> float:
+    """B (rejected): A, then capped at 80 when any component is severe (a flat cap, no dominance floor)."""
+    a = a_multiplicative(ev)
+    return min(a, 80.0) if severe_failures(ev) else a
+
+
+def _one_more_casualty(ev: EpisodeEvidence) -> EpisodeEvidence | None:
+    if ev.evacuated == 0:
+        return None
+    return replace(
+        ev,
+        evacuated=ev.evacuated - 1,
+        casualties=ev.casualties + 1,
+        avoidable_casualty_ids=tuple(sorted((*ev.avoidable_casualty_ids, "~extra"))),
+    )
+
+
+def c_safety_tiers(ev: EpisodeEvidence) -> float:
+    """C (rejected): quality interpolates between this safety level and the next worse one."""
+    s, q = _sq(ev)
+    nxt = _one_more_casualty(ev)
+    s_next = 0.0 if nxt is None else _sq(nxt)[0]
+    return 100 * (s_next + (s - s_next) * q)
+
+
+def d_lexicographic(ev: EpisodeEvidence) -> float:
+    """D (rejected): safety first; quality only moves the score by up to 5% of the safety level."""
+    s, q = _sq(ev)
+    return 100 * s * (1 - 0.05 * (1 - q))
+
+
+def e_soft_min(ev: EpisodeEvidence) -> float:
+    """E (rejected): weighted power mean (p = -5) of Safety and the quality components (a soft minimum)."""
+    s, _q = _sq(ev)
+    if s == 0:
+        return 0.0
+    p = _parts(ev)
+    terms = [(s, 0.5)] + [(p[k], 0.5 * float(w)) for k, w in OFFICIAL_CONSTANTS.weights().items() if p[k] is not None]
+    if any(v == 0 for v, _w in terms):
+        return 0.0
+    total = sum(w for _v, w in terms)
+    weighted = [float(w) * float(v) ** -5 for v, w in terms]  # type: ignore[arg-type]
+    return float(100 * (sum(weighted) / float(total)) ** (-1 / 5))
+
+
+def f_strand_floor(ev: EpisodeEvidence) -> float:
+    """F variant (rejected): as F, but the dominance floor is the stranding factor 0.8 (beta = 0.32)."""
+    sc = _scored(ev)
+    if sc.safety is None or sc.quality is None:
+        return 0.0
+    return float(100 * float(sc.safety) * float(sc.quality) ** BETA_STRANDING * float(sc.severity or 0))
 
 
 def additive(ev: EpisodeEvidence) -> float:
-    """REJECTED: 100 * weighted arithmetic mean of evacuated rate and the quality components."""
+    """REJECTED (first study): 100 * weighted arithmetic mean of evacuated rate and the quality components."""
     if ev.max_evacuated == 0:
         return 0.0
     p = _parts(ev)
@@ -356,7 +446,7 @@ def additive(ev: EpisodeEvidence) -> float:
 
 
 def plain_product(ev: EpisodeEvidence) -> float:
-    """REJECTED: 100 * evacuated rate * product of quality components (no incident factors, no gate)."""
+    """REJECTED (first study): 100 * evacuated rate * product of quality components (no incident factors, no gate)."""
     if ev.max_evacuated == 0:
         return 0.0
     p = _parts(ev)
@@ -367,35 +457,16 @@ def plain_product(ev: EpisodeEvidence) -> float:
     return 100 * (ev.evacuated / ev.max_evacuated) * q
 
 
-def rate_only_safety(ev: EpisodeEvidence) -> float:
-    """REJECTED: the official form without the discrete incident factors (alpha = 1)."""
-    return official(replace(OFFICIAL_CONSTANTS, casualty_incident_factor=Decimal(1), stranding_incident_factor=Decimal(1)))(ev)
-
-
-def safety_times_arith_quality(ev: EpisodeEvidence) -> float:
-    """REJECTED: official Safety times an arithmetic (compensatory) mean of the quality components."""
-    s = score_evidence(0, ev, OFFICIAL_CONSTANTS)
-    if s.safety is None or s.safety == 0:
-        return 0.0
-    p = _parts(ev)
-    w = {k: float(v) for k, v in OFFICIAL_CONSTANTS.weights().items()}
-    num = sum(p[k] * w[k] for k in QUALITY_COMPONENTS if p[k] is not None)  # type: ignore[operator]
-    den = sum(w[k] for k in QUALITY_COMPONENTS if p[k] is not None)
-    return 100 * float(s.safety) * (num / den if den else 0.0)
-
-
-def horizon_time(ev: EpisodeEvidence) -> float:
-    """REJECTED: official, but Time = (W - A) / (W - L) over all people with censoring at the horizon."""
-    s = score_evidence(0, ev, OFFICIAL_CONSTANTS)
-    return float(s.score)  # placeholder; the horizon variant is reported separately in time_variants()
-
-
 CANDIDATES: dict[str, Formula] = {
-    "official": official(),
+    "F-official": official(),
+    "A-multiplicative": a_multiplicative,
+    "B-hard-ceilings": b_hard_ceilings,
+    "C-safety-tiers": c_safety_tiers,
+    "D-lexicographic": d_lexicographic,
+    "E-soft-min": e_soft_min,
+    "F-strand-floor": f_strand_floor,
     "additive": additive,
     "plain-product": plain_product,
-    "no-incident-factor": rate_only_safety,
-    "arith-quality": safety_times_arith_quality,
 }
 
 
@@ -449,50 +520,138 @@ def spearman(xs: Sequence[float], ys: Sequence[float]) -> float:
     return cov / (vx * vy) if vx and vy else float("nan")
 
 
-def synthetic(population: int, *, casualties: int = 0, stranded: int = 0, time: Fraction = Fraction(1), blocks: Fraction = Fraction(0)) -> EpisodeEvidence:
-    """A hand-made evidence record: perfect except for the given failures."""
-    evac = population - casualties - stranded
-    attempts = 1000
+# --------------------------------------------------------------------------- synthetic profiles
+
+
+def synthetic(
+    population: int,
+    *,
+    casualties: int = 0,
+    stranded: int = 0,
+    unsavable_stranded: int = 0,
+    time: Fraction = Fraction(1),
+    blocks: Fraction = Fraction(0),
+    hazard: Fraction = Fraction(0),
+    path: Fraction = Fraction(1),
+    replanning: Fraction | None = None,
+) -> EpisodeEvidence:
+    """A hand-made evidence record: perfect except for the given failures (all components exact)."""
+    evac = population - casualties - stranded - unsavable_stranded
+    attempts = 10_000
+    steps = 100 * evac
     return EpisodeEvidence(
         scenario_id="synthetic",
         scenario_hash="0" * 64,
         seed=0,
         record_digest="0" * 64,
         population=population,
-        max_evacuated=population,
+        max_evacuated=population - unsavable_stranded,
         evacuated=evac,
         casualties=casualties,
-        stranded=stranded,
-        evacuee_time=int(100 * evac / time) if evac else 0,
-        evacuee_time_bound=100 * evac if evac else 0,
+        stranded=stranded + unsavable_stranded,
+        avoidable_casualty_ids=tuple(f"c{i:04d}" for i in range(casualties)),
+        avoidable_stranded_ids=tuple(f"s{i:04d}" for i in range(stranded)),
+        unavoidable_casualty_ids=(),
+        unavoidable_stranded_ids=tuple(f"u{i:04d}" for i in range(unsavable_stranded)),
+        evacuee_time=int(steps / time) if evac else 0,
+        evacuee_time_bound=steps,
+        evacuee_time_queue_bound=steps,
         movement_attempts=attempts,
         blocked_occupied=int(attempts * blocks),
         blocked_conflict=0,
         blocked_cycle=0,
-        path_cells_moved=10 * evac,
+        path_cells_moved=int(10 * evac / path),
         path_moves_bound=10 * evac,
         path_static_bound=10 * evac,
-        evacuee_danger_states=0,
+        evacuee_danger_states=int(steps / time * hazard) if evac else 0,
         evacuee_danger_bound=0,
-        invalidation_events=0,
+        invalidation_events=0 if replanning is None else 1,
         unrecoverable_invalidations=0,
-        replanning_remaining=0,
-        replanning_remaining_bound=0,
+        replanning_remaining=0 if replanning is None else int(1000 / replanning),
+        replanning_remaining_bound=0 if replanning is None else 1000,
     )
 
 
+def _mixed_identity() -> EpisodeEvidence:
+    """P1 savable and dead, P2 unsavable and stranded, 98 evacuated (R11)."""
+    return replace(synthetic(100, casualties=1, unsavable_stranded=1))
+
+
+def _threshold_corner(population: int, stranded: int, c: ScoringConstants = OFFICIAL_CONSTANTS) -> EpisodeEvidence:
+    """No avoidable casualty; every quality component exactly at its severe threshold (not severe)."""
+    return synthetic(
+        population,
+        stranded=stranded,
+        time=c.severe_time,
+        blocks=c.severe_block_rate,
+        hazard=c.severe_hazard_rate,
+        path=c.severe_path,
+        replanning=c.severe_replanning,
+    )
+
+
+def _r12(f: Formula, c: ScoringConstants = OFFICIAL_CONSTANTS) -> bool:
+    for m in (2, 4, 10, 100, 1000):
+        for s in (0, 1):
+            if s and m < 4:
+                continue
+            if not f(_threshold_corner(m, s, c)) > f(synthetic(m, casualties=1, stranded=s)):
+                return False
+    return True
+
+
 REQUIREMENTS: list[tuple[str, Callable[[Formula], bool]]] = [
-    ("R1 one casualty in 100, otherwise perfect, scores <= 70", lambda f: f(synthetic(100, casualties=1)) <= 70),
-    ("R2 safe run with Time 0.25 beats perfect run with 1/100 casualty", lambda f: f(synthetic(100, time=Fraction(1, 4))) > f(synthetic(100, casualties=1))),
-    ("R3 2 casualties < 1 casualty by more than 1 < 0 does", lambda f: (f(synthetic(100, casualties=1)) - f(synthetic(100, casualties=2))) > 0),
+    ("R1 one avoidable casualty in 100, otherwise perfect, scores <= 60", lambda f: f(synthetic(100, casualties=1)) <= 60),
+    ("R2 Time is not irrelevant: Time 0.5 (not severe) costs >= 10 points", lambda f: f(synthetic(100)) - f(synthetic(100, time=Fraction(1, 2))) >= 10),
+    ("R3 2 casualties score below 1 casualty", lambda f: f(synthetic(100, casualties=2)) < f(synthetic(100, casualties=1))),
     ("R4 10/100 casualties still >= 5 (unsafe runs stay separable)", lambda f: f(synthetic(100, casualties=10)) >= 5),
     ("R5 10/100 casualties <= 35", lambda f: f(synthetic(100, casualties=10)) <= 35),
     ("R6 one stranded in 100 <= 85 and above one casualty", lambda f: f(synthetic(100, casualties=1)) < f(synthetic(100, stranded=1)) <= 85),
     ("R7 10/100 stranded <= 50", lambda f: f(synthetic(100, stranded=10)) <= 50),
     ("R8 congestion rate 0.3 costs >= 10 points", lambda f: f(synthetic(100)) - f(synthetic(100, blocks=Fraction(3, 10))) >= 10),
-    ("R9 50% losses score 0 (catastrophic gate)", lambda f: f(synthetic(100, casualties=50)) == 0),
-    ("R10 non-compensation: Time 0.1 with everything else perfect scores <= 60", lambda f: f(synthetic(100, time=Fraction(1, 10))) <= 60),
+    ("R9 50% avoidable losses score 0 (catastrophic gate)", lambda f: f(synthetic(100, casualties=50)) == 0),
+    ("R10 Time 0.1 with everything else perfect scores <= 60", lambda f: f(synthetic(100, time=Fraction(1, 10))) <= 60),
+    ("R11 a savable casualty is not hidden by another person's unavoidable loss", lambda f: f(_mixed_identity()) <= 60),
+    ("R12 no casualty + no severe failure beats perfect + 1 casualty (M* 2..1000, s 0..1)", _r12),
+    ("R13 severe bottleneck (rate 0.3), no loss: < 80 and >= 20 points lost", lambda f: f(synthetic(100, blocks=Fraction(3, 10))) < 80 and f(synthetic(100)) - f(synthetic(100, blocks=Fraction(3, 10))) >= 20),
+    (
+        "R14 severe Time 0.4 / Hazard 0.3 / Replanning 0.4 / Path 0.4 alone: each < 80",
+        lambda f: all(
+            f(ev) < 80
+            for ev in (
+                synthetic(100, time=Fraction(2, 5)),
+                synthetic(100, hazard=Fraction(3, 10)),
+                synthetic(100, replanning=Fraction(2, 5)),
+                synthetic(100, path=Fraction(2, 5)),
+            )
+        ),
+    ),
+    ("R15 failed / missing / timeout episodes score 0 and stay in every mean (structural; tests)", lambda f: True),
 ]
+
+# Pre-registered ordering (written before the study was run): each pair must satisfy left > right.
+ORDERING: list[tuple[str, EpisodeEvidence, str, EpisodeEvidence]] = [
+    ("zero-loss, Time 0.6", synthetic(100, time=Fraction(3, 5)), "perfect quality + 1 casualty", synthetic(100, casualties=1)),
+    ("perfect", synthetic(100), "zero-loss but slow (Time 0.5)", synthetic(100, time=Fraction(1, 2))),
+    ("perfect", synthetic(100), "zero-loss, severe congestion (0.3)", synthetic(100, blocks=Fraction(3, 10))),
+    ("perfect", synthetic(100), "zero-loss, high exposure (0.3)", synthetic(100, hazard=Fraction(3, 10))),
+    ("perfect", synthetic(100), "zero-loss, inefficient routing (Path 0.6)", synthetic(100, path=Fraction(3, 5))),
+    ("replanning 0.9", synthetic(100, replanning=Fraction(9, 10)), "static-good, invalidation failure (0.3)", synthetic(100, replanning=Fraction(3, 10))),
+    ("1 stranded", synthetic(100, stranded=1), "1 casualty", synthetic(100, casualties=1)),
+    ("1 casualty", synthetic(100, casualties=1), "2 casualties", synthetic(100, casualties=2)),
+    ("mild congestion (0.05)", synthetic(100, blocks=Fraction(1, 20)), "severe congestion (0.4)", synthetic(100, blocks=Fraction(2, 5))),
+    ("mild delay (Time 0.8)", synthetic(100, time=Fraction(4, 5)), "extreme delay (Time 0.1)", synthetic(100, time=Fraction(1, 10))),
+]
+
+
+def _old_attribution(ev: EpisodeEvidence) -> tuple[int, int]:
+    """The draft's aggregate rule: unavoidable losses offset casualties first, then stranding."""
+    u = ev.population - ev.max_evacuated
+    return max(0, ev.casualties - u), max(0, ev.stranded - max(0, u - ev.casualties))
+
+
+def _scores(data: Mapping[str, list[Row]], f: Formula, names: Sequence[str]) -> dict[str, float]:
+    return {n: hierarchical(data[n], [f(r[4]) for r in data[n]]) or 0.0 for n in names}
 
 
 def main() -> None:
@@ -502,8 +661,10 @@ def main() -> None:
     suites = study_suites(args.cache)
     data = collect(suites, args.cache / "evidence")
     names = list(POLICIES)
+    c = OFFICIAL_CONSTANTS
+    print(f"quality exponent beta = {float(c.quality_exponent):.6f}; severe thresholds (component space) " + ", ".join(f"{k} {float(v):.4f}" for k, v in c.severe_thresholds().items()))
 
-    print("## Raw components (hierarchical means over both suites; Safety parts and quality parts in [0, 1])\n")
+    print("\n## Raw components (hierarchical means over both suites; Safety parts and quality parts in [0, 1])\n")
     comp_rows = []
     for name in names:
         rows = data[name]
@@ -520,43 +681,70 @@ def main() -> None:
         comp_rows.append(line)
     print(table(["policy", "evac", "casualty", "stranding", "Safety", *QUALITY_COMPONENTS, "EMBER"], comp_rows))
 
-    print("\n## Totals (people over all episodes)\n")
+    print("\n## Severe quality failures (share of applicable episodes, %)\n")
+    sev_rows = []
+    for name in names:
+        scored = [score_evidence(0, r[4]) for r in data[name]]
+        applicable = [s for s in scored if s.safety is not None]
+        sev_rows.append([name, *(100 * sum(1 for s in applicable if k in s.severe) / max(1, len(applicable)) for k in QUALITY_COMPONENTS)])
+    print(table(["policy", *QUALITY_COMPONENTS], sev_rows))
+
+    print("\n## Totals (people over all episodes) and person-level attribution\n")
     tot = []
+    changed_episodes = 0
+    all_episodes = 0
     for name in names:
         rows = data[name]
-        tot.append([name, sum(r[4].evacuated for r in rows), sum(r[4].casualties for r in rows), sum(r[4].stranded for r in rows), sum(r[4].max_evacuated for r in rows)])
-    print(table(["policy", "evacuated", "casualties", "stranded", "privileged max"], tot))
+        old_c = old_s = 0
+        for r in rows:
+            oc, os_ = _old_attribution(r[4])
+            old_c += oc
+            old_s += os_
+            all_episodes += 1
+            if (oc, os_) != (r[4].avoidable_casualties, r[4].avoidable_stranded):
+                changed_episodes += 1
+        tot.append(
+            [
+                name,
+                sum(r[4].evacuated for r in rows),
+                sum(r[4].casualties for r in rows),
+                sum(r[4].stranded for r in rows),
+                sum(r[4].max_evacuated for r in rows),
+                sum(r[4].avoidable_casualties for r in rows),
+                old_c,
+                sum(r[4].avoidable_stranded for r in rows),
+                old_s,
+            ]
+        )
+    print(table(["policy", "evacuated", "casualties", "stranded", "savable", "avoidable cas.", "draft rule", "avoidable str.", "draft rule"], tot))
+    print(f"\nEpisodes where the draft's aggregate rule differs from person-level attribution: {changed_episodes} of {all_episodes}")
 
-    print("\n## Candidate formulas: overall scores per suite\n")
-    results: dict[str, dict[str, float]] = {}
-    for cname, f in CANDIDATES.items():
-        results[cname] = {}
-        for name in names:
-            results[cname][name] = hierarchical(data[name], [f(r[4]) for r in data[name]]) or 0.0
-    print(table(["policy", *CANDIDATES], [[n, *(results[c][n] for c in CANDIDATES)] for n in names]))
+    print("\n## Candidate designs: overall scores (both suites)\n")
+    results = {cname: _scores(data, f, names) for cname, f in CANDIDATES.items()}
+    print(table(["policy", *CANDIDATES], [[n, *(results[k][n] for k in CANDIDATES)] for n in names]))
     for suite_name in ("public", "generated"):
-        print(f"\n### official score, {suite_name} suite only\n")
+        print(f"\n### F-official and A-multiplicative, {suite_name} suite only\n")
         rows_out = []
         for name in names:
             rows = [r for r in data[name] if r[0] == suite_name]
-            rows_out.append([name, hierarchical(rows, [official()(r[4]) for r in rows]) or 0.0])
-        print(table(["policy", "EMBER"], rows_out))
+            rows_out.append([name, hierarchical(rows, [official()(r[4]) for r in rows]) or 0.0, hierarchical(rows, [a_multiplicative(r[4]) for r in rows]) or 0.0])
+        print(table(["policy", "F-official", "A-multiplicative"], rows_out))
 
     print("\n## Requirement checks per candidate\n")
-    req_rows = []
-    for label, check in REQUIREMENTS:
-        req_rows.append([label, *("pass" if check(f) else "FAIL" for f in CANDIDATES.values())])
-    print(table(["requirement", *CANDIDATES], req_rows))
+    print(table(["requirement", *CANDIDATES], [[label, *("pass" if check(f) else "FAIL" for f in CANDIDATES.values())] for label, check in REQUIREMENTS]))
 
-    print("\n## Adversarial checks (official vs candidates): policy must score below congestion-aware\n")
-    adv_rows = []
-    for name in names:
-        if not name.startswith("adv-"):
-            continue
-        adv_rows.append([name, *(f"{results[c][name] - results[c]['congestion-aware']:+.1f}" for c in CANDIDATES)])
+    print("\n## Pre-registered ordering (left must score above right)\n")
+    ord_rows = []
+    for left, lev, right, rev in ORDERING:
+        ord_rows.append([f"{left} > {right}", *("pass" if f(lev) > f(rev) else "FAIL" for f in CANDIDATES.values())])
+    print(table(["ordering", *CANDIDATES], ord_rows))
+    print("\nF-official values: " + "; ".join(f"{left} {official()(lev):.1f} vs {right} {official()(rev):.1f}" for left, lev, right, rev in ORDERING))
+
+    print("\n## Adversarial checks: adversary minus congestion-aware (gaming check, not a selection criterion)\n")
+    adv_rows = [[n, *(f"{results[k][n] - results[k]['congestion-aware']:+.1f}" for k in CANDIDATES)] for n in names if n.startswith("adv-")]
     print(table(["adversary - congestion-aware", *CANDIDATES], adv_rows))
 
-    print("\n## Synthetic single-failure profile (official)\n")
+    print("\n## Synthetic single-failure profile\n")
     syn = [
         ("perfect", synthetic(100)),
         ("1 casualty / 100", synthetic(100, casualties=1)),
@@ -568,78 +756,141 @@ def main() -> None:
         ("1 casualty / 4", synthetic(4, casualties=1)),
         ("1 stranded / 100", synthetic(100, stranded=1)),
         ("10 stranded / 100", synthetic(100, stranded=10)),
-        ("Time 0.5", synthetic(100, time=Fraction(1, 2))),
+        ("1 savable dead + 1 unsavable stranded / 100", _mixed_identity()),
+        ("Time 0.8", synthetic(100, time=Fraction(4, 5))),
+        ("Time 0.5 (threshold)", synthetic(100, time=Fraction(1, 2))),
+        ("Time 0.4 (severe)", synthetic(100, time=Fraction(2, 5))),
         ("Time 0.25", synthetic(100, time=Fraction(1, 4))),
+        ("Time 0.1", synthetic(100, time=Fraction(1, 10))),
         ("congestion rate 0.1", synthetic(100, blocks=Fraction(1, 10))),
-        ("congestion rate 0.3", synthetic(100, blocks=Fraction(3, 10))),
-        ("congestion rate 0.6", synthetic(100, blocks=Fraction(6, 10))),
+        ("congestion rate 0.25 (threshold)", synthetic(100, blocks=Fraction(1, 4))),
+        ("congestion rate 0.3 (severe)", synthetic(100, blocks=Fraction(3, 10))),
+        ("congestion rate 0.5", synthetic(100, blocks=Fraction(1, 2))),
+        ("avoidable hazard 0.1", synthetic(100, hazard=Fraction(1, 10))),
+        ("avoidable hazard 0.3 (severe)", synthetic(100, hazard=Fraction(3, 10))),
+        ("Path 0.6", synthetic(100, path=Fraction(3, 5))),
+        ("Path 0.4 (severe)", synthetic(100, path=Fraction(2, 5))),
+        ("Replanning 0.8", synthetic(100, replanning=Fraction(4, 5))),
+        ("Replanning 0.3 (severe)", synthetic(100, replanning=Fraction(3, 10))),
+        ("every component at its threshold", _threshold_corner(100, 0)),
     ]
     print(table(["case", *CANDIDATES], [[label, *(f(ev) for f in CANDIDATES.values())] for label, ev in syn]))
 
     print("\n## Component correlation (Spearman, episodes with every component defined, moving policies)\n")
-    comps = ["safety", *QUALITY_COMPONENTS[:4]]
-    vecs: dict[str, list[float]] = {c: [] for c in comps}
+    comps = ["safety", *QUALITY_COMPONENTS]
+    vecs: dict[str, list[float]] = {k: [] for k in comps}
     for name in names:
         if name in ("always-stay", "random-legal"):
             continue
         for r in data[name]:
             s = score_evidence(0, r[4])
-            vals = {"safety": None if s.safety is None else float(s.safety), **{c: (None if s.component(c) is None else float(s.component(c))) for c in QUALITY_COMPONENTS[:4]}}  # type: ignore[arg-type]
-            if all(v is not None for v in vals.values()):
-                for c in comps:
-                    vecs[c].append(vals[c])  # type: ignore[arg-type]
+            cvals: dict[str, float | None] = {"safety": None if s.safety is None else float(s.safety)}
+            for k in QUALITY_COMPONENTS:
+                part = s.component(k)
+                cvals[k] = None if part is None else float(part)
+            present = [v for v in cvals.values() if v is not None]
+            if len(present) == len(comps):
+                for k, v in zip(comps, present, strict=True):
+                    vecs[k].append(v)
     print(table(["", *comps], [[a, *(f"{spearman(vecs[a], vecs[b]):.2f}" for b in comps)] for a in comps]))
     print(f"\n(n = {len(vecs['safety'])} episodes)")
 
-    print("\n## Sensitivity grid: constants satisfying every requirement, and rank stability\n")
-    base = results["official"]
-    grid = {
-        "casualty_incident_factor": ["0.5", "0.6", "0.7", "0.8", "0.9"],
-        "casualty_rate_exponent": ["2", "4", "6"],
-        "evacuation_exponent": ["1", "2", "3"],
-        "stranding_incident_factor": ["0.7", "0.8", "0.9"],
-        "congestion_exponent": ["1", "2", "3"],
-    }
-    feasible = []
-    taus: list[float] = []
-    total = 0
-    for combo in itertools.product(*grid.values()):
-        total += 1
-        c = replace(OFFICIAL_CONSTANTS, **{k: Decimal(v) for k, v in zip(grid, combo, strict=True)})
-        f = official(c)
-        if not all(check(f) for _label, check in REQUIREMENTS):
-            continue
-        sc = {n: hierarchical(data[n], [f(r[4]) for r in data[n]]) or 0.0 for n in names}
-        tau = kendall_tau(base, sc)
-        feasible.append((combo, tau))
-        taus.append(tau)
-    print(f"feasible: {len(feasible)} of {total} combinations")
-    official_combo = tuple(str(getattr(OFFICIAL_CONSTANTS, k)) for k in grid)
-    print(f"official constants {dict(zip(grid, official_combo, strict=True))} feasible: {any(c == official_combo for c, _ in feasible)}")
-    if taus:
-        print(f"Kendall tau vs official ranking over feasible combinations: min {min(taus):.3f}, mean {sum(taus) / len(taus):.3f}")
-    per_axis: dict[str, dict[str, int]] = {k: {} for k in grid}
-    for combo, _tau in feasible:
-        for k, v in zip(grid, combo, strict=True):
-            per_axis[k][v] = per_axis[k].get(v, 0) + 1
-    for k, counts in per_axis.items():
-        print(f"- {k}: " + ", ".join(f"{v}: {counts.get(v, 0)}" for v in grid[k]))
+    print("\n## Score spread (F-official)\n")
+    base = results["F-official"]
+    moving = [base[n] for n in names if n not in ("always-stay", "random-legal")]
+    mean = sum(moving) / len(moving)
+    sd = math.sqrt(sum((v - mean) ** 2 for v in moving) / (len(moving) - 1))
+    print(f"moving policies: min {min(moving):.1f}, max {max(moving):.1f}, range {max(moving) - min(moving):.1f}, sd {sd:.1f}")
+    for k in ("A-multiplicative", "C-safety-tiers", "D-lexicographic", "E-soft-min"):
+        mv = [results[k][n] for n in names if n not in ("always-stay", "random-legal")]
+        print(f"{k}: range {max(mv) - min(mv):.1f}")
 
-    print("\n## Quality-weight perturbation (each weight x0.5 and x1.5, renormalized)\n")
+    print("\n## Per-family ranking (F-official; family means over seeds)\n")
+    families = sorted({f"{r[0]}:{r[1]}" for r in data[names[0]]})
+    fam_rows = []
+    for name in names:
+        line = [name]
+        for fam in families:
+            rows = [r for r in data[name] if f"{r[0]}:{r[1]}" == fam]
+            line.append(hierarchical(rows, [official()(r[4]) for r in rows]) or 0.0)
+        fam_rows.append(line)
+    print(table(["policy", *families], fam_rows))
+    for fam_i, fam in enumerate(families):
+        col = {row[0]: row[fam_i + 1] for row in fam_rows}
+        top = sorted(col, key=lambda n: -col[n])[:3]
+        print(f"- {fam}: " + ", ".join(f"{n} {col[n]:.1f}" for n in top))
+
+    print("\n## Sensitivity grids: requirement feasibility and rank stability\n")
+    grid_runs = [
+        (
+            "safety",
+            {
+                "casualty_incident_factor": ["0.5", "0.6", "0.7"],
+                "casualty_rate_exponent": ["2", "4", "6"],
+                "evacuation_exponent": ["1", "2", "3"],
+                "stranding_incident_factor": ["0.7", "0.8", "0.9"],
+            },
+        ),
+        (
+            "gates",
+            {
+                "severe_factor": ["0.7", "0.8", "0.9"],
+                "severe_exponent": ["0.5", "1", "2"],
+                "severe_time": ["1/3", "1/2", "2/3"],
+                "severe_block_rate": ["1/5", "1/4", "1/3"],
+                "severe_hazard_rate": ["1/5", "1/4", "1/3"],
+            },
+        ),
+    ]
+    for label, grid in grid_runs:
+        feasible = []
+        every: list[tuple[float, float]] = []
+        failing: dict[str, int] = {}
+        total = 0
+        for combo in itertools.product(*grid.values()):
+            total += 1
+            change = {k: (Fraction(v) if "/" in v else Decimal(v)) for k, v in zip(grid, combo, strict=True)}
+            constants = replace(OFFICIAL_CONSTANTS, **change)  # type: ignore[arg-type]
+            f = official(constants)
+            sc = _scores(data, f, names)
+            tau, delta = kendall_tau(base, sc), max(abs(sc[n] - base[n]) for n in names)
+            every.append((tau, delta))
+            failed = [lab.split()[0] for lab, check in REQUIREMENTS if not (_r12(f, constants) if lab.startswith("R12") else check(f))]
+            for req in failed:
+                failing[req] = failing.get(req, 0) + 1
+            if not failed:
+                feasible.append((combo, tau, delta))
+        print(f"### grid {label}: feasible {len(feasible)} of {total}")
+        print(f"every combination: Kendall tau min {min(t for t, _d in every):.3f}, mean {sum(t for t, _d in every) / len(every):.3f}; max |delta score| {max(d for _t, d in every):.1f}")
+        print("requirements failed (combinations): " + (", ".join(f"{k} {v}" for k, v in sorted(failing.items())) or "none"))
+        official_combo = tuple(str(getattr(OFFICIAL_CONSTANTS, k)) for k in grid)
+        print(f"official {dict(zip(grid, official_combo, strict=True))} feasible: {any(c_ == official_combo for c_, _t, _d in feasible)}")
+        if feasible:
+            taus = [t for _c, t, _d in feasible]
+            print(f"Kendall tau vs official over feasible: min {min(taus):.3f}, mean {sum(taus) / len(taus):.3f}; max |delta score| {max(d for _c, _t, d in feasible):.1f}")
+        for i, k in enumerate(grid):
+            counts: dict[str, int] = {}
+            for combo, _t, _d in feasible:
+                counts[combo[i]] = counts.get(combo[i], 0) + 1
+            print(f"- {k}: " + ", ".join(f"{v}: {counts.get(v, 0)}" for v in grid[k]))
+        print()
+
+    print("## Quality-weight perturbation (each weight x0.5 and x1.5, renormalized)\n")
     w_rows = []
     weights = OFFICIAL_CONSTANTS.weights()
     for comp in QUALITY_COMPONENTS:
         for factor in (Fraction(1, 2), Fraction(3, 2)):
             raw = {k: (w * factor if k == comp else w) for k, w in weights.items()}
-            s = sum(raw.values())
-            norm = {f"weight_{k}": v / s for k, v in raw.items()}
-            c = replace(OFFICIAL_CONSTANTS, **norm)
-            f = official(c)
-            sc = {n: hierarchical(data[n], [f(r[4]) for r in data[n]]) or 0.0 for n in names}
+            total_w = sum(raw.values())
+            constants = replace(OFFICIAL_CONSTANTS, **{f"weight_{k}": v / total_w for k, v in raw.items()})  # type: ignore[arg-type]
+            sc = _scores(data, official(constants), names)
             w_rows.append([f"{comp} x{float(factor)}", f"{kendall_tau(base, sc):.3f}", f"{max(abs(sc[n] - base[n]) for n in names):.1f}"])
     print(table(["perturbation", "Kendall tau", "max |delta score|"], w_rows))
 
-    print("\n## Official ranking\n")
+    print("\n## Rank agreement between candidate designs (Kendall tau vs F-official)\n")
+    print(table(["candidate", "Kendall tau"], [[k, f"{kendall_tau(base, results[k]):.3f}"] for k in CANDIDATES]))
+
+    print("\n## Official ranking (F-official, both suites)\n")
     rk = ranks(base)
     print(table(["rank", "policy", "EMBER"], [[rk[n], n, base[n]] for n in sorted(names, key=lambda n: rk[n])]))
 

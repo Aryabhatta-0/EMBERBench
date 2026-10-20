@@ -1,5 +1,6 @@
 """Tests for the EMBER Score (``emberbench.scoring``): hand-calculated values, penalties, ceilings and aggregation."""
 
+import ast
 import dataclasses
 import itertools
 import math
@@ -23,6 +24,7 @@ from emberbench import (
     EvaluationResult,
     FailureKind,
     Observation,
+    OperationalRecord,
     Scenario,
     ScoringInputError,
     Suite,
@@ -33,6 +35,7 @@ from emberbench import (
     efficiency_view,
     episode_evidence,
     format_summary,
+    inference_config_digest,
     leaderboard_order,
     load_suite,
     run_episode,
@@ -52,6 +55,7 @@ from emberbench.scoring import (
     quality_components,
     safety_components,
     score_evidence,
+    severe_failures,
 )
 
 SUITE_DIR = Path(__file__).resolve().parents[1] / "scenarios" / "public" / "v1"
@@ -60,6 +64,7 @@ IDS = ("v1-pub-01-single-exit-sparse", "v1-pub-08-maze-deceptive-exit", "v1-pub-
 SEEDS = (11, 7, 3, 5, 9)
 RESAMPLES = 200
 F = Fraction
+BETA = float(OFFICIAL_CONSTANTS.quality_exponent)  # ln 0.6 / ln 0.5
 
 
 # --------------------------------------------------------------------------- helpers
@@ -71,6 +76,7 @@ def evidence(
     max_evacuated: int | None = None,
     casualties: int = 0,
     stranded: int = 0,
+    unavoidable_casualties: int | None = None,
     time_bound: int = 10,
     time: int | None = None,
     attempts: int = 1000,
@@ -82,8 +88,17 @@ def evidence(
     replan: int = 0,
     replan_bound: int = 0,
 ) -> EpisodeEvidence:
-    """Hand-made evidence. Per-evacuee values are multiplied by the number of evacuees."""
+    """Hand-made evidence. Per-evacuee values are multiplied by the number of evacuees.
+
+    ``population - max_evacuated`` people are unsavable; by default the first
+    ``min(unsavable, casualties)`` casualties are unsavable and the rest of the
+    unsavable people are stranded.
+    """
     evac = population - casualties - stranded
+    unsavable = 0 if max_evacuated is None else population - max_evacuated
+    u_cas = min(unsavable, casualties) if unavoidable_casualties is None else unavoidable_casualties
+    dead = [f"c{i:04d}" for i in range(casualties)]
+    inside = [f"s{i:04d}" for i in range(stranded)]
     return EpisodeEvidence(
         scenario_id="synthetic",
         scenario_hash="0" * 64,
@@ -94,8 +109,13 @@ def evidence(
         evacuated=evac,
         casualties=casualties,
         stranded=stranded,
+        avoidable_casualty_ids=tuple(dead[u_cas:]),
+        avoidable_stranded_ids=tuple(inside[unsavable - u_cas :]),
+        unavoidable_casualty_ids=tuple(dead[:u_cas]),
+        unavoidable_stranded_ids=tuple(inside[: unsavable - u_cas]),
         evacuee_time=evac * (time_bound if time is None else time),
         evacuee_time_bound=evac * time_bound,
+        evacuee_time_queue_bound=evac * time_bound,
         movement_attempts=attempts,
         blocked_occupied=blocks,
         blocked_conflict=0,
@@ -186,6 +206,14 @@ def test_version_and_official_constants() -> None:
     assert str(c.evacuation_exponent) == "2" and str(c.congestion_exponent) == "2" and str(c.hazard_exponent) == "1"
     assert c.catastrophic_loss_rate == F(1, 2) and c.practical_difference == F(1)
     assert HAZARD_RADIUS == 2
+    assert c.severe_time == F(1, 2) and c.severe_block_rate == F(1, 4) and c.severe_hazard_rate == F(1, 4)
+    assert c.severe_path == F(1, 2) and c.severe_replanning == F(1, 2)
+    assert str(c.severe_factor) == "0.8" and str(c.severe_exponent) == "1"
+    thresholds = {k: float(v) for k, v in c.severe_thresholds().items()}
+    assert thresholds == {"time": 0.5, "coordination": 0.5625, "hazard": 0.75, "path": 0.5, "replanning": 0.5}
+    # beta is derived, not tuned: the one-casualty factor over the lowest threshold.
+    assert math.isclose(BETA, math.log(0.6) / math.log(0.5), rel_tol=1e-15)
+    assert c.to_dict()["quality_exponent"].startswith("0.7369655941662")
     assert len(c.digest()) == 64
 
 
@@ -197,6 +225,9 @@ def test_version_and_official_constants() -> None:
         {"stranding_incident_factor": Decimal("1.5")},
         {"catastrophic_loss_rate": F(0)},
         {"evacuation_exponent": Decimal("-1")},
+        {"severe_time": F(1)},
+        {"severe_block_rate": F(0)},
+        {"severe_factor": Decimal("0")},
     ],
 )
 def test_invalid_constants_rejected(change: dict[str, object]) -> None:
@@ -215,17 +246,31 @@ def test_perfect_episode_scores_100() -> None:
 
 
 def test_time_penalty_hand_calculated() -> None:
-    # Time 1/2; replanning undefined, so the weights renormalize over 0.8: 100 * 0.5^(0.3/0.8).
+    # Time 1/2 is at the threshold, not severe; replanning undefined, so the weights renormalize over 0.8.
     s = score_evidence(0, evidence(time_bound=10, time=20))
-    assert s.component("time") == F(1, 2)
-    assert close(s.score, 100 * 0.5 ** (3 / 8))
+    assert s.component("time") == F(1, 2) and s.severe == () and s.severity == 1
+    assert close(s.score, 100 * 0.5 ** (3 / 8 * BETA))
+    assert 100 - s.score >= 10  # Time is not irrelevant
+
+
+def test_severe_delay_is_gated() -> None:
+    # Time 0.4 is severe: factor 0.8 times (0.4 / 0.5) on top of the quality term.
+    s = score_evidence(0, evidence(time_bound=10, time=25))
+    assert s.severe == ("time",) and close(s.severity, 0.8 * 0.8, 1e-12)
+    assert close(s.score, 100 * 0.4 ** (3 / 8 * BETA) * 0.64)
+    assert s.ceiling is not None and close(s.ceiling, 64, 1e-9)
+    # Mild delay beats extreme delay by a wide margin; extreme delay keeps almost nothing.
+    assert points(evidence(time=12)) - points(evidence(time=100)) > 70
+    assert points(evidence(time=100)) < 10
 
 
 def test_congestion_penalty_is_nonlinear() -> None:
-    # Congestion block rate 0.3: Coordination = 0.7^2 = 0.49; 100 * 0.49^(0.2/0.8).
+    # Congestion block rate 0.3 (> 1/4, severe): Coordination = 0.7^2 = 0.49; gate 0.8 * (0.7 / 0.75)^2.
     s = score_evidence(0, evidence(blocks=300))
-    assert s.component("coordination") == F(49, 100)
-    assert close(s.score, 100 * 0.49 ** (1 / 4))
+    assert s.component("coordination") == F(49, 100) and s.severe == ("coordination",)
+    assert close(s.score, 100 * 0.49 ** (BETA / 4) * 0.8 * (0.7 / 0.75) ** 2)
+    # Exactly one in four blocked is not severe.
+    assert severe_failures(evidence(blocks=250)) == {}
     # Doubling the block rate more than doubles the loss.
     loss = [100 - points(evidence(blocks=b)) for b in (150, 300, 600)]
     assert loss[1] > 2 * loss[0] * 0.95 and loss[2] > 2 * loss[1]
@@ -234,24 +279,36 @@ def test_congestion_penalty_is_nonlinear() -> None:
 def test_exposure_penalty_without_deaths() -> None:
     # Each evacuee spends 4 of 10 states in the danger zone where 1 was unavoidable: H = 1 - 3/10.
     s = score_evidence(0, evidence(danger=4, danger_bound=1))
-    assert s.component("hazard") == F(7, 10)
+    assert s.component("hazard") == F(7, 10) and s.severe == ("hazard",)
     assert s.component("casualty") == 1 and s.safety == 1
-    assert close(s.score, 100 * 0.7 ** (1 / 4))
+    assert close(s.score, 100 * 0.7 ** (BETA / 4) * 0.8 * (0.7 / 0.75))
+    assert s.score < 80  # lucky unsafe behaviour is never excellent
+    # Mild avoidable exposure costs less, without a gate.
+    mild = score_evidence(0, evidence(danger=2, danger_bound=1))
+    assert mild.severe == () and close(mild.score, 100 * 0.9 ** (BETA / 4))
     # Unavoidable danger costs nothing.
     assert score_evidence(0, evidence(danger=3, danger_bound=3)).score == 100
 
 
 def test_path_penalty_hand_calculated() -> None:
     s = score_evidence(0, evidence(moves_bound=10, moves=16))
-    assert s.component("path") == F(10, 16)
-    assert close(s.score, 100 * (10 / 16) ** (1 / 8))
+    assert s.component("path") == F(10, 16) and s.severe == ()
+    assert close(s.score, 100 * (10 / 16) ** (BETA / 8))
+    # Moves above twice the privileged minimum are severe.
+    assert score_evidence(0, evidence(moves_bound=10, moves=25)).severe == ("path",)
+
+
+def test_path_does_not_charge_necessary_fire_detours() -> None:
+    # The path bound is the fire-aware privileged minimum: a forced detour is in the bound, not a penalty.
+    ev = evidence(moves_bound=14, moves=14)
+    assert quality_components(ev)["path"] == 1 and score_evidence(0, ev).score == 100
 
 
 def test_replanning_penalty_hand_calculated() -> None:
-    # Replanning 1/4 with every weight in use: 100 * 0.25^0.2.
+    # Replanning 1/4 with every weight in use (severe): 100 * 0.25^(0.2 beta) * 0.8 * (0.25 / 0.5).
     s = score_evidence(0, evidence(replan=40, replan_bound=10))
-    assert s.component("replanning") == F(1, 4)
-    assert close(s.score, 100 * 0.25**0.2)
+    assert s.component("replanning") == F(1, 4) and s.severe == ("replanning",)
+    assert close(s.score, 100 * 0.25 ** (0.2 * BETA) * 0.4)
     # Failure to replan costs on its own, before any loss of life that it causes is charged to Safety.
     assert s.score < 80
 
@@ -294,25 +351,104 @@ def test_stranding_penalized_independently() -> None:
 
 
 def test_incomplete_evacuation_penalized() -> None:
-    # Two people nobody can save are not charged: unavoidable losses go to casualties first.
+    # Two people nobody can save are not charged.
     unavoidable = evidence(100, max_evacuated=98, casualties=2)
-    assert unavoidable.avoidable_casualties == 0
+    assert unavoidable.avoidable_casualties == 0 and unavoidable.unavoidable_losses == 2
     assert score_evidence(0, unavoidable).score == 100
-    # One more loss than unavoidable is charged.
+    # A savable person lost on top is charged.
     assert points(evidence(100, max_evacuated=98, casualties=3)) < 60
+    # E falls with every savable person not evacuated, independently of the incident factors.
+    e = [safety_components(evidence(100, stranded=k))["evacuation"] for k in (0, 1, 5)]
+    assert e[0] == 1 and e[0] > e[1] > e[2]
+
+
+# --------------------------------------------------------------------------- person-level attribution
+
+
+def test_savable_casualty_with_unsavable_stranded() -> None:
+    # P1 savable dies, P2 unsavable is stranded: the casualty is avoidable, the stranding is not.
+    ev = evidence(100, max_evacuated=99, casualties=1, stranded=1, unavoidable_casualties=0)
+    assert ev.avoidable_casualty_ids == ("c0000",) and ev.unavoidable_stranded_ids == ("s0000",)
+    assert (ev.avoidable_casualties, ev.avoidable_stranded, ev.unavoidable_losses) == (1, 0, 1)
+    s = score_evidence(0, ev)
+    assert s.component("casualty") != 1 and s.component("stranding") == 1
+    assert s.score <= 60
+
+
+def test_unsavable_casualty_with_savable_stranded() -> None:
+    ev = evidence(100, max_evacuated=99, casualties=1, stranded=1, unavoidable_casualties=1)
+    assert ev.unavoidable_casualty_ids == ("c0000",) and ev.avoidable_stranded_ids == ("s0000",)
+    assert (ev.avoidable_casualties, ev.avoidable_stranded) == (0, 1)
+    s = score_evidence(0, ev)
+    assert s.component("casualty") == 1 and s.component("stranding") != 1
+    # One stranded savable person is less severe than one savable casualty.
+    assert s.score > points(evidence(100, max_evacuated=99, casualties=1, stranded=1, unavoidable_casualties=0))
+
+
+def test_mixed_identity_losses_are_never_offset() -> None:
+    # 3 unsavable people (2 dead, 1 stranded) and 2 savable casualties + 1 savable stranded.
+    ev = evidence(100, max_evacuated=97, casualties=4, stranded=2, unavoidable_casualties=2)
+    assert (ev.avoidable_casualties, ev.avoidable_stranded, ev.unavoidable_losses) == (2, 1, 3)
+    # Exactly the score of the same avoidable losses with no unsavable people present.
+    same = evidence(97, casualties=2, stranded=1)
+    assert score_evidence(0, ev).score == score_evidence(0, same).score
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"avoidable_casualty_ids": ("b", "a")},  # not sorted
+        {"avoidable_casualty_ids": ("s0000",), "unavoidable_stranded_ids": ("s0000",)},  # not disjoint
+        {"avoidable_casualty_ids": ("x", "y")},  # does not match the casualty count
+        {"max_evacuated": 100},  # does not match the unsavable identities
+    ],
+)
+def test_evidence_identities_must_be_consistent(change: dict[str, object]) -> None:
+    base = evidence(100, max_evacuated=99, casualties=1, stranded=1, unavoidable_casualties=0)
+    with pytest.raises(ScoringInputError):
+        dataclasses.replace(base, **change)  # type: ignore[arg-type]
+
+
+def test_real_episode_person_level_attribution() -> None:
+    # Pa can outrun the fire to the exit but stays and dies; Pb is walled in and can never escape.
+    scenario = layout(["Fa...E", "######", "#b####"], termination=TerminationConfig(max_steps=12))
+    record = run_episode(scenario, stay_policy, seed=0)
+    ev = episode_evidence(scenario, record)
+    assert ev.max_evacuated == 1
+    assert ev.avoidable_casualty_ids == ("Pa",) and ev.unavoidable_stranded_ids == ("Pb",)
+    assert ev.avoidable_stranded_ids == () and ev.unavoidable_casualty_ids == ()
+    # The draft's aggregate rule (unavoidable losses offset casualties first) would have hidden Pa's death.
+    assert max(0, ev.casualties - (ev.population - ev.max_evacuated)) == 0
+    assert score_evidence(0, ev).status is EpisodeStatus.CATASTROPHIC
 
 
 def test_unsafe_fast_cannot_compensate() -> None:
-    fast_unsafe = points(evidence(casualties=1))  # perfect quality, one casualty
-    safe_slow = points(evidence(time=40))  # 4x slower than possible, nobody lost
-    assert safe_slow > fast_unsafe
+    # R12: no avoidable casualty and no severe failure always beats perfect quality with one casualty,
+    # even with every quality component exactly at its severe threshold, for any population.
+    for n in (2, 4, 10, 100, 1000):
+        corner = evidence(n, time=20, blocks=250, danger=5, danger_bound=0, moves=20, replan=20, replan_bound=10)
+        s = score_evidence(0, corner)
+        assert s.severe == () and s.safety == 1
+        assert s.score > points(evidence(n, casualties=1))
+        assert s.score > 60
+    # The same holds with equal stranding.
+    assert points(evidence(100, stranded=1, time=20)) > points(evidence(100, stranded=1, casualties=1))
+    # A severe failure is allowed to fall below one casualty: it is a failure too.
+    assert points(evidence(time=40)) < points(evidence(casualties=1))
 
 
 def test_bottleneck_cannot_compensate() -> None:
     # Perfect safety and speed cannot hide a congestion block rate of 0.6.
-    assert points(evidence(blocks=600)) < 80
+    assert points(evidence(blocks=600)) < 40
+    # Severe congestion with everything else perfect is never excellent and loses >= 20 points.
+    assert points(evidence(blocks=300)) < 80 and 100 - points(evidence(blocks=300)) >= 20
+    # Mild congestion stays far above severe congestion.
+    assert points(evidence(blocks=50)) - points(evidence(blocks=400)) > 40
     # A non-compensatory mean: one very bad quality component caps the score.
     assert points(evidence(time=100)) <= 60
+    # Several severe failures compound.
+    two = score_evidence(0, evidence(time=40, blocks=400))
+    assert two.severe == ("time", "coordination") and two.score < points(evidence(time=40))
 
 
 def test_catastrophic_gate_and_ceilings() -> None:
@@ -366,8 +502,16 @@ def test_real_episode_perfect_and_delayed() -> None:
     assert s.score == 100 and s.component("replanning") is None
     delayed = score_episode(scenario, run_episode(scenario, delayed_policy, seed=0))
     # Six moves; three steps of waiting: Time = 6/9, the only imperfect component.
-    assert delayed.component("time") == F(6, 9)
-    assert close(delayed.score, 100 * (6 / 9) ** (3 / 8))
+    assert delayed.component("time") == F(6, 9) and delayed.severe == ()
+    assert close(delayed.score, 100 * (6 / 9) ** (3 / 8 * BETA))
+
+
+def test_real_episode_time_bound_counts_exit_capacity() -> None:
+    # Two people one step from the same exit: at most one leaves per step, so the bound is 1 + 2, not 1 + 1.
+    scenario = layout([".a", "bE"], termination=TerminationConfig(max_steps=10))
+    ev = episode_evidence(scenario, run_episode(scenario, greedy_exit_policy, seed=0))
+    assert ev.evacuated == 2 and ev.evacuee_time_bound == 1 + 1 and ev.evacuee_time_queue_bound == 1 + 2
+    assert quality_components(ev)["time"] == F(3, ev.evacuee_time)
 
 
 def test_real_episode_nobody_can_escape_is_not_applicable() -> None:
@@ -541,3 +685,33 @@ def test_efficiency_view_is_separate(small: Suite, greedy: EvaluationResult) -> 
     assert "cost" not in report.to_dict()
     with pytest.raises(ValueError):
         efficiency_view(report, F(-1), "USD")
+
+
+def test_operational_record_is_separate_and_validated() -> None:
+    config = {"model": "example-model", "snapshot": "2026-10-01", "temperature": 0, "top_p": 1, "max_tokens": 64, "adapter": "1.0"}
+    digest = inference_config_digest(config)
+    assert digest == inference_config_digest(dict(reversed(list(config.items()))))  # canonical: key order is irrelevant
+    record = OperationalRecord("example-model", "example-provider", digest, 3, 30, 12.5, 1000, 200, F(3, 100), "USD", 2, 1)
+    assert record.to_dict()["cost"] == "3/100" and len(record.digest()) == 64
+    # The score never reads operational data: score_results has no parameter for it.
+    assert "operational" not in score_results.__code__.co_varnames
+    bad: list[dict[str, object]] = [
+        {"model_id": ""},
+        {"inference_config_digest": "x" * 64},
+        {"retries": -1},
+        {"trials": 0},
+        {"latency_seconds": float("nan")},
+        {"cost_unit": None},
+    ]
+    for change in bad:
+        with pytest.raises(ScoringInputError):
+            dataclasses.replace(record, **change)  # type: ignore[arg-type]
+
+
+def test_scoring_does_not_depend_on_visualization() -> None:
+    root = Path(__file__).resolve().parents[1] / "src" / "emberbench"
+    for name in ("scoring.py", "environment_pack.py"):
+        tree = ast.parse((root / name).read_text(encoding="utf-8"))
+        imported = {node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module}
+        imported |= {alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names}
+        assert not imported & {"audit", "visualization", "emberbench.audit", "emberbench.visualization"}, name
