@@ -542,6 +542,10 @@ def main(argv: list[str] | None = None) -> int:
         return contracts_only()
     if args.dist is None:
         parser.error("--dist is required unless --contracts-only is given")
+    # Later steps run in other working directories (the clean environment never runs in the checkout).
+    args.dist = args.dist.resolve()
+    if args.wheelhouse is not None:
+        args.wheelhouse = args.wheelhouse.resolve()
     if args.dist.exists() and any(args.dist.iterdir()):
         print(f"{args.dist}: not empty", file=sys.stderr)
         return 2

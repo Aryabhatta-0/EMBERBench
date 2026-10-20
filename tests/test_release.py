@@ -534,5 +534,6 @@ def test_release_check_compares_normalized_members(tmp_path: Path) -> None:
 
 @pytest.mark.skipif(os.environ.get("EMBERBENCH_RELEASE_SMOKE") != "1", reason="the CI packaging job runs tools/check_release.py; set EMBERBENCH_RELEASE_SMOKE=1 to run it here")
 def test_release_smoke(tmp_path: Path) -> None:
-    proc = subprocess.run([sys.executable, str(TOOLS / "check_release.py"), "--dist", str(tmp_path / "dist")], capture_output=True, text=True, timeout=1800)
+    # A relative --dist, as CI passes it, from a working directory outside the checkout.
+    proc = subprocess.run([sys.executable, str(TOOLS / "check_release.py"), "--dist", "dist"], cwd=tmp_path, capture_output=True, text=True, timeout=1800)
     assert proc.returncode == 0, proc.stdout + proc.stderr
