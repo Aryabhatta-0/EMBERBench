@@ -127,15 +127,15 @@ model's evaluation. Its canonical form:
   "versions": {
     "benchmark_revision": "1", "simulator": "0.2.0", "observation": "1.0",
     "action_schema": "1.0", "scenario_schema": "1.0", "metrics": "1.0",
-    "crowd_diagnostics": "1.0", "statistics": "1.0", "generator": "1.0.0",
-    "generator_config": "1.0", "generation_manifest": "1.0",
+    "crowd_diagnostics": "1.0", "statistics": "1.0", "generator": "1.1.0",
+    "generator_config": "1.1", "generation_manifest": "1.1",
     "evaluation_manifest": "1.0", "evaluation_result": "1.0"
   },
   "protocol": {"mode": "shared_heldout_batch", "submission_roster_digest": null},
   "suite": {
     "suite_id": "<batch ID>", "suite_version": "1.0.0",
     "suite_hash": "<64 hex>", "generation_hash": "<64 hex>",
-    "generator_version": "1.0.0", "generator_config_hash": "<64 hex>",
+    "generator_version": "1.1.0", "generator_config_hash": "<64 hex>",
     "scenario_count": 40
   },
   "evaluation_manifest": {"manifest_hash": "<64 hex>", "episode_count": 400},

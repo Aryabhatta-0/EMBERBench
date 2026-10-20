@@ -49,6 +49,7 @@ FORBIDDEN_FILE_NAMES = frozenset(
         "identity.json",
         "provenance.json",
         "result.json",
+        "suite-freeze.json",
     }
 )
 FORBIDDEN_SUFFIXES = frozenset({".seed", ".seeds", ".key", ".pem", ".p12", ".pfx"})

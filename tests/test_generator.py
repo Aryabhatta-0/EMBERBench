@@ -45,11 +45,11 @@ from emberbench.generator import (
     freeze_generated_suite,
     generate_suite,
     load_generated_suite,
-    measure_proxies,
     scenario_file_bytes,
     verify_regeneration,
 )
 from emberbench.rng import derive_stream_seed
+from emberbench.structure import measure_proxies
 from emberbench.scenario import ExitSpec, FireModelName, PersonSpec
 from emberbench.simulator import Policy
 from emberbench.suite import MANIFEST_NAME, Visibility
@@ -61,9 +61,10 @@ OTHER_SEED = SEED + 1
 BATCH = "test-batch-a"
 
 # Golden hashes for BASE_CONFIG + SEED + BATCH. They must be equal on every platform and Python version.
+# Generator 1.1.0 changed the generation and suite hashes (version-keyed streams, PR #33 structural labels); the config hash is unchanged.
 GOLDEN_CONFIG_HASH = "a464c56981fbfcfe976ec4114a9194ce408aebf53348e135d3515a3902f12704"
-GOLDEN_GENERATION_HASH = "f9fac2b98f45fb36186504cff4826e26eda2a9780470727507f5ca69cfe9271d"
-GOLDEN_SUITE_HASH = "78319258f35ba44a6139a370233350ca25830cacad2181e16c625b9ef20ae1dd"
+GOLDEN_GENERATION_HASH = "eb14751ab649677ff37c787cd3404e7c9dd47990b51a05924a74a34ee310726d"
+GOLDEN_SUITE_HASH = "8605612a226f317277c84f196e38334aab722c42cc82fb96b588285d83dfe443"
 
 BASE_CONFIG: dict[str, Any] = {
     "config_version": "1.0",

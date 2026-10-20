@@ -220,7 +220,7 @@ def test_the_cli_changes_no_library_version() -> None:
         emberbench.BASELINES_VERSION,
         emberbench.INTEGRITY_PROTOCOL_VERSION,
         emberbench.BENCHMARK_REVISION,
-    ) == ("0.2.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0.0", "1.0", "1.0", "1.0", "1.0", "1")
+    ) == ("0.2.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.1.0", "1.0", "1.0", "1.0", "1.0", "1")
 
 
 def test_version_human_mode() -> None:

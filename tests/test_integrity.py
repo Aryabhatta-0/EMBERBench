@@ -175,9 +175,9 @@ def test_versions_are_pinned_and_unchanged() -> None:
         "metrics": (METRICS_VERSION, "1.0"),
         "crowd_diagnostics": (CROWD_DIAGNOSTICS_VERSION, "1.0"),
         "statistics": (STATISTICS_VERSION, "1.0"),
-        "generator": (GENERATOR_VERSION, "1.0.0"),
-        "generator_config": (GENERATOR_CONFIG_VERSION, "1.0"),
-        "generation_manifest": (GENERATION_MANIFEST_VERSION, "1.0"),
+        "generator": (GENERATOR_VERSION, "1.1.0"),
+        "generator_config": (GENERATOR_CONFIG_VERSION, "1.1"),
+        "generation_manifest": (GENERATION_MANIFEST_VERSION, "1.1"),
         "evaluation_manifest": (EVALUATION_MANIFEST_VERSION, "1.0"),
         "evaluation_result": (EVALUATION_RESULT_VERSION, "1.0"),
     }
