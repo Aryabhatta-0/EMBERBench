@@ -1,57 +1,43 @@
-"""Render REPORT.md of the V1 evaluation pack from authenticated artifacts only.
+"""Render the V1 evaluation pack report (``REPORT.md``) from authenticated artifacts only.
 
-Every number in the report comes from an ``EvaluationResult`` that
-``load_evaluation_result`` authenticated, from a statistics artifact of
-``aggregate_result`` / ``compare_results``, or from the privileged bound
-document. The text is deterministic: the same artifacts give the same bytes.
-There is no composite score and no overall ranking.
+Every headline number comes from an official :class:`~emberbench.ScoreReport`
+(``emberbench.scoring``) or :class:`~emberbench.ScoreComparison`. This module
+computes no score: it formats library values, sums authenticated per-episode
+metrics and evidence for the diagnostic and reference tables, and never
+changes the score. Congestion is a diagnostic table, never a score column.
 """
 
 import json
 from collections.abc import Mapping, Sequence
+from fractions import Fraction
 from typing import Any
 
-from emberbench import EvaluationResult
+from emberbench import EvaluationResult, ScoreReport
 
 import pack_index
 import pack_protocol
 from pack_agents import SHORT_NAMES
 
-
-# (metric, column title, decimals)
-REPORTED = (
-    ("evacuated_rate", "Evacuation rate", 3),
-    ("casualty_rate", "Casualty rate", 3),
-    ("stranded_rate", "Stranded rate", 3),
-    ("mean_person_time_to_safety", "Person-time to safety (mean / person)", 2),
-    ("congestion_block_rate", "Congestion block rate", 3),
-    ("aggregate_path_efficiency", "Path-efficiency proxy", 3),
-    ("mean_exposure", "Fire-exposure proxy", 3),
-)
-DIRECTIONAL = (*(m for m, _, _ in REPORTED), "terminal_trapped_rate", "blocked_rate")
+QUALITY = ("time", "hazard", "path", "replanning")
 
 
 def _short(model_id: str) -> str:
     return SHORT_NAMES.get(model_id, model_id)
 
 
-def _num(value: Any, decimals: int) -> str:
-    return "n/a" if value is None else f"{value:.{decimals}f}"
+def _num(value: Fraction | float | None, decimals: int) -> str:
+    return "n/a" if value is None else f"{float(value):.{decimals}f}"
 
 
-def _metric(group: Mapping[str, Any], name: str) -> Mapping[str, Any]:
-    for entry in group["metrics"]:
-        if entry["metric"] == name:
-            return entry  # type: ignore[no-any-return]
-    raise KeyError(name)
+def _signed(value: Fraction | float | None, decimals: int) -> str:
+    return "n/a" if value is None else f"{float(value):+.{decimals}f}"
 
 
-def _mean_ci(entry: Mapping[str, Any], decimals: int, ci_key: str = "mean_ci") -> str:
-    mean = _num(entry["statistics"]["mean"], decimals)
-    ci = entry[ci_key]
+def _ci(ci: Mapping[str, Any] | None, decimals: int, signed: bool = False) -> str:
     if ci is None:
-        return mean
-    return f"{mean} [{_num(ci['lower'], decimals)}, {_num(ci['upper'], decimals)}]"
+        return "n/a"
+    fmt = _signed if signed else _num
+    return f"[{fmt(ci['lower'], decimals)}, {fmt(ci['upper'], decimals)}]"
 
 
 def _table(header: Sequence[str], rows: Sequence[Sequence[str]], align: Sequence[str] | None = None) -> list[str]:
@@ -62,327 +48,422 @@ def _table(header: Sequence[str], rows: Sequence[Sequence[str]], align: Sequence
     return lines
 
 
-def _totals(result: EvaluationResult) -> tuple[int, int, int, int, int]:
-    population = evacuated = casualties = stranded = person_time = 0
+def _totals(result: EvaluationResult) -> dict[str, int]:
+    """People counts summed over the authenticated episodes of one result (diagnostics, not score inputs)."""
+    out = {"population": 0, "evacuated": 0, "casualties": 0, "stranded": 0, "person_time": 0}
     for episode in result.episodes:
         s = episode.metrics.safety
-        population += s.population
-        evacuated += s.evacuated
-        casualties += s.casualties
-        stranded += s.stranded
-        person_time += episode.metrics.time.person_time_to_safety_total
-    return population, evacuated, casualties, stranded, person_time
+        out["population"] += s.population
+        out["evacuated"] += s.evacuated
+        out["casualties"] += s.casualties
+        out["stranded"] += s.stranded
+        out["person_time"] += episode.metrics.time.person_time_to_safety_total
+    return out
+
+
+def _bound_ratios(report: ScoreReport) -> tuple[Fraction | None, Fraction | None]:
+    """Summed actual / summed privileged lower bound for evacuee time and path moves (1 = at the bound)."""
+    time = time_bound = moves = moves_bound = 0
+    for episode in report.episodes:
+        ev = episode.evidence
+        if ev is None or not ev.evacuated:
+            continue
+        time += ev.evacuee_time
+        time_bound += ev.evacuee_time_cut_bound
+        moves += ev.path_cells_moved
+        moves_bound += ev.path_moves_bound
+    return (
+        Fraction(time, time_bound) if time_bound else None,
+        Fraction(moves, moves_bound) if moves_bound else None,
+    )
 
 
 def render_report(
     protocol: pack_protocol.Protocol,
     index: Mapping[str, Any],
     results: Mapping[str, EvaluationResult],
-    aggregates: Mapping[str, str],
-    paired: Mapping[tuple[str, str], str],
-    bound_doc: Mapping[str, Any],
+    reports: Mapping[str, ScoreReport],
+    comparisons: Mapping[tuple[str, str], str],
+    references: Mapping[str, Any],
 ) -> str:
-    models = [m["model_id"] for m in index["models"]]
-    agg = {mid: json.loads(text) for mid, text in aggregates.items()}
-    pairs = {key: json.loads(text) for key, text in paired.items()}
     bench = index["benchmark"]
-    suite = index["suite"]
-    manifest = index["evaluation_manifest"]
-    out: list[str] = []
-    add = out.append
+    schedule = index["schedule"]
+    models = {m["model_id"]: m for m in index["models"]}
+    order: list[str] = list(index["leaderboard"])
+    in_spec_order = list(models)
+    families = {e["scenario_id"]: e["primary_family"] for e in index["suite"]["scenarios"]}
+    totals = {m: _totals(results[m]) for m in in_spec_order}
+    n_worlds = schedule["unique_worlds"]
+    any_report = reports[order[0]]
 
-    add("# EMBERBench V1 evaluation pack: report")
-    add("")
-    add(f"**{pack_protocol.RUN_LABEL}**")
-    add("")
-    add(
-        "This report shows how EMBERBench compares decision-making methods. It uses the canonical public "
-        "development suite and a committed public development seed schedule. These numbers are not "
-        "held-out benchmark scores, not a leaderboard and not a ranking. There is no composite EMBER score: "
-        "every number belongs to one named metric."
-    )
-    add("")
-    if protocol.name != pack_protocol.PUBLIC.name:
-        add(f"> Protocol `{protocol.name}`: a CI smoke subset. Its numbers mean nothing.")
-        add("")
-    add("Generated by `tools/experiments/v1/run_public_benchmark.py` from authenticated artifacts only.")
-    add(f"Experiment index digest: `{pack_index.index_digest(index)}`.")
-    add("")
-
-    # ------------------------------------------------------------------ pins
-    add("## 1. Benchmark pins")
-    add("")
-    rows = [
-        ["package", f"`{bench['package']}` {bench['package_version']}"],
-        ["benchmark revision", f"`{bench['versions']['benchmark_revision']}`"],
+    out = [
+        "# EMBERBench V1 evaluation pack: report",
+        "",
+        f"**{pack_protocol.RUN_LABEL}**",
+        "",
+        "This report shows how EMBERBench compares decision-making methods with the official EMBER Score "
+        f"(`emberbench.scoring`, scoring version {bench['scoring_version']}). Every method is scored against one frozen "
+        "environment pack of the **public** V1 suite, with one episode per **unique environment world**. The scoring "
+        "procedure is official; the suite is public and known, so these numbers are development results. They are "
+        "not hidden-suite scores, not leaderboard-grade generalization evidence and they can be overfit.",
+        "",
+        "Generated by `tools/experiments/v1/run_public_benchmark.py` from authenticated artifacts only.",
+        f"Experiment index digest: `{pack_index.index_digest(index)}`.",
+        "",
+        "## 1. Benchmark and scoring pins",
+        "",
     ]
-    rows += [[f"{name} version", f"`{value}`"] for name, value in sorted(bench["versions"].items()) if name != "benchmark_revision"]
-    rows += [["baselines version", f"`{bench['baselines_version']}`"], ["CLI version", f"`{bench['cli_version']}`"]]
-    rows += [
-        ["suite", f"`{suite['suite_id']}` {suite['suite_version']} ({suite['visibility']}, {suite['seed_role']} seeds)"],
-        ["suite hash", f"`{suite['suite_hash']}`"],
-        ["evaluation manifest hash", f"`{manifest['manifest_hash']}`"],
-        ["episodes per model", str(manifest["episode_count"])],
+    pins = [
+        ["package", f"`emberbench` {bench['package_version']}"],
+        *[[f"{name.replace('_', ' ')}" + ("" if name == "benchmark_revision" else " version"), f"`{v}`"] for name, v in sorted(bench["versions"].items())],
+        ["scoring version", f"`{bench['scoring_version']}`"],
+        ["scoring constants digest", f"`{bench['scoring_constants_digest']}`"],
+        ["environment-world version", f"`{bench['environment_world_version']}`"],
+        ["environment-pack version", f"`{bench['environment_pack_version']}`"],
+        ["baselines version", f"`{bench['baselines_version']}`"],
+        ["CLI version", f"`{bench['cli_version']}`"],
+        ["suite", f"`{index['suite']['suite_id']}` {index['suite']['suite_version']} ({index['suite']['visibility']}, {index['suite']['seed_role'].replace('_', ' ')} seeds)"],
+        ["suite hash", f"`{index['suite']['suite_hash']}`"],
+        ["unique-world manifest hash", f"`{schedule['evaluation_manifest']['manifest_hash']}`"],
+        ["environment pack", f"`{index['environment_pack']['pack_id']}`"],
+        ["environment pack digest", f"`{index['environment_pack']['digest']}`"],
         ["bootstrap resamples", str(protocol.resamples)],
     ]
-    out += _table(["Item", "Value"], rows, ["l", "l"])
-    add("")
+    out += _table(["Item", "Value"], pins, ["l", "l"])
 
-    # ------------------------------------------------------------------ seeds
-    add("## 2. Seed schedule")
-    add("")
-    add(f"Seeds, in manifest order: `{', '.join(str(s) for s in protocol.seeds)}`.")
-    add("")
-    add(
-        "`build_evaluation_manifest` schedules every suite scenario under every seed: suite order first, then "
-        "seed order. Every model below runs this one manifest, so every episode pairs exactly. The seeds are "
-        "public development seeds of this pack, committed in `pack_protocol.py`. They are not an evaluator's "
-        "scored schedule."
-    )
-    add("")
-    add("Scenarios, in suite order:")
-    add("")
-    out += _table(
-        ["Scenario", "Content hash"],
-        [[f"`{s['scenario_id']}`", f"`{s['content_hash']}`"] for s in suite["scenarios"]],
-        ["l", "l"],
-    )
-    add("")
-
-    # ------------------------------------------------------------------ models
-    add("## 3. Evaluated models")
-    add("")
-    add(
-        "Every model is fair: a zero-argument factory builds a new agent per episode, and the agent receives "
-        "one `Observation` per step and nothing else. `always-stay` is a control, not a method. The five "
-        "registered baselines are reference anchors. The two pack agents are research methods of this pack "
-        "(see `pack_agents.py`). None of them is an oracle."
-    )
-    add("")
-    rows = [
-        [f"`{m['model_id']}`", _short(m["model_id"]), m["kind"], f"`{m['config_digest']}`", m["description"]]
-        for m in index["models"]
+    # ------------------------------------------------------------------ schedule
+    seeds = ", ".join(str(s) for s in protocol.candidate_seeds)
+    out += [
+        "",
+        "## 2. Unique-world schedule",
+        "",
+        f"Public development candidate seeds, in order: `{seeds}`.",
+        "",
+        f"`build_unique_world_manifest(suite, candidate_seeds, stochastic_worlds={protocol.stochastic_worlds})` schedules "
+        "each deterministic-fire scenario once (its first candidate seed: every seed gives the same world) and the "
+        f"stochastic-fire scenario with the first {protocol.stochastic_worlds} candidates that give a new fire world. "
+        "Duplicate deterministic seeds are never scheduled, so they are never counted as evidence.",
+        "",
     ]
-    out += _table(["Model ID", "Short", "Kind", "Config digest (SHA-256)", "Description"], rows, ["l"] * 5)
-    add("")
-    add(
-        "An independent wall-only A* planner is not listed: on a unit-cost 4-neighbour grid A* with an "
-        "admissible heuristic returns the same shortest-path lengths as the BFS of `static-shortest-path-v1`, "
-        "so it would differ only in tie-breaking. `forecast-shortest-path-r1` is the independent planner "
-        "that is meaningfully different: it plans against a forecast of the fire from the public rules."
+    out += _table(
+        ["Quantity", "Value"],
+        [
+            ["nominal candidate episodes (scenarios x candidate seeds)", str(schedule["nominal_candidate_episodes"])],
+            ["distinct environment worlds among the candidates", str(schedule["distinct_worlds_among_candidates"])],
+            ["**scheduled unique environment worlds**", f"**{n_worlds}**"],
+            ["deterministic-fire worlds", str(schedule["deterministic_worlds"])],
+            ["stochastic-fire worlds", str(schedule["stochastic_worlds"])],
+            ["episodes per model (one trial)", str(schedule["evaluation_manifest"]["episode_count"])],
+            ["duplicate worlds scheduled", "0"],
+        ],
     )
-    add("")
-
-    # ------------------------------------------------------------------ aggregate
-    n_episodes = manifest["episode_count"]
-    add("## 4. Aggregate results")
-    add("")
-    add(f"Totals over all {n_episodes} episodes (person counts summed over episodes):")
-    add("")
-    rows = []
-    for mid in models:
-        population, evacuated, casualties, stranded, person_time = _totals(results[mid])
-        rows.append([f"`{mid}`", str(population), str(evacuated), str(casualties), str(stranded), str(person_time)])
-    out += _table(["Model", "People", "Evacuated", "Casualties", "Stranded", "Person-time to safety (total)"], rows)
-    add("")
-    add(
-        "Per-episode metric means with 95 % percentile-bootstrap intervals (`aggregate_result`, resampling "
-        "unit: episode). Higher is better for evacuation rate and path efficiency; lower is better for the "
-        "others."
+    out += ["", "Every world (the full digests are in the index):", ""]
+    out += _table(
+        ["#", "Scenario", "Primary family", "Fire", "Seed", "Environment world"],
+        [
+            [str(w["index"]), f"`{w['scenario_id']}`", families[w["scenario_id"]], w["fire_model"], str(w["seed"]), f"`{w['environment_world_digest'][:16]}`"]
+            for w in schedule["worlds"]
+        ],
+        ["r", "l", "l", "l", "r", "l"],
     )
-    add("")
-    rows = []
-    for mid in models:
-        overall = agg[mid]["overall"]
-        rows.append([f"`{mid}`"] + [_mean_ci(_metric(overall, name), d) for name, _, d in REPORTED])
-    out += _table(["Model"] + [title for _, title, _ in REPORTED], rows)
-    add("")
-    robustness = []
-    for mid in models:
-        r = agg[mid]["overall"]["robustness"]
-        robustness.append(
-            [f"`{mid}`"]
-            + [str(r[k]) for k in ("observed", "all_resolved", "max_steps", "with_casualties", "with_stranded", "zero_evacuation")]
-        )
-    add("Episode counts (`robustness`):")
-    add("")
-    out += _table(["Model", "Observed", "All resolved", "Step limit", "With casualties", "With stranded", "Zero evacuation"], robustness)
-    add("")
 
-    # ------------------------------------------------------------------ scenarios and families
-    def grouped(kind: str, metric: str, decimals: int) -> list[str]:
-        names = [g["name"] for g in agg[models[0]][kind]]
-        body = []
-        for i, name in enumerate(names):
-            row = [f"`{name}`"]
-            for mid in models:
-                group = agg[mid][kind][i]
-                if group["name"] != name:
-                    raise ValueError("group order differs between artifacts")
-                row.append(_num(_metric(group, metric)["statistics"]["mean"], decimals))
-            body.append(row)
-        return _table(["Scenario" if kind == "scenarios" else "Family"] + [_short(m) for m in models], body)
-
-    add("## 5. Per-scenario results")
-    add("")
-    add("Mean evacuation rate per scenario:")
-    add("")
-    out += grouped("scenarios", "evacuated_rate", 3)
-    add("")
-    add("Mean person-time to safety per person, per scenario (non-evacuees count at the step limit):")
-    add("")
-    out += grouped("scenarios", "mean_person_time_to_safety", 1)
-    add("")
-    add("Mean fire-exposure proxy per scenario:")
-    add("")
-    out += grouped("scenarios", "mean_exposure", 3)
-    add("")
-    add("The per-scenario statistics artifacts also hold the intervals and every other metric.")
-    add("")
-
-    add("## 6. Per-family results")
-    add("")
-    add("A scenario with several families counts in each of them, so family rows overlap.")
-    add("")
-    add("Mean evacuation rate per family:")
-    add("")
-    out += grouped("families", "evacuated_rate", 3)
-    add("")
-    add("Mean casualty rate per family:")
-    add("")
-    out += grouped("families", "casualty_rate", 3)
-    add("")
-    add("Mean person-time to safety per person, per family:")
-    add("")
-    out += grouped("families", "mean_person_time_to_safety", 1)
-    add("")
-
-    # ------------------------------------------------------------------ paired
-    add("## 7. Paired comparisons")
-    add("")
-    add(
-        "`compare_results(A, B)` over the shared manifest; every delta is A - B. Each cell is "
-        "`A better / B better / ties` in episodes, by the metric's own direction. There is no count across "
-        "metrics and no overall winner."
+    # ------------------------------------------------------------------ methods
+    out += [
+        "",
+        "## 3. Evaluated methods",
+        "",
+        "Every method is fair: a new agent per episode, and `act` receives one `Observation` and nothing else. "
+        "The privileged references (section 9) are not methods and are not in any ranking.",
+        "",
+    ]
+    out += _table(
+        ["Label", "Model ID", "Kind", "Config digest", "Description"],
+        [[_short(m), f"`{m}`", models[m]["kind"], f"`{models[m]['config_digest']}`", models[m]["description"]] for m in in_spec_order],
+        ["l", "l", "l", "l", "l"],
     )
-    add("")
-    rows = []
-    for (a, b), doc in pairs.items():
-        overall = doc["overall"]
-        cells = []
-        for name, _, _ in REPORTED:
-            e = _metric(overall, name)
-            cells.append(f"{e['a_better']}/{e['b_better']}/{e['ties']}")
-        rows.append([f"{_short(a)} - {_short(b)}", str(doc["paired_count"])] + cells)
-    out += _table(["A - B", "Paired"] + [title for _, title, _ in REPORTED], rows)
-    add("")
-    add("Mean paired delta (A - B) with 95 % bootstrap interval (resampling unit: paired episode):")
-    add("")
-    rows = []
-    for (a, b), doc in pairs.items():
-        overall = doc["overall"]
-        rows.append(
-            [f"{_short(a)} - {_short(b)}"]
-            + [_mean_ci(_metric(overall, name), d, "mean_delta_ci") for name, _, d in REPORTED[:4]]
-        )
-    out += _table(["A - B"] + [title for _, title, _ in REPORTED[:4]], rows)
-    add("")
 
-    # ------------------------------------------------------------------ bound
-    add("## 8. Privileged escape bound (context only, not a model)")
-    add("")
-    add(
-        "`emberbench.oracle.privileged_manifest_bounds` reads the scenario and the evaluator seed, so it knows "
-        "the whole future fire, and it plans each person alone. It is a relaxed upper bound on evacuations and "
-        "a lower bound on person-time to safety for **every** policy. It is not an agent, it is never in a "
-        "model table and it is not attainable in crowds, where people compete for exits. It says nothing about "
-        "casualties versus stranded people."
-    )
-    add("")
-    bound_by_index = {e["index"]: e for e in bound_doc["episodes"]}
-    bound_evac = sum(e["max_evacuated"] for e in bound_doc["episodes"])
-    bound_time = sum(e["min_person_time_to_safety_total"] for e in bound_doc["episodes"])
-    population = sum(e["population"] for e in bound_doc["episodes"])
-    add(f"Over all {n_episodes} episodes: {population} people, at most {bound_evac} can escape (bound), "
-        f"person-time to safety at least {bound_time} (bound).")
-    add("")
+    # ------------------------------------------------------------------ score table
+    out += [
+        "",
+        "## 4. EMBER Score",
+        "",
+        "Official EMBER Score in benchmark-performance points (0-100; not a percentage of people), family-balanced "
+        "over the primary families. Safety and the quality components are family-balanced aggregates in [0, 1]. "
+        f"Casualties and stranded are totals over the {n_worlds} worlds. Rows are in `leaderboard_order`; order is "
+        "not significance (section 6).",
+        "",
+    ]
     rows = []
-    for mid in models:
-        _, evacuated, _, _, person_time = _totals(results[mid])
+    for rank, m in enumerate(order, start=1):
+        r = reports[m]
         rows.append(
             [
-                f"`{mid}`",
-                str(evacuated),
-                str(bound_evac - evacuated),
-                str(person_time),
-                str(person_time - bound_time),
-                _num(person_time / bound_time if bound_time else None, 2),
+                str(rank),
+                _short(m),
+                f"**{_num(r.score, 1)}**",
+                _ci(None if r.ci is None else r.ci.to_dict(), 1),
+                _num(r.safety, 3),
+                *[_num(r.component(c).value, 3) for c in QUALITY],
+                str(totals[m]["casualties"]),
+                str(totals[m]["stranded"]),
+                f"{r.robustness.zero_score_episode_trials}/{len(r.episodes)}",
             ]
         )
     out += _table(
-        ["Achievable policy", "Evacuated", "Gap to bound (people)", "Person-time", "Gap to bound (person-steps)", "Person-time / bound"],
+        ["#", "Model", "EMBER Score", "95% CI", "Safety", "Time", "Hazard", "Path", "Replanning", "Casualties", "Stranded", "Zero-score worlds"],
+        rows,
+        ["r", "l", *["r"] * 10],
+    )
+    out += [
+        "",
+        "The 95% CI is the official stratified two-stage bootstrap. With one scenario per primary family and one world "
+        "per deterministic scenario, only the stochastic worlds of `v1-pub-10` vary under resampling, so the interval "
+        "measures fire-world variation inside one family. It is **not** a generalization interval over scenarios.",
+        "",
+        "Severe failures and zero-score causes (episode counts):",
+        "",
+    ]
+    rows = []
+    for m in order:
+        rb = reports[m].robustness
+        severe = dict(rb.severe_episode_trials)
+        failed = dict(rb.failed_episode_trials)
+        other = rb.zero_score_episode_trials - rb.catastrophic_episode_trials - sum(failed.values())
+        rows.append(
+            [
+                _short(m),
+                *[str(severe.get(c, 0)) for c in QUALITY],
+                str(rb.catastrophic_episode_trials),
+                ", ".join(f"{k} {n}" for k, n in failed.items() if n) or "0",
+                str(other),
+                str(rb.zero_score_episode_trials),
+            ]
+        )
+    out += _table(
+        ["Model", "Severe time", "Severe hazard", "Severe path", "Severe replanning", "Catastrophic", "Failed", "Other zero", "Zero total"],
         rows,
     )
-    add("")
-    add("Gap to the bound in evacuated people per scenario (bound minus evacuated, summed over seeds):")
-    add("")
-    scenario_ids = [s["scenario_id"] for s in suite["scenarios"]]
+    out += [
+        "",
+        "A severe failure multiplies the episode score by the severity factor (docs/scoring.md). Catastrophic means "
+        "the avoidable-loss gate set the score to 0. A failed episode has no authenticated result (missing, invalid output, model error or timeout). Other zero is an "
+        "authenticated episode whose Safety is 0 below the gate.",
+    ]
+
+    # ------------------------------------------------------------------ families
+    family_names = [g.name for g in any_report.families]
+    out += [
+        "",
+        "## 5. Per-family results",
+        "",
+        "EMBER Score per primary family. The public suite has one scenario per family, so a family score here is one "
+        "scenario score: never rank models on one family.",
+        "",
+    ]
+    out += _table(
+        ["Primary family", "Worlds", *[_short(m) for m in order]],
+        [[f, str(any_report.family(f).episodes), *[_num(reports[m].family(f).score, 1) for m in order]] for f in family_names],
+    )
+
+    # ------------------------------------------------------------------ comparisons
+    out += [
+        "",
+        "## 6. Paired comparisons",
+        "",
+        "Official `compare_scores`: the family-balanced mean of paired world-score differences (A - B), its "
+        "stratified paired 95% bootstrap interval, and the outcome rule: `a_better` needs the interval above 0 "
+        f"**and** a difference of at least the practical difference ({_num(any_report.constants.practical_difference, 1)} "
+        "point); `exact_tie` needs every paired world equal; everything else is `inconclusive`. Both models of every "
+        f"pair ran the same {n_worlds} worlds. The required pairs come first.",
+        "",
+    ]
     rows = []
-    for sid in scenario_ids:
-        eps = [e for e in bound_doc["episodes"] if e["scenario_id"] == sid]
-        row = [f"`{sid}`", str(sum(e["population"] for e in eps)), str(sum(e["max_evacuated"] for e in eps))]
-        for mid in models:
-            evac = sum(
-                ep.metrics.safety.evacuated for ep in results[mid].episodes if ep.episode.scenario_id == sid
-            )
-            bound = sum(bound_by_index[ep.episode.index]["max_evacuated"] for ep in results[mid].episodes if ep.episode.scenario_id == sid)
-            row.append(str(bound - evac))
-        rows.append(row)
-    out += _table(["Scenario", "People", "Bound"] + [_short(m) for m in models], rows)
-    add("")
+    for (a, b), text in comparisons.items():
+        c = json.loads(text)["comparison"]
+        rows.append(
+            [
+                _short(a),
+                _short(b),
+                _signed(c["delta"], 2),
+                _ci(c["ci"], 2, signed=True),
+                _num(c["practical_difference"], 1),
+                f"**{c['outcome']}**",
+                f"{c['a_higher']} / {c['b_higher']} / {c['equal']}",
+            ]
+        )
+    out += _table(["A", "B", "Mean difference", "Paired 95% CI", "Practical difference", "Outcome", "Worlds A higher / B higher / equal"], rows)
+    zero_width, fewer_worlds = [], []
+    for (a, b), text in comparisons.items():
+        c = json.loads(text)["comparison"]
+        if c["outcome"] != "exact_tie" and c["ci"] is not None and c["ci"]["lower"] == c["ci"]["upper"]:
+            zero_width.append(f"{_short(a)} - {_short(b)}")
+        if (c["outcome"] == "a_better" and c["b_higher"] > c["a_higher"]) or (c["outcome"] == "b_better" and c["a_higher"] > c["b_higher"]):
+            fewer_worlds.append(f"{_short(a)} - {_short(b)} ({c['a_higher']} / {c['b_higher']})")
+    if zero_width:
+        out += [
+            "",
+            "Zero-width intervals: " + ", ".join(f"`{p}`" for p in zero_width) + ". The paired differences on the stochastic "
+            "worlds are all equal, so resampling never changes the mean difference. The interval is exact for these "
+            f"{n_worlds} worlds and says nothing about other worlds.",
+        ]
+    if fewer_worlds:
+        out += [
+            "",
+            "Family balance decides: " + ", ".join(f"`{p}`" for p in fewer_worlds) + ". The better model by the official "
+            "family-balanced difference wins fewer worlds than the other model (A higher / B higher), because the 10 "
+            "stochastic worlds form one family and count as one tenth of the score.",
+        ]
+    out += [
+        "",
+        "The paired interval has the same limitation as the score interval: deterministic worlds give one fixed "
+        "difference each, so the interval reflects only the stochastic worlds of one family. An `a_better` here means "
+        "\"better on these public worlds\", not \"better in general\".",
+    ]
+
+    # ------------------------------------------------------------------ lower tail
+    out += [
+        "",
+        "## 7. Lower-tail behaviour",
+        "",
+        "Robustness views of the official report: the median and worst scenario score, the 10th percentile (type 7) "
+        "and CVaR10 (mean of the lowest ceil(n / 10)) of world scores.",
+        "",
+    ]
+    out += _table(
+        ["Model", "Median scenario", "Worst scenario", "Worst scenario ID", "p10 world", "CVaR10 world", "Zero-score worlds"],
+        [
+            [
+                _short(m),
+                _num(reports[m].robustness.median_scenario, 1),
+                _num(reports[m].robustness.worst_scenario, 1),
+                f"`{reports[m].robustness.worst_scenario_id}`",
+                _num(reports[m].robustness.p10_episode, 1),
+                _num(reports[m].robustness.cvar10_episode, 1),
+                str(reports[m].robustness.zero_score_episode_trials),
+            ]
+            for m in order
+        ],
+    )
+
+    # ------------------------------------------------------------------ diagnostics
+    out += [
+        "",
+        "## 8. Diagnostics (not score components)",
+        "",
+        "People outcomes summed over the authenticated worlds (the earlier pack's main metrics, now diagnostics). "
+        "Per-metric statistics with intervals are in the `diagnostics/` artifacts (`aggregate_result`).",
+        "",
+    ]
+    out += _table(
+        ["Model", "People", "Evacuated", "Casualties", "Stranded", "Person-time to safety"],
+        [[_short(m), *[str(totals[m][k]) for k in ("population", "evacuated", "casualties", "stranded", "person_time")]] for m in order],
+    )
+    out += [
+        "",
+        "Congestion diagnostics of the official report. Blocked moves are action-log events, so they are **not** "
+        "score inputs; their realized effects are in Time and Safety.",
+        "",
+    ]
+    rows = []
+    for m in order:
+        dg, t = reports[m].diagnostics, reports[m].totals
+        rows.append(
+            [
+                _short(m),
+                _num(dg.congestion_block_rate, 3),
+                str(dg.congestion_blocks),
+                _num(t.per_trial(dg.contested_cell_steps), 0),
+                str(dg.hotspot_cells),
+                str(dg.peak_contested_cells),
+                _num(dg.exit_throughput, 3),
+            ]
+        )
+    out += _table(["Model", "Block rate", "Blocked moves", "Contested cell-steps", "Hotspot cells", "Peak contested cells", "Exit throughput"], rows)
+
+    # ------------------------------------------------------------------ privileged references
+    ref_worlds = references["worlds"]
+    m_star = sum(w["m_star"] for w in ref_worlds)
+    m_cap = sum(w["m_cap"] for w in ref_worlds)
+    population = sum(w["population"] for w in ref_worlds)
+    out += [
+        "",
+        "## 9. Privileged references (context only, not models)",
+        "",
+        "These references read the scenario and the evaluator seed (the whole future fire). They are bounds, not "
+        "fair methods, and they never appear in a ranking. `M*` is the official savable count (people who can escape "
+        "alone); `M_cap <= M*` adds exit and cut capacity (`capacity_savable`, tools/analyze_suite_design.py).",
+        "",
+        f"Over the {n_worlds} worlds: {population} people, `M*` = {m_star}, `M_cap` = {m_cap}"
+        + (" (no capacity gap on any world)." if m_cap == m_star else "."),
+        "",
+    ]
+    out += _table(
+        ["#", "Scenario", "Seed", "People", "M*", "M_cap"],
+        [[str(w["index"]), f"`{w['scenario_id']}`", str(w["seed"]), str(w["population"]), str(w["m_star"]), str(w["m_cap"])] for w in ref_worlds],
+        ["r", "l", "r", "r", "r", "r"],
+    )
+    out += [
+        "",
+        "Gaps of every fair method to the references, summed over worlds with evacuees (1.000 = at the bound). "
+        "Time / bound is evacuee person-time over the official Time reference (the single-person bound raised by the "
+        "exit-queue and cut bounds). Path / bound is cells moved over the single-person minimum moves.",
+        "",
+    ]
+    rows = []
+    for m in order:
+        evacuated = totals[m]["evacuated"]
+        time_ratio, path_ratio = _bound_ratios(reports[m])
+        rows.append(
+            [
+                _short(m),
+                str(evacuated),
+                _num(Fraction(evacuated, m_star) if m_star else None, 3),
+                str(m_star - evacuated),
+                str(m_cap - evacuated),
+                _num(time_ratio, 3),
+                _num(path_ratio, 3),
+            ]
+        )
+    out += _table(["Model", "Evacuated", "Evacuated / M*", "M* gap", "M_cap gap", "Time / bound", "Path / bound"], rows)
 
     # ------------------------------------------------------------------ limitations
-    add("## 9. Limitations")
-    add("")
-    for line in LIMITATIONS:
-        add(f"- {line}")
-    add("")
+    out += ["", "## 10. Limitations", ""]
+    out += [f"- {text}" for text in LIMITATIONS]
 
     # ------------------------------------------------------------------ reproduce
-    add("## 10. Reproduce")
-    add("")
-    add("```bash")
-    add(f"python tools/experiments/v1/run_public_benchmark.py --protocol {protocol.name} --out ../emberbench-pack-out")
-    add("```")
-    add("")
-    add(
-        "The run is resumable: rerun the same command after an interruption. Existing outputs are never "
-        "overwritten; an output with different bytes stops the run. `index.json` in the output directory "
-        "is the canonical experiment index. Its golden copy is "
-        "`tests/fixtures/experiments/v1/public-development-index.json`."
-    )
-    add("")
-    return "\n".join(out)
+    out += [
+        "",
+        "## 11. Reproduce",
+        "",
+        "```bash",
+        "python tools/experiments/v1/run_public_benchmark.py --out ../emberbench-pack-out",
+        "```",
+        "",
+        "The run is deterministic: a rerun gives byte-identical artifacts, the same index digest and this report. "
+        "The canonical index is `tests/fixtures/experiments/v1/public-development-index.json`.",
+    ]
+    return "\n".join(out) + "\n"
 
 
 LIMITATIONS = (
-    "Public development evaluation only. The suite is public and small (10 scenarios), and the pack agents "
-    "were designed while looking at it, so their numbers can overfit it. Nothing here predicts held-out scores.",
-    "Only `v1-pub-10-route-invalidation` has stochastic fire. The other nine scenarios give the same episode "
-    "under every seed, so the 100 episodes per model hold 9 + 10 = 19 distinct episodes. Intervals treat "
-    "every episode as a resampling unit and therefore look more precise than the evidence is. Read them as "
-    "descriptive (docs/statistics.md, section 9).",
-    "The forecast of the pack agents uses only the public rules in the observation. For deterministic fire it "
-    "is exact, so on the nine deterministic V1 scenarios the future fire is predictable to every fair model. For stochastic "
-    "fire it is the earliest possible ignition (pessimistic), with a stretched and a current-fire fallback.",
-    "Metrics trade off. A run can lower the congestion block rate by not moving, and person-time to safety "
-    "counts every non-evacuee at the step limit. Read each metric with the safety rates.",
-    "The privileged bound ignores other people. With crowds it is usually not attainable, so a gap to it is "
-    "not all recoverable by any policy.",
-    "Compute cost and wall time are not measured or compared.",
+    "**Public worlds can be overfit.** The suite and the candidate seeds are public, and the pack agents were "
+    "designed while looking at them. Nothing here predicts hidden-suite scores.",
+    "**Only one scenario has stochastic fire** (`v1-pub-10-route-invalidation`). The other nine scenarios are one "
+    "world each, whatever the seed.",
+    "**This is not the hidden 10-family suite.** The hidden V1 design (docs/evaluation-suite-design.md) draws "
+    "about 16 scenarios per family from a generated pool; the public suite is a fixed development suite.",
+    "**Public-family coverage is shallow:** one scenario per primary family, so a family score is one scenario "
+    "score, and family intervals cannot be estimated.",
+    "**Score precision here is not the precision of the final 240-world hidden design.** The intervals reflect only "
+    "the fire-world variation of one stochastic scenario; scenario-sampling variance is not represented at all. "
+    "The hidden design expects about +-4 points overall (docs/evaluation-suite-design.md, section 11).",
+    "Congestion diagnostics are shown separately and are not score components.",
+    "The privileged references ignore other people (M*) or relax capacity to intervals (M_cap), so a gap to them "
+    "is not all recoverable by any policy.",
+    "The forecast of the pack agents uses only the public rules in the observation. For deterministic fire it is "
+    "exact, so on the nine deterministic scenarios the future fire is predictable to every fair method.",
+    "Wall time, tokens and cost are not part of any pinned artifact (they are not reproducible); see "
+    "`tools/experiments/v1/README.md` for the measured runtime.",
     "The agents are in-process Python code. The fairness guarantee is the interface contract "
     "(docs/evaluation.md, section 4), not a sandbox.",
-    "The pack lives in `tools/experiments/v1/` because the leak guard (`emberbench.leakguard`) allows only "
-    "fixed top-level directories and keeps JSON assets under `scenarios/public/` and `tests/fixtures/`. Run "
-    "outputs go to a directory outside the repository.",
 )
