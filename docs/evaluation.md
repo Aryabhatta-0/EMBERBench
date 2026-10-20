@@ -7,7 +7,8 @@ episodes** and how their results are matched. The code is in
 
 Out of scope here: model-provider adapters, win rates, confidence intervals and
 other aggregate statistics (see [statistics.md](statistics.md)), procedural scenario generation,
-held-out integrity and provenance (see [integrity.md](integrity.md)), leaderboards and a composite score.
+held-out integrity and provenance (see [integrity.md](integrity.md)), and the EMBER Score, leaderboard order
+and frozen environment packs (see [scoring.md](scoring.md) and [environment-pack.md](environment-pack.md)).
 
 ## 1. Common random numbers
 

@@ -25,6 +25,10 @@ class MetricsInputError(EmberBenchError):
     """A scenario and run record cannot be scored: they do not match, or the record is malformed."""
 
 
+class ReplayAuditError(MetricsInputError):
+    """A replay audit or animation export cannot be built or verified: the record is not authentic for the scenario."""
+
+
 class SuiteValidationError(EmberBenchError):
     """A suite manifest is malformed, or it does not match the scenario files it lists."""
 
@@ -35,6 +39,14 @@ class EvaluationError(EmberBenchError):
 
 class StatisticsInputError(EvaluationError):
     """An evaluation result cannot be summarized: it fails authentication against its suite."""
+
+
+class ScoringInputError(EvaluationError):
+    """An evaluation result cannot be scored: it fails authentication, or a failure declaration is invalid."""
+
+
+class EnvironmentPackError(EmberBenchError):
+    """A frozen environment pack is malformed, incomplete, tampered with or of another benchmark version."""
 
 
 class GenerationError(EmberBenchError):
