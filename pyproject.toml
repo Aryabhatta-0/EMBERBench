@@ -30,10 +30,10 @@ emberbench = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src", "tests"]
+pythonpath = ["src", "tests", "tools"]
 addopts = "-ra"
 
 [tool.mypy]
 strict = true
 files = ["src", "tests"]
-mypy_path = ["src", "tests"]
+mypy_path = ["src", "tests", "tools"]

@@ -78,8 +78,10 @@ contract version of this build: `cli_version`,
 `generator_version`, `generator_config_version`,
 `generation_manifest_version`, `evaluation_manifest_version`,
 `evaluation_result_version`, `crowd_diagnostics_version`,
-`baselines_version`, `integrity_protocol_version` and `benchmark_revision`
-(see `docs/baselines.md` and `docs/integrity.md`). No field depends
+`baselines_version`, `integrity_protocol_version`, `scoring_version`,
+`environment_pack_version`, `replay_audit_version`, `animation_format_version`
+and `benchmark_revision` (see `docs/baselines.md`, `docs/integrity.md`,
+`docs/scoring.md`, `docs/environment-pack.md` and `docs/replay-visualization.md`). No field depends
 on the environment (no paths, platform, interpreter or install location).
 `package_version` was added before any release, so `CLI_VERSION` stays `1.0`.
 

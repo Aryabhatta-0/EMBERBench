@@ -36,6 +36,8 @@ FORBIDDEN_PATHS = [
     "tests/fixtures/evaluation-manifest.json",
     "docs/provenance.json",
     "tests/fixtures/run/result.json",
+    "tests/fixtures/suite-freeze.json",
+    "scenarios/public/v1/suite-freeze.json",
     "tools/evaluation-run/notes.md",
     "tools/batch.seed",
     "docs/signing.key",
@@ -53,6 +55,9 @@ ALLOWED_PATHS = [
     "tests/test_hidden_names.py",  # a component must *be* a forbidden name, not merely mention one
     "src/emberbench/integrity.py",
     "tools/check_public_assets.py",
+    "tools/validate_generator_coverage.py",
+    "docs/generator-coverage-results.md",
+    "src/emberbench/composition.py",
 ]
 
 
