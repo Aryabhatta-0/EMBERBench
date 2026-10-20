@@ -4,8 +4,8 @@
 | --- | --- |
 | Modules | `emberbench.integrity`, `emberbench.leakguard` |
 | Integrity protocol version | `1.0` (`INTEGRITY_PROTOCOL_VERSION`) |
-| Benchmark revision | `1` (`BENCHMARK_REVISION`) |
-| Simulator, observation, action, schema, metrics, statistics, generator versions | unchanged |
+| Benchmark revision | `2` (`BENCHMARK_REVISION`); section 12 |
+| Pinned versions | every key of `benchmark_versions()`: revision, simulator, interface, metrics, statistics, scoring, environment, generator, suite-definition and evaluation contracts (section 12) |
 | Runtime dependencies | none (no cryptography library) |
 
 The simulator, the public V1 suite and the generator are open source. A model
@@ -125,17 +125,22 @@ model's evaluation. Its canonical form:
 {
   "integrity_protocol_version": "1.0",
   "versions": {
-    "benchmark_revision": "1", "simulator": "0.2.0", "observation": "1.0",
+    "benchmark_revision": "2", "simulator": "0.2.0", "observation": "1.0",
     "action_schema": "1.0", "scenario_schema": "1.0", "metrics": "1.0",
-    "crowd_diagnostics": "1.0", "statistics": "1.0", "generator": "1.0.0",
-    "generator_config": "1.0", "generation_manifest": "1.0",
-    "evaluation_manifest": "1.0", "evaluation_result": "1.0"
+    "crowd_diagnostics": "1.0", "statistics": "1.0", "generator": "1.1.0",
+    "generator_config": "1.1", "generation_manifest": "1.1",
+    "evaluation_manifest": "1.0", "evaluation_result": "1.0",
+    "scoring": "1.0", "environment_pack": "1.0", "environment_world": "1.0",
+    "family_rules": "1.0", "calibration_panel": "1.0",
+    "difficulty_rules": "1.0", "admission_rules": "1.0",
+    "composition": "1.0", "selection_rules": "1.0", "recipe_catalog": "1.0",
+    "suite_freeze_record": "1.0"
   },
   "protocol": {"mode": "shared_heldout_batch", "submission_roster_digest": null},
   "suite": {
     "suite_id": "<batch ID>", "suite_version": "1.0.0",
     "suite_hash": "<64 hex>", "generation_hash": "<64 hex>",
-    "generator_version": "1.0.0", "generator_config_hash": "<64 hex>",
+    "generator_version": "1.1.0", "generator_config_hash": "<64 hex>",
     "scenario_count": 40
   },
   "evaluation_manifest": {"manifest_hash": "<64 hex>", "episode_count": 400},
@@ -327,21 +332,65 @@ Nothing is repaired, skipped or re-derived into the record.
 ## 12. Benchmark revision policy
 
 A **benchmark revision** (`BENCHMARK_REVISION`) defines what a score means.
-Bump it, with the component version, for:
+The benchmark revision changes when a released contract changes
+incompatibly and that contract defines one of these:
+
+- the meaning of a score,
+- the identity of an environment (the world an agent is evaluated in),
+- the composition or admission of a suite (which worlds are selected and
+  evaluated),
+- the semantics of the generator,
+- the evaluator protocol.
+
+Bump the revision, together with the component version, for:
 
 - a simulator semantic change (`SIMULATOR_VERSION`),
 - an observation or action schema change (`OBSERVATION_VERSION`,
   `ACTION_SCHEMA_VERSION`, `SCHEMA_VERSION`),
 - a metric or statistic definition change (`METRICS_VERSION`,
   `STATISTICS_VERSION`, `CROWD_DIAGNOSTICS_VERSION`),
+- a change to the EMBER Score formula, its constants, its arithmetic or its
+  serialization (`SCORING_VERSION`),
+- an environment identity change (`ENVIRONMENT_PACK_VERSION`,
+  `ENVIRONMENT_WORLD_VERSION`),
 - a generator semantics or config format change (`GENERATOR_VERSION`,
-  `GENERATOR_CONFIG_VERSION`),
+  `GENERATOR_CONFIG_VERSION`, `GENERATION_MANIFEST_VERSION`),
+- a change to the suite-definition rules: family rules
+  (`FAMILY_RULES_VERSION`), the calibration panel, difficulty or admission
+  rules (`CALIBRATION_PANEL_VERSION`, `DIFFICULTY_RULES_VERSION`,
+  `ADMISSION_RULES_VERSION`), composition, selection, the recipe catalog or
+  the suite freeze record (`COMPOSITION_VERSION`, `SELECTION_RULES_VERSION`,
+  `RECIPE_CATALOG_VERSION`, `SUITE_FREEZE_RECORD_VERSION`),
+- an evaluation manifest or result format change
+  (`EVALUATION_MANIFEST_VERSION`, `EVALUATION_RESULT_VERSION`),
 - discovered held-out leakage that the current protocol permits,
 - an invalid evaluation protocol,
 - a material bug that affects ranking or comparison.
 
+`benchmark_versions()` pins every one of these versions, and each value is the
+owning module's constant. Evaluation provenance records all of them.
+`verify_evaluation_provenance` fails closed when any recorded value differs
+from the running benchmark, or when a key is missing or unknown.
+
+Examples:
+
+| Change | Revision |
+| --- | --- |
+| A new private suite, generated under the identical revision and rules | Same revision |
+| New evaluator-private seeds (generator or evaluation) under unchanged rules | Same revision |
+| Changed family, calibration-panel, difficulty, admission, composition or selection rules | New revision |
+| Changed scoring formula or scoring constants | New revision |
+| Changed generator semantics or config format | New revision |
+
 Scores from different revisions are never compared. Provenance of another
 revision fails verification.
+
+**Revision history.**
+
+| Revision | Content |
+| --- | --- |
+| `1` | First integrity protocol. Never released as a scored benchmark. |
+| `2` | The official EMBER Score (`SCORING_VERSION` 1.0) and environment packs, and the generator 1.1 suite-definition contracts (family rules, calibration, admission, composition and selection, all 1.0). These changes came between two releases, so one pre-release step covers them. |
 
 A **regenerated held-out batch under the same revision** is different: new
 private seed, new batch ID, new frozen suite and new manifest, with the same

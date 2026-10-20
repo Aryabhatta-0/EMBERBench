@@ -131,6 +131,12 @@ model runs, and `load_generated_suite()` verifies it and returns a normal
 `Suite` for `build_evaluation_manifest()` and `run_evaluation()`. The seed is
 never stored. See [docs/procedural-generation.md](docs/procedural-generation.md).
 
+`emberbench.composition` composes the V1 evaluation suite from a generated
+candidate pool on the evaluator side: unique worlds, the frozen calibration
+panel, admission, difficulty band, the ten V1 family rules, deterministic
+family x band x fire-model quotas with targeted top-up, and a private freeze
+record. See [docs/generator.md](docs/generator.md).
+
 ### Hidden-test integrity
 
 `emberbench.integrity` defines the held-out protocol: which assets are public

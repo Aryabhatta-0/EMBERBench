@@ -19,6 +19,7 @@ from emberbench import (
     EvaluationResult,
     GeneratorConfig,
     Observation,
+    SCORING_VERSION,
     ScoringInputError,
     Suite,
     benchmark_versions,
@@ -99,8 +100,9 @@ def test_public_hashes_unchanged(public: Suite) -> None:
     assert public.manifest.suite_hash() == PUBLIC_SUITE_HASH
     assert build_evaluation_manifest(public, (0, 1, 2)).manifest_hash() == PUBLIC_DEV_MANIFEST_HASH
     assert all(s.content_hash() == public.entry(s.scenario_id).content_hash for s in public.scenarios)
-    # Scoring and packs have their own versions; the provenance version set is unchanged.
-    assert "scoring" not in benchmark_versions() and "environment_pack" not in benchmark_versions()
+    # Benchmark revision 2 pins the scoring and environment-pack contracts in provenance.
+    assert benchmark_versions()["scoring"] == SCORING_VERSION
+    assert benchmark_versions()["environment_pack"] == ENVIRONMENT_PACK_VERSION
 
 
 # --------------------------------------------------------------------------- freeze and load

@@ -243,6 +243,57 @@ cell (shown by the pool and the probe), but it is not yet a supported library
 feature. The design does not claim that the generator alone produces the
 10-family suite.
 
+### 6.1 Status after Phase 11
+
+The four items above are implemented; the table above is kept as the PR #33
+audit. Details: [generator.md](generator.md).
+
+| Item | Phase 11 implementation |
+| --- | --- |
+| 1. Family rule for all ten families | `emberbench.families` (family rules 1.0, the exact thresholds of section 4). Generator 1.1.0 labels with its structural part (`structural_tags`); multi-exit alone is no longer split flow. |
+| 2. Recipes that target cells | Recipe catalog 1.0 (`emberbench.composition.V1_RECIPES`): the PR #33 recipes and probes, plus medium-population split flow, deceptive exit, narrow corridor, threatened exit, route invalidation, multiple ignitions and open single exit, each deterministic and stochastic. Config 1.1 adds `split_pressure`, `deceptive_share` and `bottleneck_severity` constraints. |
+| 3. Fire-dependent tags | Evaluator-side: `emberbench.calibration.fire_evidence` on each selected unique world, frozen in the suite freeze record. Never a generator label. |
+| 4. Difficulty | Evaluator-side only: `emberbench.calibration` (panel 1.0, difficulty rules 1.0, admission rules 1.0). The generator never labels a band. |
+| Pool, selection, top-up, freeze | `compose_pool`, `select_suite` (selection rules 1.0), `compose_suite`, `freeze_composed_suite`, `schedule_composed_worlds` |
+
+The empirical check is section 6.2.
+
+### 6.2 Generator coverage validation
+
+`tools/validate_generator_coverage.py` runs the library pipeline on a
+**development** pool (public seed labels; never a hidden suite). Full report:
+[generator-coverage-results.md](generator-coverage-results.md).
+
+| Part | Side | Fire-world-dependent | Private during live evaluation |
+| --- | --- | --- | --- |
+| Proxies, structural family tags, recipes, constraints | generator | no | recipes and rules public; hidden scenarios and generator seeds private |
+| Threatened-exit and route-invalidation tags | evaluator | yes (one trajectory for deterministic fire, mean over the 3 scheduled worlds for stochastic fire) | yes |
+| Calibration panel scores, `M*`, `M_cap`, capacity filter, admission, band | evaluator | yes | yes |
+| Selection, top-up, relabeling, `suite-freeze.json` | evaluator | uses the frozen worlds | yes; only `public_commitment()` is published |
+
+Results on 4,000 development candidates (generator 1.1.0, family rules 1.0,
+calibration panel 1.0):
+
+- Admitted 63.0%; eligible (admitted with a primary family) 54.8%. Capacity
+  artifacts 5.7%, saturated 18.8%, floor 2.6%, no separation 9.4%.
+- All **70 family x band x fire-model cells** and all **40 family x band
+  cells** filled in round 0: 160 scenarios, 0 short slots, no top-up round.
+- The frozen development suite schedules **240 unique worlds**; every world
+  digest equals the calibrated world.
+- Rarest cells (eligible / quota): `single_exit_low_density` Hard
+  deterministic 5/4, Stress deterministic 8/3; `maze_obstacle_routing` Hard
+  stochastic 6/2.
+- Pool size: a keyed 50% subsample (1,970) leaves 3 slots short; 75% (2,978)
+  fills every cell. 4,000 has margin; the top-up rule covers the rest.
+- Split flow below 100 people: 344 eligible; 14 of the 16 selected split-flow
+  scenarios have 20-56 people.
+- Overlap (Jaccard on eligible candidates): `crowd_100` / split flow 0.38,
+  threatened / route invalidation 0.33, maze / deceptive 0.23. Each selected
+  scenario has exactly one primary family.
+- Runtime on 11 workers: 49 min wall, 8.7 CPU hours (7.9 s per candidate);
+  generation 52 s wall. A `crowd_100` candidate costs 30 s (deterministic) or
+  125 s (stochastic, 3 worlds); a small one 1.5 s or 5.1 s.
+
 ## 7. Suite size
 
 400 simulated suites per size, drawn cell by cell from the 517 admitted
@@ -469,14 +520,19 @@ model-specific regeneration.
 4. **Generate the candidate pool** (section 12). Drop duplicate scenario
    hashes and any scenario equal to a public or earlier-round scenario.
 5. **Run the fixed calibration panel** on every candidate's unique worlds
-   (`distinct_world_seeds`, 3 candidate worlds for stochastic fire): official
+   (`world_seeds_for`, the same walk as `build_unique_world_manifest`, 3
+   worlds for stochastic fire): official
    EMBER Score, `M*`, `M_cap`, capacity ceiling, admission, band, tags.
 6. **Stratify** admitted candidates by family x band x fire model.
-7. **Select deterministically** with `select_suite` and the private key.
+7. **Select deterministically** with `select_suite` and the private key
+   (steps 4 to 7 with top-up: `emberbench.composition.compose_pool`).
    Report every shortfall; never borrow another band.
 8. **Freeze the unique evaluator worlds** with `build_unique_world_manifest`
    (1 world per deterministic scenario, 3 per stochastic one). Check that every
-   `environment_world_digest` is unique.
+   `environment_world_digest` is unique. In the library: `compose_suite`,
+   `freeze_composed_suite` (suite directory + private `suite-freeze.json`) and
+   `schedule_composed_worlds`, which also checks every scheduled world against
+   the frozen calibrated world.
 9. **Create one immutable `EnvironmentPack`** (`freeze_environment_pack`) with
    a new suite ID, version and batch ID.
 10. **Commit only digests publicly before evaluation:** pack digest, suite

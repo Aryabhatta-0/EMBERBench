@@ -3,9 +3,10 @@
 | Field | Value |
 | --- | --- |
 | Module | `emberbench.generator` |
-| Generator version | `1.0.0` (`GENERATOR_VERSION`) |
-| Config version | `1.0` (`GENERATOR_CONFIG_VERSION`) |
-| Freeze record version | `1.0` (`GENERATION_MANIFEST_VERSION`) |
+| Generator version | `1.1.0` (`GENERATOR_VERSION`) |
+| Config version | `1.1` (`GENERATOR_CONFIG_VERSION`); `1.0` configs are still accepted |
+| Freeze record version | `1.1` (`GENERATION_MANIFEST_VERSION`) |
+| Family rules | `1.0` (`FAMILY_RULES_VERSION`, [`emberbench.families`](../src/emberbench/families.py)) |
 | Scenario schema | `1.0` (unchanged) |
 | Suite visibility | `generated` |
 
@@ -97,7 +98,12 @@ The rules:
 `"visibility": "generated"` and `"seed_role": "development"`, and
 `suite_id` is the batch ID. Each entry has descriptive family labels from fixed
 thresholds (see `describe_families`). They describe the scenario; they are not
-a difficulty claim.
+a difficulty claim. Since generator 1.1.0 the labels are the **structural**
+part of the frozen V1 family rules (`structural_tags`, family rules 1.0, see
+[generator.md](generator.md)). The fire-dependent families
+(`threatened_nearest_exit`, `route_invalidation_replanning`) are never
+generator labels: they need a fire trajectory, so the evaluator tags them on
+the selected worlds.
 
 `generation.json` pins:
 
@@ -237,6 +243,27 @@ values come from the scenario alone, so anyone can re-derive them. They are
 | `route_redundancy` | The minimum over people of the number of vertex-disjoint routes to the exit set on the static map, capped at 4. A value of 1 means one blocked cell can cut a person off from every exit. |
 | `ignition_person_distance` | Shortest wall-free distance from any ignition to any person. |
 | `ignition_exit_distance` | Shortest wall-free distance from any ignition to any exit. |
+| `min_cut` | The maximum number of vertex-disjoint routes from the whole crowd to the exit set (every free cell has capacity 1). |
+| `bottleneck_severity` | `population / min_cut`: the fewest steps the crowd needs to drain through its narrowest cut (`null` when `min_cut` is 0). |
+| `max_nearest_exit_load` | The most people that share one route-nearest exit. |
+| `split_pressure` | The busiest route-nearest exit's load / (1 + the median extra route to its people's second-nearest exit). `null` with one exit. |
+| `deceptive_share` | Share of people whose Manhattan-nearest exit is a dead end or at least 2 steps longer by route than their route-nearest exit. |
+| `exit_gap_median` | Median over people of (second - first) route distance to an exit. `null` with one exit. |
+| `detour_ratio` | Mean over people of route / Manhattan distance to the route-nearest exit. |
+| `ignition_centrality` | 0 for an ignition at the grid centre, 1 on the border (the most central ignition counts). |
+
+The proxies from `min_cut` on were added in generator 1.1.0. They are the PR #33
+family measurements, so a family rule and a generation constraint read the
+same number.
+
+**Config 1.1 constraints.** A `1.1` config may also set three optional ranges
+in `constraints`: `split_pressure`, `deceptive_share` and
+`bottleneck_severity` (floats; the ratios are capped at 1,000,000). A `1.0`
+config with any of them is rejected. A positive `split_pressure` or
+`deceptive_share` minimum needs `exit_count.max >= 2`. A `null` proxy meets no
+`split_pressure` range (it reads as 0) and no `bottleneck_severity` range.
+They let a recipe aim at one structural family by rejection sampling; they do
+not label difficulty.
 
 A distance of `null` (the fire can never reach a person or exit) counts as
 infinite: it meets any minimum and breaks any maximum.
