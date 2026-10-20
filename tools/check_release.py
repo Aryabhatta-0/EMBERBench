@@ -188,8 +188,14 @@ def same_bytes(a: Path, b: Path) -> bool:
     return a.read_bytes() == b.read_bytes()
 
 
+def zip_time(epoch: str) -> tuple[int, int, int, int, int, int]:
+    """The zip member time of ``epoch``: no earlier than 1980, seconds rounded down to even (DOS time)."""
+    t = time.gmtime(max(int(epoch), ZIP_EPOCH_FLOOR))
+    return (t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec - t.tm_sec % 2)
+
+
 def wheel_time_problems(wheel: Path, epoch: str) -> list[str]:
-    expected = time.gmtime(max(int(epoch), ZIP_EPOCH_FLOOR))[:6]
+    expected = zip_time(epoch)
     with zipfile.ZipFile(wheel) as z:
         wrong = sorted(i.filename for i in z.infolist() if i.date_time != expected)
     return [f"wheel members {wrong[:5]} do not carry SOURCE_DATE_EPOCH={epoch} ({expected})"] if wrong else []

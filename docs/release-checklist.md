@@ -47,8 +47,8 @@ python -m pip install -c tools/dev-constraints.txt -e ".[dev]"
 python tools/check_dev_constraints.py --installed
 ```
 
-The last command reports `0 problem(s)`: every installed tool is the pinned
-version.
+The last command reports `0 problem(s)`: every installed tool and every
+dependency of a tool is the pinned version.
 
 ## 3. Release gates
 
@@ -273,6 +273,8 @@ To refresh the pins:
 3. Run the release gates in section 3. Fix new strict mypy findings in the
    same pull request.
 4. Open a pull request that changes only the pins (and the ranges, if
-   needed). CI fails on any unpinned or drifted installed package
-   (`tools/check_dev_constraints.py --installed`); add a reported
-   platform-only pin by hand.
+   needed). CI fails on any unpinned or drifted installed tool or
+   dependency of a tool (`tools/check_dev_constraints.py --installed`
+   follows the declared tools' `Requires-Dist` under each platform's
+   markers; packages a hosted runner preinstalls for itself are not
+   checked); add a reported platform-only pin by hand.

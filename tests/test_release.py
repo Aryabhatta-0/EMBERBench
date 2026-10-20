@@ -6,6 +6,7 @@ See docs/versioning.md and docs/release-checklist.md.
 import contextlib
 import hashlib
 import importlib
+import importlib.metadata
 import importlib.util
 import io
 import json
@@ -267,10 +268,36 @@ def test_dev_constraints_reject_loose_or_missing_pins(dev: str, pins: str, probl
     assert proc.returncode == 1 and problem in proc.stderr, proc.stderr
 
 
+def test_installed_check_follows_the_tool_closure_only(tmp_path: Path) -> None:
+    """Runner-preinstalled packages that no declared tool needs are ignored; the tools' dependencies are not."""
+    tool = _tool("check_dev_constraints")
+
+    def dist(name: str, version: str, *requires: str) -> importlib.metadata.Distribution:
+        info = tmp_path / f"{name}-{version}.dist-info"
+        info.mkdir()
+        lines = [f"Name: {name}", f"Version: {version}", *(f"Requires-Dist: {r}" for r in requires)]
+        (info / "METADATA").write_text("Metadata-Version: 2.1\n" + "\n".join(lines) + "\n", encoding="utf-8")
+        return importlib.metadata.PathDistribution(info)
+
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text('[build-system]\nrequires = ["setuptools>=69,<85"]\n[project]\nname = "x"\n[project.optional-dependencies]\ndev = ["pytest>=8,<10"]\n', encoding="utf-8")
+    installed = {
+        "pytest": dist("pytest", "9.1.1", "iniconfig>=1", 'colorama; sys_platform == "no-such-platform"', 'extra-only; extra == "dev"'),
+        "iniconfig": dist("iniconfig", "2.0"),
+        "setuptools": dist("setuptools", "84.2.0"),
+        "pip": dist("pip", "26.2.1"),
+        "pipx": dist("pipx", "1.0", "click"),
+        "click": dist("click", "8.0"),
+    }
+    assert tool.tool_closure(pyproject, installed) == ["iniconfig", "pip", "pytest", "setuptools"]
+
+
 def test_ci_installs_only_pinned_tools_and_keeps_the_release_gates() -> None:
     workflow = (REPO_ROOT / ".github" / "workflows" / "tests.yml").read_text(encoding="utf-8")
     assert "PIP_CONSTRAINT: ${{ github.workspace }}/tools/dev-constraints.txt" in workflow
-    assert "PIP_BUILD_CONSTRAINT: ${{ github.workspace }}/tools/dev-constraints.txt" in workflow
+    # Only on the editable install: pip rejects a build constraint with --no-build-isolation (the wheel tests use it).
+    assert workflow.count("PIP_BUILD_CONSTRAINT: ${{ github.workspace }}/tools/dev-constraints.txt") == 1
+    assert '- run: python -m pip install -e ".[dev]"\n        env:\n          PIP_BUILD_CONSTRAINT:' in workflow
     assert "os: [ubuntu-latest, windows-latest, macos-latest]" in workflow
     assert 'python-version: ["3.12", "3.13"]' in workflow
     for command in (
@@ -484,6 +511,10 @@ def test_release_check_freezes_source_date_epoch(built_distributions: tuple[Path
     # The shared test build sets no SOURCE_DATE_EPOCH, so its member times are the build time, not a frozen epoch.
     wheel, _ = built_distributions
     assert CHECK_RELEASE.wheel_time_problems(wheel, "0")
+    # Zip times have two-second resolution: an odd epoch is stored rounded down; before 1980 it is clamped.
+    assert CHECK_RELEASE.zip_time("1792523845") == (2026, 10, 20, 19, 17, 24)
+    assert CHECK_RELEASE.zip_time("1792523844") == (2026, 10, 20, 19, 17, 24)
+    assert CHECK_RELEASE.zip_time("0") == (1980, 1, 1, 0, 0, 0)
 
 
 def test_release_check_compares_normalized_members(tmp_path: Path) -> None:

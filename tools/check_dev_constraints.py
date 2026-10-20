@@ -13,9 +13,13 @@ The files check needs no network and no installed tools except ``packaging``
 - ``pip`` is not pinned;
 - a line is not ``name==version`` or a package is pinned twice.
 
-With ``--installed`` it also fails if any installed distribution other than
-``emberbench`` is not pinned, or its version is not the pinned one. That
-catches a new transitive dependency on any CI platform. See
+With ``--installed`` it also walks the installed dependency closure of the
+declared tools (the ``dev`` extra, ``[build-system] requires`` and ``pip``,
+following ``Requires-Dist`` with its environment markers) and fails if any
+distribution in it is not pinned or its version is not the pinned one. That
+catches a new transitive dependency on any CI platform. Packages that the
+Python installation brings and no declared tool needs (for example a hosted
+runner's ``pipx``) are outside the closure and are not checked. See
 docs/release-checklist.md, section "Development tool constraints".
 """
 
@@ -82,18 +86,39 @@ def check_files(constraints: Path, pyproject: Path) -> tuple[dict[str, Version],
     return pins, errors
 
 
-def check_installed(pins: dict[str, Version]) -> list[str]:
-    errors: list[str] = []
-    seen: set[str] = set()
+def _installed() -> dict[str, importlib.metadata.Distribution]:
+    out: dict[str, importlib.metadata.Distribution] = {}
     for dist in importlib.metadata.distributions():
-        name = canonicalize_name(dist.metadata["Name"])
-        if name in NEVER_PINNED or name in seen:
-            continue
-        seen.add(name)
+        out.setdefault(canonicalize_name(dist.metadata["Name"]), dist)
+    return out
+
+
+def tool_closure(pyproject: Path, installed: dict[str, importlib.metadata.Distribution]) -> list[str]:
+    """Installed distributions that the declared tools need, transitively, under this environment's markers."""
+    pending = [canonicalize_name(req.name) for where, req in declared_requirements(pyproject) if req.marker is None or req.marker.evaluate({"extra": ""})]
+    pending += [canonicalize_name(name) for name in ALWAYS_PINNED]
+    closure: set[str] = set()
+    while pending:
+        name = pending.pop()
+        if name in closure or name not in installed:
+            continue  # a declared tool that this job does not install is not checked
+        closure.add(name)
+        for raw in installed[name].requires or []:
+            req = Requirement(raw)
+            if req.marker is None or req.marker.evaluate({"extra": ""}):
+                pending.append(canonicalize_name(req.name))
+    return sorted(closure - set(NEVER_PINNED))
+
+
+def check_installed(pins: dict[str, Version], pyproject: Path) -> list[str]:
+    errors: list[str] = []
+    installed = _installed()
+    for name in tool_closure(pyproject, installed):
+        version = installed[name].version
         if name not in pins:
-            errors.append(f"installed {name}=={dist.version} is not pinned")
-        elif Version(dist.version) != pins[name]:
-            errors.append(f"installed {name}=={dist.version}, pinned {pins[name]}")
+            errors.append(f"installed {name}=={version} is not pinned")
+        elif Version(version) != pins[name]:
+            errors.append(f"installed {name}=={version}, pinned {pins[name]}")
     return errors
 
 
@@ -101,11 +126,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     parser.add_argument("--constraints", type=Path, default=REPO_ROOT / "tools" / "dev-constraints.txt")
     parser.add_argument("--pyproject", type=Path, default=REPO_ROOT / "pyproject.toml")
-    parser.add_argument("--installed", action="store_true", help="also check every installed distribution")
+    parser.add_argument("--installed", action="store_true", help="also check the installed tools and their dependencies")
     args = parser.parse_args(argv)
     pins, errors = check_files(args.constraints, args.pyproject)
     if args.installed:
-        errors += check_installed(pins)
+        errors += check_installed(pins, args.pyproject)
     for error in errors:
         print(error, file=sys.stderr)
     print(f"checked {len(pins)} pin(s){' and the installed environment' if args.installed else ''}: {len(errors)} problem(s)")
