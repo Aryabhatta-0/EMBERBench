@@ -64,8 +64,9 @@ python tools/check_release.py --contracts-only
 python tools/check_public_assets.py --untracked
 ```
 
-When the evaluation-pack test exists (`tests/test_evaluation_pack.py`,
-added by the public development evaluation), also run its full opt-in mode:
+Also run the full opt-in mode of the public development evaluation pack
+(`tests/test_evaluation_pack.py`, PR #31). It reproduces the golden index and
+`REPORT.md`:
 
 ```bash
 EMBERBENCH_FULL_PACK=1 python -m pytest -q tests/test_evaluation_pack.py

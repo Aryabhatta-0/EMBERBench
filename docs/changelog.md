@@ -92,6 +92,12 @@ suite `suite_version` `1.0.0`.
 - **Benchmark revision 2** (PR #34): `BENCHMARK_REVISION` went from `1` to
   `2` before any release, and `benchmark_versions()` pins every
   benchmark-defining version above. Revision 1 was never released.
+- **Public development evaluation pack** (research lane, PR #31): the
+  official EMBER Score of the fair reference agents on the 19 unique worlds
+  of the public suite, one frozen environment pack, fail-closed resume and
+  `--verify`, and the golden index and `REPORT.md`
+  ([tools/experiments/v1/README.md](../tools/experiments/v1/README.md)). It
+  is not a hidden-suite leaderboard and changes no version or pinned hash.
 
 ### Release hardening (Phase 10, issue #16, PR #30)
 
