@@ -14,8 +14,11 @@ No version of EMBERBench has been released yet. This entry collects the V1
 milestones that are in `main`. Release them by following
 [release-checklist.md](release-checklist.md). The package version stays
 `0.1.0` until the maintainers record a different first release version
-([versioning.md](versioning.md), section 1). No license is configured yet;
-that is a release blocker (`tools/check_release.py --require-license`).
+([versioning.md](versioning.md), section 1). License: Apache License 2.0
+(`Apache-2.0`), selected by the maintainers: `LICENSE` at the repository
+root, and `license = "Apache-2.0"` with `license-files = ["LICENSE"]` in
+`pyproject.toml`, so the wheel and sdist carry `License-Expression`,
+`License-File` and the license text.
 
 Benchmark-defining versions (all pinned by evaluation provenance through
 `benchmark_versions()`): `SIMULATOR_VERSION` `0.2.0`,
