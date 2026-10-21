@@ -5,17 +5,20 @@ A model controls the people in a 2D grid building. Fire spreads through the buil
 the model must decide each timestep how every person moves. The benchmark measures how
 well the model's decisions get people out through the exits before the fire reaches them.
 
-> **Status: Phase 7.** This repository contains the benchmark contract, the
+> **Status: V1 release candidate, benchmark revision 2, not yet released
+> (package `0.1.0`).** This repository contains the benchmark contract, the
 > deterministic simulation core, the frozen V1 fairness and semantics
-> specification, the finalized matched stochastic hazard contract, auditable
+> specification, the matched stochastic hazard contract, auditable
 > per-episode metrics, crowd coordination diagnostics, the canonical V1
-> public scenario suite and resumable paired evaluation on exact scenario +
-> seed schedules. Wind, delayed
-> ignitions, burn-out, smoke and material flammability are deferred to a
-> future benchmark version. Model integrations, LLM APIs, a UI, procedural map generation,
-> cross-seed aggregation, win rates and confidence intervals, and
-> human-behaviour models are out of scope for now. Phase 10 adds the
-> official EMBER Score and frozen environment packs (see below).
+> public scenario suite, paired evaluation on exact scenario + seed
+> schedules, deterministic statistics, reference baselines, the procedural
+> generator (1.1, ten V1 scenario families) and the suite-composition rules,
+> the hidden-test integrity protocol, the `emberbench` CLI, replay audit and
+> visualization, the official EMBER Score and frozen environment packs. The
+> public suite is for development and diagnostics; scored V1 evaluation uses
+> a held-out generated suite. Wind, delayed ignitions, burn-out, smoke and
+> material flammability are deferred to a future benchmark version. LLM
+> provider integrations, a UI and human-behaviour models are out of scope.
 
 ## What EMBERBench measures
 
@@ -320,10 +323,11 @@ See [docs/cli.md](docs/cli.md).
 
 ## Running the tests
 
-Requires Python 3.12+ and has no runtime dependencies.
+Requires Python 3.12+ and has no runtime dependencies. The development tools are pinned
+in `tools/dev-constraints.txt`, the same versions CI uses.
 
 ```bash
-python -m pip install -e ".[dev]"
+python -m pip install -c tools/dev-constraints.txt -e ".[dev]"
 ```
 
 ```bash
@@ -355,3 +359,12 @@ metrics, hotspots in the public crowd scenarios, 50/100/200-person stress
 runs and golden diagnostic digests).
 Any change to simulator output fails the golden test until you bump
 `SIMULATOR_VERSION` on purpose.
+
+## Versions and releases
+
+The package version (`emberbench.__version__`), the benchmark revision
+(`BENCHMARK_REVISION`) and the component contract versions are separate; `emberbench
+version --json` reports all of them. The rules are in [docs/versioning.md](docs/versioning.md),
+the history in [docs/changelog.md](docs/changelog.md) and the release steps, including the
+regression digest registry and `tools/check_release.py`, in
+[docs/release-checklist.md](docs/release-checklist.md).

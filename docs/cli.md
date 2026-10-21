@@ -70,17 +70,33 @@ Commands that take a suite accept exactly one of:
 emberbench version --json
 ```
 
-Prints every contract version of this build: `cli_version`,
-`simulator_version`, `schema_version`, `observation_version`,
-`action_schema_version`, `metrics_version`, `statistics_version`,
-`generator_version`, `generator_config_version`,
-`generation_manifest_version`, `evaluation_manifest_version`,
-`evaluation_result_version`, `crowd_diagnostics_version`,
-`baselines_version`, `integrity_protocol_version`, `scoring_version`,
-`environment_pack_version`, `replay_audit_version`, `animation_format_version`
-and `benchmark_revision` (see `docs/baselines.md`, `docs/integrity.md`,
-`docs/scoring.md`, `docs/environment-pack.md` and `docs/replay-visualization.md`). No field depends
-on the environment (no paths, platform, interpreter or install location).
+Prints the package version (`package_version`, from
+`src/emberbench/_version.py`, see [versioning.md](versioning.md)) and every
+contract version of this build:
+
+- `benchmark_revision` and every benchmark-defining version, exactly the
+  entries of `benchmark_versions()` that evaluation provenance pins:
+  `simulator_version`, `observation_version`, `action_schema_version`,
+  `schema_version` (the scenario schema), `metrics_version`,
+  `crowd_diagnostics_version`, `statistics_version`, `generator_version`,
+  `generator_config_version`, `generation_manifest_version`,
+  `evaluation_manifest_version`, `evaluation_result_version`,
+  `scoring_version`, `environment_pack_version`,
+  `environment_world_version`, `family_rules_version`,
+  `calibration_panel_version`, `difficulty_rules_version`,
+  `admission_rules_version`, `composition_version`,
+  `selection_rules_version`, `recipe_catalog_version` and
+  `suite_freeze_record_version`;
+- the tooling contracts that do not change what a score means:
+  `cli_version`, `baselines_version`, `integrity_protocol_version`,
+  `replay_audit_version` and `animation_format_version`.
+
+The benchmark-defining part is built from `benchmark_versions()`, so a
+version that provenance pins is always reported (see
+[versioning.md](versioning.md), section 3, and `docs/integrity.md`,
+section 12). No field depends on the environment (no paths, platform,
+interpreter or install location). These keys were added before any
+release, so `CLI_VERSION` stays `1.0`.
 
 ### `scenario validate FILE`
 

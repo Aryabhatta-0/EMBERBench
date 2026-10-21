@@ -23,14 +23,11 @@ from enum import IntEnum
 from pathlib import Path
 from typing import Any, NoReturn, TextIO
 
-from . import SIMULATOR_VERSION
-from .agent import ACTION_SCHEMA_VERSION, ActionOutput, Agent, AgentFactory, agent_policy, agent_policy_factory
+from ._version import __version__
+from .agent import ActionOutput, Agent, AgentFactory, agent_policy, agent_policy_factory
 from .canonical import canonical_json, sha256_hex
-from .crowd import CROWD_DIAGNOSTICS_VERSION
 from .errors import EmberBenchError, ModelOutputError, ReplayMismatchError, SimulationError
 from .evaluation import (
-    EVALUATION_MANIFEST_VERSION,
-    EVALUATION_RESULT_VERSION,
     EvaluationManifest,
     EvaluationResult,
     build_evaluation_manifest,
@@ -40,14 +37,14 @@ from .evaluation import (
     run_evaluation,
 )
 from .events import RunRecord
-from .generator import GENERATION_MANIFEST_VERSION, GENERATOR_CONFIG_VERSION, GENERATOR_VERSION, load_generated_suite
-from .metrics import METRICS_VERSION, validate_run_record
-from .observation import OBSERVATION_VERSION, Observation
+from .generator import load_generated_suite
+from .metrics import validate_run_record
+from .observation import Observation
 from .replay import verify_record
 from .rng import MAX_SEED
-from .scenario import SCHEMA_VERSION, Scenario, load_scenario
+from .scenario import Scenario, load_scenario
 from .simulator import run_episode
-from .statistics import STATISTICS_VERSION, aggregate_result, check_resamples, compare_results
+from .statistics import aggregate_result, check_resamples, compare_results
 from .suite import Suite, load_suite
 
 CLI_VERSION = "1.0"
@@ -118,37 +115,31 @@ def _mismatch(message: str) -> CliError:
 # --------------------------------------------------------------------------- version
 
 
+# `emberbench version` keys of benchmark_versions() entries whose CLI 1.0 name is not "<key>_version".
+_BENCHMARK_VERSION_KEYS = {"benchmark_revision": "benchmark_revision", "scenario_schema": "schema_version"}
+
+
 def version_info() -> dict[str, str]:
-    """Every contract version this build implements. Nothing here depends on the environment."""
-    # Imported here: only version reporting needs the baseline, integrity, scoring, pack and replay modules.
+    """Every contract version this build implements. Nothing here depends on the environment.
+
+    The benchmark-defining versions are exactly :func:`~emberbench.integrity.benchmark_versions`,
+    so a version that provenance pins is reported here by construction. The
+    other entries are tooling contracts that do not change what a score means.
+    """
+    # Imported here: only version reporting needs the baseline, integrity and replay modules.
     from .audit import REPLAY_AUDIT_VERSION
     from .baselines import BASELINES_VERSION
-    from .environment_pack import ENVIRONMENT_PACK_VERSION
-    from .integrity import BENCHMARK_REVISION, INTEGRITY_PROTOCOL_VERSION
-    from .scoring import SCORING_VERSION
+    from .integrity import INTEGRITY_PROTOCOL_VERSION, benchmark_versions
     from .visualization import ANIMATION_FORMAT_VERSION
 
     return {
+        "package_version": __version__,
+        **{_BENCHMARK_VERSION_KEYS.get(key, f"{key}_version"): value for key, value in benchmark_versions().items()},
         "cli_version": CLI_VERSION,
-        "simulator_version": SIMULATOR_VERSION,
-        "schema_version": SCHEMA_VERSION,
-        "observation_version": OBSERVATION_VERSION,
-        "action_schema_version": ACTION_SCHEMA_VERSION,
-        "metrics_version": METRICS_VERSION,
-        "statistics_version": STATISTICS_VERSION,
-        "generator_version": GENERATOR_VERSION,
-        "generator_config_version": GENERATOR_CONFIG_VERSION,
-        "generation_manifest_version": GENERATION_MANIFEST_VERSION,
-        "evaluation_manifest_version": EVALUATION_MANIFEST_VERSION,
-        "evaluation_result_version": EVALUATION_RESULT_VERSION,
-        "crowd_diagnostics_version": CROWD_DIAGNOSTICS_VERSION,
         "baselines_version": BASELINES_VERSION,
         "integrity_protocol_version": INTEGRITY_PROTOCOL_VERSION,
-        "scoring_version": SCORING_VERSION,
-        "environment_pack_version": ENVIRONMENT_PACK_VERSION,
         "replay_audit_version": REPLAY_AUDIT_VERSION,
         "animation_format_version": ANIMATION_FORMAT_VERSION,
-        "benchmark_revision": BENCHMARK_REVISION,
     }
 
 

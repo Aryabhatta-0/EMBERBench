@@ -5,6 +5,13 @@ on:
     branches: [main]
   pull_request:
 
+# Every pip call resolves only the exact tool versions in tools/dev-constraints.txt
+# (docs/release-checklist.md). PIP_BUILD_CONSTRAINT pins the isolated build backend of the
+# editable install; it is set on that step only, because pip rejects it with --no-build-isolation.
+env:
+  PIP_CONSTRAINT: ${{ github.workspace }}/tools/dev-constraints.txt
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -18,9 +25,32 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - run: python -m pip install pip
       - run: python -m pip install -e ".[dev]"
-      - run: python -m mypy --strict  # src and tests, see [tool.mypy] in pyproject.toml
+        env:
+          PIP_BUILD_CONSTRAINT: ${{ github.workspace }}/tools/dev-constraints.txt
+      # Fails on any installed tool or transitive dependency that is not pinned exactly.
+      - run: python tools/check_dev_constraints.py --installed
+      - run: python -m mypy --strict  # src, tests and the release tools, see [tool.mypy] in pyproject.toml
       - run: python -m pytest -q
       # Leak guard: the checkout and the built wheel and sdist hold only public assets (docs/integrity.md).
       - run: python -m build --no-isolation --outdir dist .
       - run: python tools/check_public_assets.py --dist dist
+
+  # One job for the expensive release checks (two clean builds, offline sdist -> wheel, clean-venv
+  # install, registry against the installed wheel); the matrix above builds once per platform.
+  packaging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pip
+      # Build tools and pytest (for the registry test helpers): EMBERBench itself is never installed from the checkout here.
+      - run: python -m pip install build setuptools packaging pytest
+      - run: python tools/check_dev_constraints.py --installed
+      # The pinned build backend alone, for the isolated offline sdist -> wheel build.
+      - run: 'python -m pip download --no-deps --only-binary=:all: --dest wheelhouse setuptools'
+      # SOURCE_DATE_EPOCH is frozen to the commit time, so both builds and every wheel member carry it.
+      - run: SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) python tools/check_release.py --dist dist --wheelhouse wheelhouse
