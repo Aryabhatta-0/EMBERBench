@@ -13,14 +13,17 @@ commands are the same.
 
 Each of these must be resolved before a tag:
 
-- [ ] **License.** No license is configured yet. Choosing one is a
-      maintainer decision; no tool or pull request picks it. Until then
-      `python tools/check_release.py ... --require-license` fails. Once a
-      license is chosen, add:
-      1. a `LICENSE` file with the license text at the repository root;
-      2. in `pyproject.toml`, `[project]`: `license = "<SPDX expression>"`
-         and `license-files = ["LICENSE"]`;
+- [ ] **License.** The maintainers selected the Apache License 2.0
+      (`Apache-2.0`). The release needs all of:
+      1. the canonical Apache License 2.0 text as `LICENSE` at the
+         repository root;
+      2. in `pyproject.toml`, `[project]`: `license = "Apache-2.0"` and
+         `license-files = ["LICENSE"]`;
       3. the license name in this checklist and in the changelog entry.
+      `python tools/check_release.py ... --require-license` fails if one is
+      missing, or if the wheel lacks `License-Expression`, `License-File` or
+      the `LICENSE` file. A license change is a maintainer decision; no tool
+      or pull request makes it.
 - [ ] **Pending V1 pull requests.** Every pull request accepted for V1 is
       merged, `main` contains it, and this checklist runs on that `main`.
 - [ ] **Package version decision.** The package version stays `0.1.0`
@@ -64,8 +67,9 @@ python tools/check_release.py --contracts-only
 python tools/check_public_assets.py --untracked
 ```
 
-When the evaluation-pack test exists (`tests/test_evaluation_pack.py`,
-added by the public development evaluation), also run its full opt-in mode:
+Also run the full opt-in mode of the public development evaluation pack
+(`tests/test_evaluation_pack.py`, PR #31). It reproduces the golden index and
+`REPORT.md`:
 
 ```bash
 EMBERBENCH_FULL_PACK=1 python -m pytest -q tests/test_evaluation_pack.py

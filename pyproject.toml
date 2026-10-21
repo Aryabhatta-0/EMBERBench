@@ -8,6 +8,8 @@ dynamic = ["version"]  # from src/emberbench/_version.py, see docs/versioning.md
 description = "A deterministic benchmark for decision-making models on dynamic fire-evacuation tasks"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 dependencies = []
 
 [project.scripts]

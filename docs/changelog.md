@@ -14,8 +14,11 @@ No version of EMBERBench has been released yet. This entry collects the V1
 milestones that are in `main`. Release them by following
 [release-checklist.md](release-checklist.md). The package version stays
 `0.1.0` until the maintainers record a different first release version
-([versioning.md](versioning.md), section 1). No license is configured yet;
-that is a release blocker (`tools/check_release.py --require-license`).
+([versioning.md](versioning.md), section 1). License: Apache License 2.0
+(`Apache-2.0`), selected by the maintainers: `LICENSE` at the repository
+root, and `license = "Apache-2.0"` with `license-files = ["LICENSE"]` in
+`pyproject.toml`, so the wheel and sdist carry `License-Expression`,
+`License-File` and the license text.
 
 Benchmark-defining versions (all pinned by evaluation provenance through
 `benchmark_versions()`): `SIMULATOR_VERSION` `0.2.0`,
@@ -92,6 +95,12 @@ suite `suite_version` `1.0.0`.
 - **Benchmark revision 2** (PR #34): `BENCHMARK_REVISION` went from `1` to
   `2` before any release, and `benchmark_versions()` pins every
   benchmark-defining version above. Revision 1 was never released.
+- **Public development evaluation pack** (research lane, PR #31): the
+  official EMBER Score of the fair reference agents on the 19 unique worlds
+  of the public suite, one frozen environment pack, fail-closed resume and
+  `--verify`, and the golden index and `REPORT.md`
+  ([tools/experiments/v1/README.md](../tools/experiments/v1/README.md)). It
+  is not a hidden-suite leaderboard and changes no version or pinned hash.
 
 ### Release hardening (Phase 10, issue #16, PR #30)
 

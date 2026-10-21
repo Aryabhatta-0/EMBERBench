@@ -368,3 +368,10 @@ version --json` reports all of them. The rules are in [docs/versioning.md](docs/
 the history in [docs/changelog.md](docs/changelog.md) and the release steps, including the
 regression digest registry and `tools/check_release.py`, in
 [docs/release-checklist.md](docs/release-checklist.md).
+
+## License
+
+EMBERBench is licensed under the Apache License 2.0 (`Apache-2.0`); see [LICENSE](LICENSE).
+The license covers the benchmark implementation, the public suite and the protocol in this
+repository. Hidden evaluation suites are never part of this repository
+([docs/integrity.md](docs/integrity.md)).
