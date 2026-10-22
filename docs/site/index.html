@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMBERBench V1 — Results</title>
+  <meta name="description" content="EMBER Scores of decision models and reference agents on the EMBERBench V1 public development pack.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>EMBERBench V1 results</h1>
+  <p class="sub">EMBER Score of every evaluated model on the frozen V1 public development pack: 19 unique fire-evacuation
+    worlds, the same environment pack and the official scoring procedure for every model. Select a model to open its
+    metrics in a new window.</p>
+  <div class="banner" id="label"></div>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Leaderboard</h2>
+      <span class="muted" id="unit"></span>
+    </div>
+    <div class="filters" role="group" aria-label="Filter models">
+      <button class="chip" data-kind="all" aria-pressed="true">All</button>
+      <button class="chip" data-kind="Decision model" aria-pressed="false">Decision models</button>
+      <button class="chip" data-kind="Reference agent" aria-pressed="false">Reference agents</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead>
+        <tr>
+          <th class="rank">#</th>
+          <th>Model</th>
+          <th>Kind</th>
+          <th class="score-cell">EMBER Score (0–100)</th>
+          <th class="num">95% CI</th>
+          <th class="num">Safety</th>
+          <th class="num">Quality</th>
+          <th class="num">Evacuated</th>
+          <th class="num">Avoidable deaths</th>
+        </tr>
+      </thead>
+      <tbody id="rows"><tr><td colspan="9" class="muted">Loading results…</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <footer class="muted" id="footer"></footer>
+</main>
+<script type="module" src="index.js"></script>
+</body>
+</html>

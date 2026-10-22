@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMBERBench V1 — Model</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <p class="muted"><a href="index.html">← All results</a></p>
+  <h1 id="name">Loading…</h1>
+  <p class="sub" id="meta"></p>
+  <div class="banner" id="label"></div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <section class="card chart">
+    <div class="card-head"><h2>People outcomes</h2><span class="muted" id="people-note"></span></div>
+    <div id="people"></div>
+    <div class="legend" id="people-legend"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card chart">
+      <div class="card-head"><h2>Score per scenario</h2><span class="muted">0–100, mean over the scenario's worlds</span></div>
+      <div id="scenarios"></div>
+    </section>
+    <section class="card chart">
+      <div class="card-head"><h2>Score components</h2><span class="muted">0–1, higher is better</span></div>
+      <div id="components"></div>
+    </section>
+  </div>
+
+  <div class="stack" style="margin-top:18px">
+    <section class="card chart">
+      <div class="card-head"><h2>Score per world</h2><span class="muted">19 unique worlds; 10·sN = route-invalidation fire seed N</span></div>
+      <div id="episodes"></div>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="card chart">
+      <div class="card-head"><h2>Robustness counts</h2><span class="muted">worlds out of 19</span></div>
+      <div id="robustness"></div>
+    </section>
+    <section class="card chart">
+      <div class="card-head"><h2>Congestion</h2><span class="muted">diagnostics, not score components</span></div>
+      <div class="tiles" id="congestion" style="margin-bottom:0"></div>
+    </section>
+  </div>
+
+  <section class="card" id="api-card" style="margin-top:18px" hidden>
+    <div class="card-head"><h2>API use</h2><span class="muted">as reported by the provider</span></div>
+    <div class="tiles" id="api" style="margin-bottom:0"></div>
+  </section>
+
+  <footer class="muted" id="footer"></footer>
+</main>
+<script type="module" src="model.js"></script>
+</body>
+</html>
