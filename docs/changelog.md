@@ -107,11 +107,12 @@ suite `suite_version` `1.0.0`.
   and paired comparisons against the reference runs
   ([tools/experiments/remote/README.md](../tools/experiments/remote/README.md)).
   It changes no version or pinned hash.
-- **Results website** (first version): a static leaderboard of every
-  evaluated model on the public development pack, with a metrics page per
-  model ([docs/site/README.md](site/README.md)). The data comes from the
-  official score reports through `tools/build_results_site.py`, and
-  `.github/workflows/pages.yml` publishes it to GitHub Pages.
+- **Results website**: moved to its own repository,
+  [Aryabhatta-0/EMBERBench-site](https://github.com/Aryabhatta-0/EMBERBench-site).
+  It builds its data from the official score reports of EMBERBench runs, with
+  the `emberbench` package pinned to a commit of this repository. The first
+  version (`docs/site`, `tools/build_results_site.py` and
+  `.github/workflows/pages.yml`, PR #36) is removed from this repository.
 
 ### Release hardening (Phase 10, issue #16, PR #30)
 
