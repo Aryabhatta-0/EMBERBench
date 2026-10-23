@@ -152,7 +152,8 @@ def test_openai_run_is_official_cached_and_byte_identical(server: tuple[str, Fak
     assert summary["api"]["requests_sent"] == len(model.requests) > 0
     assert summary["api"]["input_tokens"] == 5 * len(model.requests)
     assert summary["api"]["cost"] == 0 and summary["api"]["cost_source"] == "not reported"
-    assert 0 < summary["api"]["first_response_s"] and 0 < summary["api"]["median_response_s"]
+    # Measured, but rounded to 3 decimals: a fast local fake server can give 0.0.
+    assert 0 <= summary["api"]["first_response_s"] and 0 <= summary["api"]["median_response_s"]
     assert "always-stay" in summary["references"]  # the missing reference run was made first, offline
     assert (out / "REPORT.md").read_text(encoding="utf-8").startswith("# `127.0.0.1-gpt_test-chat-r1`")
     path, headers, body = model.requests[0]
