@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMBERBench V1 — Model</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <p class="muted"><a href="index.html">← All results</a></p>
+  <h1 id="name">Loading…</h1>
+  <div class="badges" id="badges"></div>
+  <p class="verdict" id="verdict"></p>
+
+  <div class="tiles hero-tiles" id="tiles"></div>
+
+  <section class="card chart">
+    <div class="card-head"><div><h2>What happened to the people</h2><p class="muted" id="people-note"></p></div></div>
+    <div id="people"></div>
+    <div class="legend" id="people-legend"></div>
+  </section>
+
+  <h2 class="section">Compared with the other models</h2>
+  <p class="muted section-sub">This model is in color. The other models are in gray. Point at a bar to see the numbers.</p>
+  <div class="grid2" id="compare"></div>
+
+  <h2 class="section">Fire by fire</h2>
+  <section class="card">
+    <div class="card-head"><div><h2>EMBER Score in each type of fire</h2><p class="muted">0 to 100. Higher is better. The gray mark is the best AI decision model in that fire. ×10: ten versions with a different fire.</p></div></div>
+    <div id="scenarios"></div>
+  </section>
+
+  <section class="card">
+    <details class="tech">
+      <summary><b>Technical details</b> — score parts, robustness, crowding and API use</summary>
+      <div id="technical"></div>
+    </details>
+  </section>
+
+  <footer class="muted" id="footer"></footer>
+</main>
+<script type="module" src="model.js"></script>
+</body>
+</html>

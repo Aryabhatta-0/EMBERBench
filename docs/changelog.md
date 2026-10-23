@@ -101,6 +101,17 @@ suite `suite_version` `1.0.0`.
   `--verify`, and the golden index and `REPORT.md`
   ([tools/experiments/v1/README.md](../tools/experiments/v1/README.md)). It
   is not a hidden-suite leaderboard and changes no version or pinned hash.
+- **Remote-model runner** (research lane): any model behind a base URL and
+  an API key (OpenAI-compatible chat, Anthropic Messages or the Jev/SubQ
+  decision API) on the same environment pack, with the same official scoring
+  and paired comparisons against the reference runs
+  ([tools/experiments/remote/README.md](../tools/experiments/remote/README.md)).
+  It changes no version or pinned hash.
+- **Results website** (first version): a static leaderboard of every
+  evaluated model on the public development pack, with a metrics page per
+  model ([docs/site/README.md](site/README.md)). The data comes from the
+  official score reports through `tools/build_results_site.py`, and
+  `.github/workflows/pages.yml` publishes it to GitHub Pages.
 
 ### Release hardening (Phase 10, issue #16, PR #30)
 
