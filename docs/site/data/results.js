@@ -5,6 +5,16 @@ export default {
  "pack_digest": "ca18c895f6f655f85448dd3bcd8a02a776a2c21bd28e13d5a3aa91b3955b506e",
  "suite_id": "emberbench-v1-public",
  "scoring_version": "1.0",
+ "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+ "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+ "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+ "world_count": 19,
+ "generation": {
+  "tool": "tools/build_results_site.py",
+  "schema_version": 2,
+  "source": "Official ScoreReport JSON and matched remote-run summaries",
+  "timestamps": "No evaluation timestamps are available in these source schemas."
+ },
  "unit": "EMBER Score: benchmark-performance points (0-100), not a percentage of people",
  "models": [
   {
@@ -18,6 +28,108 @@ export default {
    ],
    "safety": 1.0,
    "quality": 0.924,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 99.141668369,
+     "worst_episode": 99.141668369
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 1.0,
+     "score": 94.578187009,
+     "worst_episode": 94.578187009
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 1.0,
+     "score": 96.908501884,
+     "worst_episode": 96.908501884
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 1.0,
+     "score": 57.290669085,
+     "worst_episode": 57.290669085
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 1.0,
+     "score": 98.889258288,
+     "worst_episode": 98.889258288
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 1.0,
+     "score": 63.408427905,
+     "worst_episode": 63.408427905
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 1.0,
+     "score": 99.002197894,
+     "worst_episode": 99.002197894
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 1.0,
+     "score": 85.292544172,
+     "worst_episode": 85.292544172
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 1.0,
+     "score": 91.4178148719,
+     "worst_episode": 81.570974635
+    }
+   ],
+   "provenance": {
+    "report_digest": "094d4c9739313c224c28b1062c0d80c5b0d288535a03e017676ba60f59e4e814",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "80eb965c91c538ee186c7094861d8c98a84318ec34256e3ad4efb38c799c1fea"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 88.105870900973,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "97f7b3a78705604dd072b8bcbdefa148811e6c7a825f7efca8811bf620970a18",
+     "statistic": "family_balanced_mean",
+     "upper": 89.02735416475625
+    }
+   },
    "averages": {
     "family_balanced": 88.5929,
     "micro": 89.931,
@@ -181,10 +293,23 @@ export default {
      "score": 99.1417,
      "safety": 1.0,
      "quality": 0.9884,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.965517241379,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -194,10 +319,23 @@ export default {
      "score": 94.5782,
      "safety": 1.0,
      "quality": 0.9272,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.97157622739,
+      "path": 0.6728971962616822,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 36,
      "casualties": 0,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -207,10 +345,23 @@ export default {
      "score": 96.9085,
      "safety": 1.0,
      "quality": 0.9583,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.88,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 8,
      "casualties": 0,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -220,10 +371,23 @@ export default {
      "score": 100.0,
      "safety": 1.0,
      "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -233,10 +397,25 @@ export default {
      "score": 57.2907,
      "safety": 1.0,
      "quality": 0.8468,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.607142857143,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.647619047619,
+     "severe": [
+      "hazard"
+     ],
      "evacuated": 8,
      "casualties": 0,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -246,10 +425,23 @@ export default {
      "score": 98.8893,
      "safety": 1.0,
      "quality": 0.985,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.941176470588,
+      "path": 1.0,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -259,10 +451,25 @@ export default {
      "score": 63.4084,
      "safety": 1.0,
      "quality": 0.8559,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.666666666667,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.96
+     },
+     "severity": 0.711111111111,
+     "severe": [
+      "hazard"
+     ],
      "evacuated": 9,
      "casualties": 0,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -272,10 +479,23 @@ export default {
      "score": 99.0022,
      "safety": 1.0,
      "quality": 0.9865,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.96,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -285,10 +505,23 @@ export default {
      "score": 85.2925,
      "safety": 1.0,
      "quality": 0.8058,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.960082304527,
+      "path": 0.5466970387243736,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8160493827160494
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 100,
      "casualties": 0,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -298,10 +531,23 @@ export default {
      "score": 95.822,
      "safety": 1.0,
      "quality": 0.9437,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.987096774194,
+      "path": 0.8954248366013072,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.896774193548387
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -311,10 +557,23 @@ export default {
      "score": 81.571,
      "safety": 1.0,
      "quality": 0.7585,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.987096774194,
+      "path": 0.6470588235294118,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.6709677419354839
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -324,10 +583,23 @@ export default {
      "score": 81.571,
      "safety": 1.0,
      "quality": 0.7585,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.987096774194,
+      "path": 0.6470588235294118,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.6709677419354839
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -337,10 +609,23 @@ export default {
      "score": 87.4127,
      "safety": 1.0,
      "quality": 0.8331,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.6862745098039216,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.6967741935483871
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -350,10 +635,23 @@ export default {
      "score": 81.7016,
      "safety": 1.0,
      "quality": 0.7602,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.993548387097,
+      "path": 0.6470588235294118,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.6709677419354839
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -363,10 +661,23 @@ export default {
      "score": 93.7698,
      "safety": 1.0,
      "quality": 0.9164,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.8431372549019608,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.8387096774193549
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -376,10 +687,23 @@ export default {
      "score": 98.9148,
      "safety": 1.0,
      "quality": 0.9853,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.9607843137254902,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.9741935483870968
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -389,10 +713,23 @@ export default {
      "score": 95.822,
      "safety": 1.0,
      "quality": 0.9437,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.987096774194,
+      "path": 0.8954248366013072,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.896774193548387
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -402,10 +739,23 @@ export default {
      "score": 98.9148,
      "safety": 1.0,
      "quality": 0.9853,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.9607843137254902,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.9741935483870968
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -415,12 +765,26 @@ export default {
      "score": 98.6784,
      "safety": 1.0,
      "quality": 0.9821,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.987096774194,
+      "path": 0.9607843137254902,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.9741935483870968
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
-   ]
+   ],
+   "rank": 1
   },
   {
    "id": "forecast-shortest-path-r1",
@@ -433,6 +797,108 @@ export default {
    ],
    "safety": 0.7328,
    "quality": 0.9091,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 99.141668369,
+     "worst_episode": 99.141668369
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.043841891759,
+     "score": 4.240884795,
+     "worst_episode": 4.240884795
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.269277191162,
+     "score": 26.015088379,
+     "worst_episode": 26.015088379
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 1.0,
+     "score": 36.078537633,
+     "worst_episode": 36.078537633
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 1.0,
+     "score": 98.889258288,
+     "worst_episode": 98.889258288
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 1.0,
+     "score": 66.583198442,
+     "worst_episode": 66.583198442
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 1.0,
+     "score": 99.002197894,
+     "worst_episode": 99.002197894
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.014471863963,
+     "score": 1.134877426,
+     "worst_episode": 1.134877426
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 1.0,
+     "score": 91.8220343407,
+     "worst_episode": 82.895389589
+    }
+   ],
+   "provenance": {
+    "report_digest": "58b69ffa62317ba39fffbcf025643f37e9c59d4b707052f48b28d4b44eafec78",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "fa72f5c3ce2dd5f1a81a3b4179edcee70bf703ace91a693e77888bffd35b6e8e"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 61.8530459497335,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "546aeea11c27baa4a09e6a9689a86f18cf28b900fc0ea4f6e06eec608fa0209b",
+     "statistic": "family_balanced_mean",
+     "upper": 62.71765431766325
+    }
+   },
    "averages": {
     "family_balanced": 62.2908,
     "micro": 76.2793,
@@ -596,10 +1062,23 @@ export default {
      "score": 99.1417,
      "safety": 1.0,
      "quality": 0.9884,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.965517241379,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -609,10 +1088,23 @@ export default {
      "score": 4.2409,
      "safety": 0.0438,
      "quality": 0.9559,
+     "failure": null,
+     "components": {
+      "casualty": 0.072473331275,
+      "evacuation": 0.604938271605,
+      "hazard": 0.873469387755,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 28,
      "casualties": 8,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -622,10 +1114,23 @@ export default {
      "score": 26.0151,
      "safety": 0.2693,
      "quality": 0.9543,
+     "failure": null,
+     "components": {
+      "casualty": 0.351708984375,
+      "evacuation": 0.765625,
+      "hazard": 0.869047619048,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 7,
      "casualties": 1,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -635,10 +1140,23 @@ export default {
      "score": 100.0,
      "safety": 1.0,
      "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -648,10 +1166,25 @@ export default {
      "score": 36.0785,
      "safety": 1.0,
      "quality": 0.7429,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.421052631579,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9824561403508771
+     },
+     "severity": 0.449122807018,
+     "severe": [
+      "hazard"
+     ],
      "evacuated": 8,
      "casualties": 0,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -661,10 +1194,23 @@ export default {
      "score": 98.8893,
      "safety": 1.0,
      "quality": 0.985,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.941176470588,
+      "path": 1.0,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -674,10 +1220,25 @@ export default {
      "score": 66.5832,
      "safety": 1.0,
      "quality": 0.8672,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.693333333333,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.96
+     },
+     "severity": 0.739555555556,
+     "severe": [
+      "hazard"
+     ],
      "evacuated": 9,
      "casualties": 0,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -687,10 +1248,23 @@ export default {
      "score": 99.0022,
      "safety": 1.0,
      "quality": 0.9865,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.96,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -700,10 +1274,23 @@ export default {
      "score": 1.1349,
      "safety": 0.0145,
      "quality": 0.719,
+     "failure": null,
+     "components": {
+      "casualty": 0.026427801248,
+      "evacuation": 0.5476,
+      "hazard": 0.939379699248,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5390037593984962
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 74,
      "casualties": 26,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -713,10 +1300,23 @@ export default {
      "score": 96.0023,
      "safety": 1.0,
      "quality": 0.9461,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.993377483444,
+      "path": 0.9319727891156463,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9205298013245033
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -726,10 +1326,23 @@ export default {
      "score": 82.8954,
      "safety": 1.0,
      "quality": 0.7753,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.993377483444,
+      "path": 0.673469387755102,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.6887417218543046
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -739,10 +1352,23 @@ export default {
      "score": 82.8954,
      "safety": 1.0,
      "quality": 0.7753,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.993377483444,
+      "path": 0.673469387755102,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.6887417218543046
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -752,10 +1378,23 @@ export default {
      "score": 84.8042,
      "safety": 1.0,
      "quality": 0.7996,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.7142857142857143,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.7152317880794702
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -765,10 +1404,23 @@ export default {
      "score": 83.0308,
      "safety": 1.0,
      "quality": 0.777,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.673469387755102,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.6887417218543046
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -778,10 +1430,23 @@ export default {
      "score": 93.1255,
      "safety": 1.0,
      "quality": 0.9079,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.8775510204081632,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8609271523178808
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -791,10 +1456,23 @@ export default {
      "score": 100.0,
      "safety": 1.0,
      "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -804,10 +1482,23 @@ export default {
      "score": 96.0023,
      "safety": 1.0,
      "quality": 0.9461,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.993377483444,
+      "path": 0.9319727891156463,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9205298013245033
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -817,10 +1508,23 @@ export default {
      "score": 99.5868,
      "safety": 1.0,
      "quality": 0.9944,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": 0.9777777777777777,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -830,12 +1534,26 @@ export default {
      "score": 99.8777,
      "safety": 1.0,
      "quality": 0.9983,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.993377483444,
+      "path": 1.0,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
-   ]
+   ],
+   "rank": 2
   },
   {
    "id": "congestion-aware-v1",
@@ -848,6 +1566,108 @@ export default {
    ],
    "safety": 0.5609,
    "quality": 0.9291,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 99.141668369,
+     "worst_episode": 99.141668369
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.315817759843,
+     "score": 31.242287784,
+     "worst_episode": 31.242287784
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 1.0,
+     "score": 95.525894426,
+     "worst_episode": 95.525894426
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 7.446183338,
+     "worst_episode": 7.446183338
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.200938786008,
+     "score": 18.000755592,
+     "worst_episode": 18.000755592
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.295962110564,
+     "score": 20.973568271,
+     "worst_episode": 20.973568271
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 1.0,
+     "score": 98.798887721,
+     "worst_episode": 98.798887721
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.196277687755,
+     "score": 16.990216673,
+     "worst_episode": 16.990216673
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.5205632716048,
+     "score": 48.6518860428,
+     "worst_episode": 17.659053796
+    }
+   ],
+   "provenance": {
+    "report_digest": "aac2f8f41ce9f6460b4791a827335533a52b1bee90ac834caed74d68f39faff4",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "9fe33ab01e723f07aafb982aaa642519379ca825ecbc19097c526f3b02ac528b"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 51.37547723361675,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "b6c8067c5010a730e48519ec8379de4f09331beab1e36cc2a88a826062d58a42",
+     "statistic": "family_balanced_mean",
+     "upper": 56.001112292083
+    }
+   },
    "averages": {
     "family_balanced": 53.6771,
     "micro": 51.2968,
@@ -1011,10 +1831,23 @@ export default {
      "score": 99.1417,
      "safety": 1.0,
      "quality": 0.9884,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.965517241379,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -1024,10 +1857,23 @@ export default {
      "score": 31.2423,
      "safety": 0.3158,
      "quality": 0.9854,
+     "failure": null,
+     "components": {
+      "casualty": 0.354065585429,
+      "evacuation": 0.891975308642,
+      "hazard": 0.956958393113,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 34,
      "casualties": 2,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -1037,10 +1883,23 @@ export default {
      "score": 95.5259,
      "safety": 1.0,
      "quality": 0.9398,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.83,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 8,
      "casualties": 0,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -1050,10 +1909,23 @@ export default {
      "score": 100.0,
      "safety": 1.0,
      "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -1063,10 +1935,23 @@ export default {
      "score": 7.4462,
      "safety": 0.0792,
      "quality": 0.9196,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.777777777778,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 2,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -1076,10 +1961,23 @@ export default {
      "score": 18.0008,
      "safety": 0.2009,
      "quality": 0.8613,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.916666666667,
+      "path": 0.7872340425531915,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.7708333333333334
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -1089,10 +1987,25 @@ export default {
      "score": 20.9736,
      "safety": 0.296,
      "quality": 0.8987,
+     "failure": null,
+     "components": {
+      "casualty": 0.374577046182,
+      "evacuation": 0.79012345679,
+      "hazard": 0.71875,
+      "path": 1.0,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.9375
+     },
+     "severity": 0.766666666667,
+     "severe": [
+      "hazard"
+     ],
      "evacuated": 8,
      "casualties": 1,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -1102,10 +2015,23 @@ export default {
      "score": 98.7989,
      "safety": 1.0,
      "quality": 0.9837,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.952,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -1115,10 +2041,23 @@ export default {
      "score": 16.9902,
      "safety": 0.1963,
      "quality": 0.8222,
+     "failure": null,
+     "components": {
+      "casualty": 0.217482202499,
+      "evacuation": 0.9025,
+      "hazard": 0.981739130435,
+      "path": 0.663003663003663,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.7847826086956522
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 95,
      "casualties": 5,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -1128,10 +2067,23 @@ export default {
      "score": 17.987,
      "safety": 0.2009,
      "quality": 0.8605,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.912162162162,
+      "path": 0.7902097902097902,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.7702702702702703
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -1141,10 +2093,23 @@ export default {
      "score": 17.9216,
      "safety": 0.2009,
      "quality": 0.8562,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.805825242718,
+      "path": 0.82,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.8155339805825242
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -1154,10 +2119,23 @@ export default {
      "score": 96.7729,
      "safety": 1.0,
      "quality": 0.9565,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.875,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -1167,10 +2145,23 @@ export default {
      "score": 17.6591,
      "safety": 0.2009,
      "quality": 0.8392,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.891666666667,
+      "path": 0.7586206896551724,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.7416666666666667
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -1180,10 +2171,23 @@ export default {
      "score": 97.801,
      "safety": 1.0,
      "quality": 0.9703,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.913461538462,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -1193,10 +2197,23 @@ export default {
      "score": 18.3303,
      "safety": 0.2009,
      "quality": 0.8828,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.918518518519,
+      "path": 0.8307692307692308,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.8074074074074075
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -1206,10 +2223,23 @@ export default {
      "score": 18.4983,
      "safety": 0.2009,
      "quality": 0.8938,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.987096774194,
+      "path": 0.8367346938775511,
+      "replanning": 0.976,
+      "stranding": 1.0,
+      "time": 0.8064516129032258
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -1219,10 +2249,23 @@ export default {
      "score": 90.7685,
      "safety": 1.0,
      "quality": 0.8768,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.919540229885,
+      "path": 0.8106508875739645,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.7988505747126436
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -1232,10 +2275,23 @@ export default {
      "score": 92.372,
      "safety": 1.0,
      "quality": 0.8979,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.972677595628,
+      "path": 0.8497109826589595,
+      "replanning": 0.9673202614379085,
+      "stranding": 1.0,
+      "time": 0.825136612021858
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -1245,12 +2301,26 @@ export default {
      "score": 18.4082,
      "safety": 0.2009,
      "quality": 0.8879,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.961290322581,
+      "path": 0.8367346938775511,
+      "replanning": 0.976,
+      "stranding": 1.0,
+      "time": 0.8064516129032258
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
-   ]
+   ],
+   "rank": 3
   },
   {
    "id": "typesafe-jev-latest-choice-r1",
@@ -1263,6 +2333,111 @@ export default {
    ],
    "safety": 0.4966,
    "quality": 0.7924,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 1.0,
+     "score": 97.342297848,
+     "worst_episode": 97.342297848
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.269277191162,
+     "score": 25.878183688,
+     "worst_episode": 25.878183688
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 1.0,
+     "score": 97.254417473,
+     "worst_episode": 97.254417473
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.098517012719,
+     "score": 9.262524628,
+     "worst_episode": 9.262524628
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.39421623439,
+     "score": 33.271858692,
+     "worst_episode": 33.271858692
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.20390688382,
+     "score": 19.6527312858,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "1a81a0a680de541db28c138cab3da64f835ab8702f41d3e1fea214c0cda042c1",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "7614364d460e66fa7217038d0ddb51bcbfd00d2de6ee3ea83a35d84273a5be5a"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 46.32046172466,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "7c792ef39449e741556b63e295a89f094edc402c9b4d20bab9acdfb63aa8c7e0",
+     "statistic": "family_balanced_mean",
+     "upper": 51.160136999
+    },
+    "adapter_version": null,
+    "adapter_sha256": "4c4580b4e36f5644dd94fb4f921a6e995bcd96245be92264ca1513c849c8263f",
+    "protocol": null
+   },
    "averages": {
     "family_balanced": 48.2662,
     "micro": 34.7125,
@@ -1426,10 +2601,23 @@ export default {
      "score": 100.0,
      "safety": 1.0,
      "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -1439,10 +2627,23 @@ export default {
      "score": 97.3423,
      "safety": 1.0,
      "quality": 0.9641,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.99154589372,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9347826086956522
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 36,
      "casualties": 0,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -1452,10 +2653,23 @@ export default {
      "score": 25.8782,
      "safety": 0.2693,
      "quality": 0.9475,
+     "failure": null,
+     "components": {
+      "casualty": 0.351708984375,
+      "evacuation": 0.765625,
+      "hazard": 0.896551724138,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9655172413793104
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 7,
      "casualties": 1,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -1465,10 +2679,23 @@ export default {
      "score": 100.0,
      "safety": 1.0,
      "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -1478,10 +2705,23 @@ export default {
      "score": 97.2544,
      "safety": 1.0,
      "quality": 0.9629,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.892857142857,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 8,
      "casualties": 0,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -1491,10 +2731,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6828,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.8,
+      "path": 1.0,
+      "replanning": 0.2717391304347826,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.434782608696,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -1504,10 +2759,23 @@ export default {
      "score": 9.2625,
      "safety": 0.0985,
      "quality": 0.9197,
+     "failure": null,
+     "components": {
+      "casualty": 0.162854653678,
+      "evacuation": 0.604938271605,
+      "hazard": 0.849056603774,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9433962264150944
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 7,
      "casualties": 2,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -1517,10 +2785,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 2,
      "stranded": 3,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -1530,10 +2811,23 @@ export default {
      "score": 33.2719,
      "safety": 0.3942,
      "quality": 0.7944,
+     "failure": null,
+     "components": {
+      "casualty": 0.410470881289,
+      "evacuation": 0.9604,
+      "hazard": 0.983641536273,
+      "path": 0.827768014059754,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.6795874822190612
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 98,
      "casualties": 2,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -1543,10 +2837,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7263,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.785714285714,
+      "path": 1.0,
+      "replanning": 0.3541666666666667,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.566666666667,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 1,
      "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -1556,10 +2865,25 @@ export default {
      "score": 1.9533,
      "safety": 0.0391,
      "quality": 0.737,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.753846153846,
+      "path": 1.0,
+      "replanning": 0.391304347826087,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.626086956522,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -1569,10 +2893,23 @@ export default {
      "score": 96.7729,
      "safety": 1.0,
      "quality": 0.9565,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.875,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -1582,10 +2919,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7389,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.787234042553,
+      "path": 1.0,
+      "replanning": 0.37857142857142856,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.605714285714,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -1595,10 +2947,23 @@ export default {
      "score": 97.801,
      "safety": 1.0,
      "quality": 0.9703,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.913461538462,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -1608,10 +2973,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7199,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.733333333333,
+      "path": 1.0,
+      "replanning": 0.36619718309859156,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.458316118936,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -1621,10 +3002,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3297,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32972972972972975,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.527567567568,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -1634,10 +3030,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.685,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.642857142857,
+      "path": 1.0,
+      "replanning": 0.3424657534246575,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.375733855186,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
      "evacuated": 1,
      "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -1647,10 +3059,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3289,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3288888888888889,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.526222222222,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -1660,10 +3087,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3297,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32972972972972975,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.527567567568,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
    ],
    "api": {
@@ -1679,8 +3121,14 @@ export default {
     "wall_clock_s": 365.0,
     "mean_act_latency_s": 0.753,
     "first_response_s": null,
-    "median_response_s": null
-   }
+    "median_response_s": null,
+    "cache_hits": 59,
+    "retries": 0,
+    "retries_403": null,
+    "format_errors": null,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 4
   },
   {
    "id": "fire-aware-shortest-path-v1",
@@ -1693,6 +3141,108 @@ export default {
    ],
    "safety": 0.4214,
    "quality": 0.9078,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 99.141668369,
+     "worst_episode": 99.141668369
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.032613843748,
+     "score": 3.168371537,
+     "worst_episode": 3.168371537
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.269277191162,
+     "score": 26.015088379,
+     "worst_episode": 26.015088379
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 4.062494931,
+     "worst_episode": 4.062494931
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.200938786008,
+     "score": 18.000755592,
+     "worst_episode": 18.000755592
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.098517012719,
+     "score": 9.042266683,
+     "worst_episode": 9.042266683
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 1.0,
+     "score": 99.002197894,
+     "worst_episode": 99.002197894
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.012984686911,
+     "score": 1.02134973,
+     "worst_episode": 1.02134973
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.5205632716048,
+     "score": 48.6518860428,
+     "worst_episode": 17.659053796
+    }
+   ],
+   "provenance": {
+    "report_digest": "2908a27b88a82432b3b1b73ba9b05632b8edfd923dc3864f428e526a1abf6c69",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "c5058729c36c6408c6d5a821728a4284b40325b0e4cdabaa228cd206d793ca27"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 38.50004957481825,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "31f1cb816dc79427c60baee568b934b0c4defe832727aefe4c5e78da67d07277",
+     "statistic": "family_balanced_mean",
+     "upper": 43.167380777388
+    }
+   },
    "averages": {
     "family_balanced": 40.8106,
     "micro": 44.5249,
@@ -1856,10 +3406,23 @@ export default {
      "score": 99.1417,
      "safety": 1.0,
      "quality": 0.9884,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.965517241379,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -1869,10 +3432,23 @@ export default {
      "score": 3.1684,
      "safety": 0.0326,
      "quality": 0.9615,
+     "failure": null,
+     "components": {
+      "casualty": 0.057980166664,
+      "evacuation": 0.5625,
+      "hazard": 0.888888888889,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 27,
      "casualties": 9,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -1882,10 +3458,23 @@ export default {
      "score": 26.0151,
      "safety": 0.2693,
      "quality": 0.9543,
+     "failure": null,
+     "components": {
+      "casualty": 0.351708984375,
+      "evacuation": 0.765625,
+      "hazard": 0.869047619048,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 7,
      "casualties": 1,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -1895,10 +3484,23 @@ export default {
      "score": 100.0,
      "safety": 1.0,
      "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -1908,10 +3510,25 @@ export default {
      "score": 4.0625,
      "safety": 0.0792,
      "quality": 0.8221,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.555555555556,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.592592592593,
+     "severe": [
+      "hazard"
+     ],
      "evacuated": 6,
      "casualties": 2,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -1921,10 +3538,23 @@ export default {
      "score": 18.0008,
      "safety": 0.2009,
      "quality": 0.8613,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.916666666667,
+      "path": 0.7872340425531915,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.7708333333333334
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -1934,10 +3564,23 @@ export default {
      "score": 9.0423,
      "safety": 0.0985,
      "quality": 0.8902,
+     "failure": null,
+     "components": {
+      "casualty": 0.162854653678,
+      "evacuation": 0.604938271605,
+      "hazard": 0.775510204082,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9387755102040817
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 7,
      "casualties": 2,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -1947,10 +3590,23 @@ export default {
      "score": 99.0022,
      "safety": 1.0,
      "quality": 0.9865,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.96,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -1960,10 +3616,23 @@ export default {
      "score": 1.0213,
      "safety": 0.013,
      "quality": 0.722,
+     "failure": null,
+     "components": {
+      "casualty": 0.024366085402,
+      "evacuation": 0.5329,
+      "hazard": 0.944847605225,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5413642960812772
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 73,
      "casualties": 27,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -1973,10 +3642,23 @@ export default {
      "score": 17.987,
      "safety": 0.2009,
      "quality": 0.8605,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.912162162162,
+      "path": 0.7902097902097902,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.7702702702702703
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -1986,10 +3668,23 @@ export default {
      "score": 17.9216,
      "safety": 0.2009,
      "quality": 0.8562,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.805825242718,
+      "path": 0.82,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.8155339805825242
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -1999,10 +3694,23 @@ export default {
      "score": 96.7729,
      "safety": 1.0,
      "quality": 0.9565,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.875,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -2012,10 +3720,23 @@ export default {
      "score": 17.6591,
      "safety": 0.2009,
      "quality": 0.8392,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.891666666667,
+      "path": 0.7586206896551724,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.7416666666666667
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -2025,10 +3746,23 @@ export default {
      "score": 97.801,
      "safety": 1.0,
      "quality": 0.9703,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.913461538462,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -2038,10 +3772,23 @@ export default {
      "score": 18.3303,
      "safety": 0.2009,
      "quality": 0.8828,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.918518518519,
+      "path": 0.8307692307692308,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.8074074074074075
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -2051,10 +3798,23 @@ export default {
      "score": 18.4983,
      "safety": 0.2009,
      "quality": 0.8938,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.987096774194,
+      "path": 0.8367346938775511,
+      "replanning": 0.976,
+      "stranding": 1.0,
+      "time": 0.8064516129032258
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -2064,10 +3824,23 @@ export default {
      "score": 90.7685,
      "safety": 1.0,
      "quality": 0.8768,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.919540229885,
+      "path": 0.8106508875739645,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.7988505747126436
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -2077,10 +3850,23 @@ export default {
      "score": 92.372,
      "safety": 1.0,
      "quality": 0.8979,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.972677595628,
+      "path": 0.8497109826589595,
+      "replanning": 0.9673202614379085,
+      "stranding": 1.0,
+      "time": 0.825136612021858
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -2090,12 +3876,26 @@ export default {
      "score": 18.4082,
      "safety": 0.2009,
      "quality": 0.8879,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.961290322581,
+      "path": 0.8367346938775511,
+      "replanning": 0.976,
+      "stranding": 1.0,
+      "time": 0.8064516129032258
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
-   ]
+   ],
+   "rank": 5
   },
   {
    "id": "static-shortest-path-v1",
@@ -2108,6 +3908,108 @@ export default {
    ],
    "safety": 0.3695,
    "quality": 0.8662,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 99.141668369,
+     "worst_episode": 99.141668369
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.032613843748,
+     "score": 3.166462107,
+     "worst_episode": 3.166462107
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.269277191162,
+     "score": 26.015088379,
+     "worst_episode": 26.015088379
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 4.062494931,
+     "worst_episode": 4.062494931
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.098517012719,
+     "score": 9.042266683,
+     "worst_episode": 9.042266683
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 1.0,
+     "score": 99.002197894,
+     "worst_episode": 99.002197894
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.01164817721,
+     "score": 0.918717752,
+     "worst_episode": 0.918717752
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.20390688382,
+     "score": 19.6527312858,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "fb7fd8754434f630542f8d97dc59fff83769d6bff2410e66e5e71a14610d2394",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "bbed8b1531989bea6e1e7c0dc6168ad7bd853e7cfd7af6e22e2ab7b48ee39fb8"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 34.1348896115,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "674de0065dc6c4b8bea960890f57e46f3d7b4dafc9b99a0c2294432350e67363",
+     "statistic": "family_balanced_mean",
+     "upper": 39.0043790295
+    }
+   },
    "averages": {
     "family_balanced": 36.1002,
     "micro": 28.3093,
@@ -2271,10 +4173,23 @@ export default {
      "score": 99.1417,
      "safety": 1.0,
      "quality": 0.9884,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.965517241379,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -2284,10 +4199,23 @@ export default {
      "score": 3.1665,
      "safety": 0.0326,
      "quality": 0.9607,
+     "failure": null,
+     "components": {
+      "casualty": 0.057980166664,
+      "evacuation": 0.5625,
+      "hazard": 0.886710239651,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 27,
      "casualties": 9,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -2297,10 +4225,23 @@ export default {
      "score": 26.0151,
      "safety": 0.2693,
      "quality": 0.9543,
+     "failure": null,
+     "components": {
+      "casualty": 0.351708984375,
+      "evacuation": 0.765625,
+      "hazard": 0.869047619048,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 7,
      "casualties": 1,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -2310,10 +4251,23 @@ export default {
      "score": 100.0,
      "safety": 1.0,
      "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -2323,10 +4277,25 @@ export default {
      "score": 4.0625,
      "safety": 0.0792,
      "quality": 0.8221,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.555555555556,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.592592592593,
+     "severe": [
+      "hazard"
+     ],
      "evacuated": 6,
      "casualties": 2,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -2336,10 +4305,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6828,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.8,
+      "path": 1.0,
+      "replanning": 0.2717391304347826,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.434782608696,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -2349,10 +4333,23 @@ export default {
      "score": 9.0423,
      "safety": 0.0985,
      "quality": 0.8902,
+     "failure": null,
+     "components": {
+      "casualty": 0.162854653678,
+      "evacuation": 0.604938271605,
+      "hazard": 0.775510204082,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9387755102040817
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 7,
      "casualties": 2,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -2362,10 +4359,23 @@ export default {
      "score": 99.0022,
      "safety": 1.0,
      "quality": 0.9865,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.96,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -2375,10 +4385,23 @@ export default {
      "score": 0.9187,
      "safety": 0.0116,
      "quality": 0.7247,
+     "failure": null,
+     "components": {
+      "casualty": 0.022469477642,
+      "evacuation": 0.5184,
+      "hazard": 0.948181365222,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5440956651718983
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 72,
      "casualties": 28,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -2388,10 +4411,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7263,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.785714285714,
+      "path": 1.0,
+      "replanning": 0.3541666666666667,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.566666666667,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 1,
      "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -2401,10 +4439,25 @@ export default {
      "score": 1.9533,
      "safety": 0.0391,
      "quality": 0.737,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.753846153846,
+      "path": 1.0,
+      "replanning": 0.391304347826087,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.626086956522,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -2414,10 +4467,23 @@ export default {
      "score": 96.7729,
      "safety": 1.0,
      "quality": 0.9565,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.875,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -2427,10 +4493,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7389,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.787234042553,
+      "path": 1.0,
+      "replanning": 0.37857142857142856,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.605714285714,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -2440,10 +4521,23 @@ export default {
      "score": 97.801,
      "safety": 1.0,
      "quality": 0.9703,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.913461538462,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -2453,10 +4547,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7199,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.733333333333,
+      "path": 1.0,
+      "replanning": 0.36619718309859156,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.458316118936,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -2466,10 +4576,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3297,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32972972972972975,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.527567567568,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -2479,10 +4604,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.685,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.642857142857,
+      "path": 1.0,
+      "replanning": 0.3424657534246575,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.375733855186,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
      "evacuated": 1,
      "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -2492,10 +4633,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3289,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3288888888888889,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.526222222222,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -2505,12 +4661,1654 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3297,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32972972972972975,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.527567567568,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
-   ]
+   ],
+   "rank": 6
+  },
+  {
+   "id": "openrouter-nace-ai_drex-v2.0-choice-r1",
+   "name": "nace-ai/drex-v2.0",
+   "kind": "Decision model",
+   "score": 32.6593,
+   "ci": [
+    30.793,
+    35.4236
+   ],
+   "safety": 0.3568,
+   "quality": 0.7554,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 1.0,
+     "score": 92.894236194,
+     "worst_episode": 92.894236194
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 91.158162226,
+     "worst_episode": 91.158162226
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 7.472792908,
+     "worst_episode": 7.472792908
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0390688382,
+     "score": 2.530479517,
+     "worst_episode": 2.530479517
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.098517012719,
+     "score": 6.556285125,
+     "worst_episode": 6.556285125
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.139749879625,
+     "score": 6.77165122,
+     "worst_episode": 6.77165122
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.21172065146,
+     "score": 19.2093566495,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "13cf35f57a245c98cd74a3407868137e4afb5cf368e3fd663bfe18f16e8960b1",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "b4ecd35afb266dc5d35e2301e53745eb39e4668892de58a0bbcd6dfad041ab57"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 30.79298588057,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "cbcf6b9a3d35df52ba9aa5fd66c7080e072a968e5e28319e52fa3aaa65e7aae3",
+     "statistic": "family_balanced_mean",
+     "upper": 35.42356794339625
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "4b26595ad40e9972b233f50ba5365a13dc0c559d80458e75c970ffbb251a5a61",
+    "protocol": "public-development"
+   },
+   "averages": {
+    "family_balanced": 32.6593,
+    "micro": 26.2883,
+    "scenario_balanced": 32.6593
+   },
+   "totals": {
+    "avoidable_casualties": 43,
+    "avoidable_stranded": 3,
+    "escapable": 241,
+    "evacuated": 195,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.3862,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.6143,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": 0.8931,
+     "defined": 18,
+     "total": 19
+    },
+    "path": {
+     "value": 0.8343,
+     "defined": 18,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.4209,
+     "defined": 9,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9102,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": 0.8809,
+     "defined": 18,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 7,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 7.1222,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 2,
+     "path": 1,
+     "replanning": 9,
+     "time": 0
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-03-corridor-bottleneck",
+    "zero_score_episode_trials": 7
+   },
+   "diagnostics": {
+    "congestion_block_rate": 0.2073,
+    "congestion_blocks": 1209,
+    "contested_cell_steps": 636,
+    "evacuations": 195,
+    "exit_active_steps": 365,
+    "exit_throughput": 0.5342,
+    "hotspot_cells": 220,
+    "movement_attempts": 5832,
+    "peak_contested_cells": 17
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 100.0,
+     "safety": 1.0,
+     "worst": 100.0
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 92.8942,
+     "safety": 1.0,
+     "worst": 92.8942
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 91.1582,
+     "safety": 1.0,
+     "worst": 91.1582
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 7.4728,
+     "safety": 0.0792,
+     "worst": 7.4728
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 2.5305,
+     "safety": 0.0391,
+     "worst": 2.5305
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 6.5563,
+     "safety": 0.0985,
+     "worst": 6.5563
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 6.7717,
+     "safety": 0.1397,
+     "worst": 6.7717
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 19.2094,
+     "safety": 0.2117,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "scored",
+     "score": 100.0,
+     "safety": 1.0,
+     "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "scored",
+     "score": 92.8942,
+     "safety": 1.0,
+     "quality": 0.9048,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.959706959707,
+      "path": 0.7058823529411765,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.945054945054945
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 36,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.8336,
+     "failure": null,
+     "components": {
+      "casualty": 0.019088120712,
+      "evacuation": 0.25,
+      "hazard": 0.745098039216,
+      "path": 0.88,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8823529411764706
+     },
+     "severity": 0.79477124183,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 4,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "scored",
+     "score": 91.1582,
+     "safety": 1.0,
+     "quality": 0.882,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.90243902439,
+      "path": 0.8536585365853658,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8780487804878049
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "scored",
+     "score": 7.4728,
+     "safety": 0.0792,
+     "quality": 0.9241,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.875,
+      "path": 0.9487179487179487,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.95
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 6,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "scored",
+     "score": 2.5305,
+     "safety": 0.0391,
+     "quality": 0.7685,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.891891891892,
+      "path": 0.8918918918918919,
+      "replanning": 0.4915254237288136,
+      "stranding": 1.0,
+      "time": 0.8918918918918919
+     },
+     "severity": 0.786440677966,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "scored",
+     "score": 6.5563,
+     "safety": 0.0985,
+     "quality": 0.8031,
+     "failure": null,
+     "components": {
+      "casualty": 0.162854653678,
+      "evacuation": 0.604938271605,
+      "hazard": 0.733333333333,
+      "path": 0.8620689655172413,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8333333333333334
+     },
+     "severity": 0.782222222222,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 7,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 2,
+     "stranded": 3,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "scored",
+     "score": 6.7717,
+     "safety": 0.1397,
+     "quality": 0.6569,
+     "failure": null,
+     "components": {
+      "casualty": 0.16157923416,
+      "evacuation": 0.8649,
+      "hazard": 0.982094594595,
+      "path": 0.41280148423005564,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5864864864864865
+     },
+     "severity": 0.660482374768,
+     "severe": [
+      "path"
+     ],
+     "evacuated": 93,
+     "casualties": 7,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7539,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.949152542373,
+      "path": 1.0,
+      "replanning": 0.3402777777777778,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.544444444444,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "scored",
+     "score": 1.9374,
+     "safety": 0.0391,
+     "quality": 0.7288,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.96,
+      "path": 0.8666666666666667,
+      "replanning": 0.391304347826087,
+      "stranding": 1.0,
+      "time": 0.8666666666666667
+     },
+     "severity": 0.626086956522,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "scored",
+     "score": 92.7741,
+     "safety": 1.0,
+     "quality": 0.9032,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.90350877193,
+      "path": 0.8761061946902655,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9122807017543859
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 6,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "scored",
+     "score": 1.9146,
+     "safety": 0.0391,
+     "quality": 0.7501,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.933333333333,
+      "path": 0.9466666666666667,
+      "replanning": 0.37857142857142856,
+      "stranding": 1.0,
+      "time": 0.9466666666666667
+     },
+     "severity": 0.605714285714,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "scored",
+     "score": 93.6465,
+     "safety": 1.0,
+     "quality": 0.9148,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.938596491228,
+      "path": 0.8761061946902655,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9122807017543859
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 6,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "scored",
+     "score": 1.8208,
+     "safety": 0.0391,
+     "quality": 0.7526,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.893333333333,
+      "path": 1.0,
+      "replanning": 0.3591549295774648,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.574647887324,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7573,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": 0.32882882882882886,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.526126126126,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7307,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.901639344262,
+      "path": 0.9672131147540983,
+      "replanning": 0.3378995433789954,
+      "stranding": 1.0,
+      "time": 0.9672131147540983
+     },
+     "severity": 0.540639269406,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7617,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": 0.33666666666666667,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.538666666667,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7573,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": 0.32882882882882886,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.526126126126,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "api": {
+    "resolved_models": [
+     "nace-ai/drex-v2.0-20261009"
+    ],
+    "requests": 725,
+    "decisions": 580,
+    "input_tokens": 1964731,
+    "output_tokens": 473942,
+    "cost_usd": 0.117884,
+    "cost_source": "reported",
+    "wall_clock_s": 720.7,
+    "mean_act_latency_s": 1.237,
+    "first_response_s": 1.732,
+    "median_response_s": 0.792,
+    "cache_hits": 53,
+    "retries": 26,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 7
+  },
+  {
+   "id": "openrouter-liquid_d1-ultra-choice-r1",
+   "name": "liquid/d1-ultra",
+   "kind": "Decision model",
+   "score": 32.3909,
+   "ci": [
+    32.3514,
+    32.4501
+   ],
+   "safety": 0.3339,
+   "quality": 0.7154,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 98.758556428,
+     "worst_episode": 98.758556428
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.009725122549,
+     "score": 0.774265718,
+     "worst_episode": 0.774265718
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.021457672119,
+     "score": 1.901925254,
+     "worst_episode": 1.901925254
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 98.995474339,
+     "worst_episode": 98.995474339
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 1.0,
+     "score": 96.681242491,
+     "worst_episode": 96.681242491
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.295962110564,
+     "score": 26.373840615,
+     "worst_episode": 26.373840615
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.004283483909,
+     "score": 0.028247069,
+     "worst_episode": 0.028247069
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.00781376764,
+     "score": 0.3950757155,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "7e9b1d5714f2b47ef6734b5c7c92fef6618a222a0e4d161f76d6e2be10f536a3",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "8168c140676cc7568c5a9a7d1d9ea73f07e849c76ff2ddc2aee615193d8cb250"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 32.3513551914,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "e2785b0a378590a542c9414ce9da393936b01474ee98daca3b5878d7fe178f22",
+     "statistic": "family_balanced_mean",
+     "upper": 32.4500945305
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "4b26595ad40e9972b233f50ba5365a13dc0c559d80458e75c970ffbb251a5a61",
+    "protocol": "public-development"
+   },
+   "averages": {
+    "family_balanced": 32.3909,
+    "micro": 17.235,
+    "scenario_balanced": 32.3909
+   },
+   "totals": {
+    "avoidable_casualties": 93,
+    "avoidable_stranded": 3,
+    "escapable": 241,
+    "evacuated": 145,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.357,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.5447,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": 0.9194,
+     "defined": 18,
+     "total": 19
+    },
+    "path": {
+     "value": 0.9426,
+     "defined": 18,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.2899,
+     "defined": 12,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9102,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": 0.7982,
+     "defined": 18,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 10,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 1.3381,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 1,
+     "path": 0,
+     "replanning": 12,
+     "time": 1
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-06-threatened-exit",
+    "zero_score_episode_trials": 10
+   },
+   "diagnostics": {
+    "congestion_block_rate": 0.2251,
+    "congestion_blocks": 872,
+    "contested_cell_steps": 640,
+    "evacuations": 145,
+    "exit_active_steps": 365,
+    "exit_throughput": 0.3973,
+    "hotspot_cells": 186,
+    "movement_attempts": 3873,
+    "peak_contested_cells": 11
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 98.7586,
+     "safety": 1.0,
+     "worst": 98.7586
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 0.7743,
+     "safety": 0.0097,
+     "worst": 0.7743
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 1.9019,
+     "safety": 0.0215,
+     "worst": 1.9019
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 98.9955,
+     "safety": 1.0,
+     "worst": 98.9955
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 96.6812,
+     "safety": 1.0,
+     "worst": 96.6812
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 26.3738,
+     "safety": 0.296,
+     "worst": 26.3738
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 0.0282,
+     "safety": 0.0043,
+     "worst": 0.0282
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 0.3951,
+     "safety": 0.0078,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "scored",
+     "score": 98.7586,
+     "safety": 1.0,
+     "quality": 0.9832,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9666666666666667
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.7743,
+     "safety": 0.0097,
+     "quality": 0.7339,
+     "failure": null,
+     "components": {
+      "casualty": 0.023825631046,
+      "evacuation": 0.408179012346,
+      "hazard": 0.922818791946,
+      "path": 0.946236559139785,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5788590604026845
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 23,
+     "casualties": 13,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "scored",
+     "score": 1.9019,
+     "safety": 0.0215,
+     "quality": 0.849,
+     "failure": null,
+     "components": {
+      "casualty": 0.054931640625,
+      "evacuation": 0.390625,
+      "hazard": 0.815384615385,
+      "path": 0.9298245614035088,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8461538461538461
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "scored",
+     "score": 98.9955,
+     "safety": 1.0,
+     "quality": 0.9864,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.972972972972973
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "scored",
+     "score": 96.6812,
+     "safety": 1.0,
+     "quality": 0.9552,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.966666666667,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9333333333333333
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 8,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6906,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.96,
+      "path": 0.8333333333333334,
+      "replanning": 0.3627450980392157,
+      "stranding": 1.0,
+      "time": 0.8
+     },
+     "severity": 0.580392156863,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "scored",
+     "score": 26.3738,
+     "safety": 0.296,
+     "quality": 0.8552,
+     "failure": null,
+     "components": {
+      "casualty": 0.374577046182,
+      "evacuation": 0.79012345679,
+      "hazard": 0.811594202899,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8405797101449275
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 8,
+     "casualties": 1,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 2,
+     "stranded": 3,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.0282,
+     "safety": 0.0043,
+     "quality": 0.4134,
+     "failure": null,
+     "components": {
+      "casualty": 0.010792350488,
+      "evacuation": 0.3969,
+      "hazard": 0.985358711567,
+      "path": 0.8384925975773889,
+      "replanning": 0.11486486486486487,
+      "stranding": 1.0,
+      "time": 0.4299658369936554
+     },
+     "severity": 0.126433197473,
+     "severe": [
+      "time",
+      "replanning"
+     ],
+     "evacuated": 63,
+     "casualties": 37,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7001,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.817204301075,
+      "path": 0.9444444444444444,
+      "replanning": 0.47342995169082125,
+      "stranding": 1.0,
+      "time": 0.7419354838709677
+     },
+     "severity": 0.757487922705,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.727,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.770833333333,
+      "path": 1.0,
+      "replanning": 0.36231884057971014,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.579710144928,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "scored",
+     "score": 1.9724,
+     "safety": 0.0391,
+     "quality": 0.7552,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.897058823529,
+      "path": 1.0,
+      "replanning": 0.3880597014925373,
+      "stranding": 1.0,
+      "time": 0.9558823529411765
+     },
+     "severity": 0.620895522388,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7361,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.833333333333,
+      "path": 1.0,
+      "replanning": 0.3523809523809524,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.56380952381,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "scored",
+     "score": 1.9783,
+     "safety": 0.0391,
+     "quality": 0.7583,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.911764705882,
+      "path": 1.0,
+      "replanning": 0.3880597014925373,
+      "stranding": 1.0,
+      "time": 0.9558823529411765
+     },
+     "severity": 0.620895522388,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6418,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.802469135802,
+      "path": 0.8507462686567164,
+      "replanning": 0.38823529411764707,
+      "stranding": 1.0,
+      "time": 0.7037037037037037
+     },
+     "severity": 0.621176470588,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6393,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.794871794872,
+      "path": 1.0,
+      "replanning": 0.364741641337386,
+      "stranding": 1.0,
+      "time": 0.6923076923076923
+     },
+     "severity": 0.58358662614,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6726,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.811320754717,
+      "path": 0.9534883720930233,
+      "replanning": 0.37962962962962965,
+      "stranding": 1.0,
+      "time": 0.7735849056603774
+     },
+     "severity": 0.607407407407,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6254,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.763157894737,
+      "path": 0.8360655737704918,
+      "replanning": 0.3989071038251366,
+      "stranding": 1.0,
+      "time": 0.6710526315789473
+     },
+     "severity": 0.63825136612,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6165,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.72602739726,
+      "path": 0.7741935483870968,
+      "replanning": 0.42402826855123676,
+      "stranding": 1.0,
+      "time": 0.6575342465753424
+     },
+     "severity": 0.525407812576,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "api": {
+    "resolved_models": [
+     "liquid/d1-ultra-20261015"
+    ],
+    "requests": 753,
+    "decisions": 716,
+    "input_tokens": 2344876,
+    "output_tokens": 0,
+    "cost_usd": 0.098485,
+    "cost_source": "reported",
+    "wall_clock_s": 587.0,
+    "mean_act_latency_s": 0.815,
+    "first_response_s": 0.805,
+    "median_response_s": 0.696,
+    "cache_hits": 76,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 8
   },
   {
    "id": "openrouter-openai_gpt-6-luna-decisions-choice-r1",
@@ -2523,6 +6321,111 @@ export default {
    ],
    "safety": 0.3406,
    "quality": 0.7157,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 93.849001064,
+     "worst_episode": 93.849001064
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.013259114505,
+     "score": 0.9950646,
+     "worst_episode": 0.9950646
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 97.360621645,
+     "worst_episode": 97.360621645
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 7.41976862,
+     "worst_episode": 7.41976862
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 1.0,
+     "score": 82.11585729,
+     "worst_episode": 82.11585729
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.295962110564,
+     "score": 25.277024637,
+     "worst_episode": 25.277024637
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.017974129426,
+     "score": 0.524681273,
+     "worst_episode": 0.524681273
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "f3074caf9d9e714ead90e9d5ee22813a007fca828d9007080f80c6c280c35163",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "2aca0f6061f433b86aadeb23b494d6e9f75199f86c7bf18ad7b1370fce918f3a"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 30.7542019129,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "daf8933e95a846a055451a2f1f56402d68687dcd0f4b621daf53a3c083756bc3",
+     "statistic": "family_balanced_mean",
+     "upper": 30.7542019129
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "a2cc029e056a6860b8a31bb92d61406ece9b0752501e53ae1c0e4f30e18e8a5c",
+    "protocol": "public-development"
+   },
    "averages": {
     "family_balanced": 30.7542,
     "micro": 16.1864,
@@ -2686,10 +6589,23 @@ export default {
      "score": 93.849,
      "safety": 1.0,
      "quality": 0.9175,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.8787878787878788,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8787878787878788
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -2699,10 +6615,23 @@ export default {
      "score": 0.9951,
      "safety": 0.0133,
      "quality": 0.6774,
+     "failure": null,
+     "components": {
+      "casualty": 0.029833007636,
+      "evacuation": 0.444444444444,
+      "hazard": 0.933870967742,
+      "path": 0.5128939828080229,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.6
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 24,
      "casualties": 12,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -2712,10 +6641,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.9336,
+     "failure": null,
+     "components": {
+      "casualty": 0.019088120712,
+      "evacuation": 0.25,
+      "hazard": 0.916666666667,
+      "path": 0.9565217391304348,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9375
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 4,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -2725,10 +6667,23 @@ export default {
      "score": 97.3606,
      "safety": 1.0,
      "quality": 0.9644,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.9459459459459459,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9473684210526315
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -2738,10 +6693,23 @@ export default {
      "score": 7.4198,
      "safety": 0.0792,
      "quality": 0.9152,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.85,
+      "path": 0.9487179487179487,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.95
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 2,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -2751,10 +6719,23 @@ export default {
      "score": 82.1159,
      "safety": 1.0,
      "quality": 0.7654,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.851351351351,
+      "path": 0.6756756756756757,
+      "replanning": 0.8571428571428571,
+      "stranding": 1.0,
+      "time": 0.6891891891891891
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -2764,10 +6745,23 @@ export default {
      "score": 25.277,
      "safety": 0.296,
      "quality": 0.8073,
+     "failure": null,
+     "components": {
+      "casualty": 0.374577046182,
+      "evacuation": 0.79012345679,
+      "hazard": 0.802469135802,
+      "path": 0.7631578947368421,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.7160493827160493
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 8,
      "casualties": 1,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -2777,10 +6771,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 2,
      "stranded": 3,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -2790,10 +6797,26 @@ export default {
      "score": 0.5247,
      "safety": 0.018,
      "quality": 0.5686,
+     "failure": null,
+     "components": {
+      "casualty": 0.031118645128,
+      "evacuation": 0.5776,
+      "hazard": 0.981654810932,
+      "path": 0.3838120104438642,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.45039311119430925
+     },
+     "severity": 0.442537690874,
+     "severe": [
+      "time",
+      "path"
+     ],
      "evacuated": 76,
      "casualties": 24,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -2803,10 +6826,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7172,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.785714285714,
+      "path": 1.0,
+      "replanning": 0.3368055555555556,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.538888888889,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 1,
      "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -2816,10 +6854,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7171,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.770833333333,
+      "path": 1.0,
+      "replanning": 0.34299516908212563,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.548792270531,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -2829,10 +6882,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7694,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.958333333333,
+      "path": 1.0,
+      "replanning": 0.3656716417910448,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.585074626866,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -2842,10 +6910,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7286,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.833333333333,
+      "path": 1.0,
+      "replanning": 0.3380952380952381,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.540952380952,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -2855,10 +6938,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7694,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.958333333333,
+      "path": 1.0,
+      "replanning": 0.3656716417910448,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.585074626866,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -2868,10 +6966,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7111,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.733333333333,
+      "path": 1.0,
+      "replanning": 0.3485915492957746,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.436281690141,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -2881,10 +6995,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3297,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32972972972972975,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.527567567568,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -2894,10 +7023,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6822,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.642857142857,
+      "path": 1.0,
+      "replanning": 0.336986301369863,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.369722113503,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
      "evacuated": 1,
      "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -2907,10 +7052,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3222,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32222222222222224,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.515555555556,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -2920,10 +7080,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3297,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32972972972972975,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.527567567568,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
    ],
    "api": {
@@ -2939,423 +7114,14 @@ export default {
     "wall_clock_s": 367.9,
     "mean_act_latency_s": 0.577,
     "first_response_s": null,
-    "median_response_s": null
-   }
-  },
-  {
-   "id": "nearest-exit-greedy-v1",
-   "name": "nearest-exit-greedy-v1",
-   "kind": "Reference agent",
-   "score": 26.1999,
-   "ci": [
-    24.2347,
-    29.0939
-   ],
-   "safety": 0.2695,
-   "quality": 0.7675,
-   "averages": {
-    "family_balanced": 26.1999,
-    "micro": 23.0986,
-    "scenario_balanced": 26.1999
+    "median_response_s": null,
+    "cache_hits": 55,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
    },
-   "totals": {
-    "avoidable_casualties": 84,
-    "avoidable_stranded": 3,
-    "escapable": 241,
-    "evacuated": 154,
-    "trials": 1,
-    "unavoidable_losses": 0
-   },
-   "components": {
-    "casualty": {
-     "value": 0.3027,
-     "defined": 19,
-     "total": 19
-    },
-    "evacuation": {
-     "value": 0.555,
-     "defined": 19,
-     "total": 19
-    },
-    "hazard": {
-     "value": 0.8428,
-     "defined": 15,
-     "total": 19
-    },
-    "path": {
-     "value": 1.0,
-     "defined": 15,
-     "total": 19
-    },
-    "replanning": {
-     "value": 0.3122,
-     "defined": 9,
-     "total": 19
-    },
-    "stranding": {
-     "value": 0.9102,
-     "defined": 19,
-     "total": 19
-    },
-    "time": {
-     "value": 0.9425,
-     "defined": 15,
-     "total": 19
-    }
-   },
-   "robustness": {
-    "catastrophic_episode_trials": 9,
-    "cvar10_episode": 0.0,
-    "failed_episode_trials": {
-     "invalid_output": 0,
-     "missing": 0,
-     "model_error": 0,
-     "timeout": 0
-    },
-    "median_scenario": 6.5524,
-    "p10_episode": 0.0,
-    "severe_episode_trials": {
-     "hazard": 3,
-     "path": 0,
-     "replanning": 9,
-     "time": 0
-    },
-    "worst_scenario": 0.0,
-    "worst_scenario_id": "v1-pub-06-threatened-exit",
-    "zero_score_episode_trials": 9
-   },
-   "diagnostics": {
-    "congestion_block_rate": 0.6283,
-    "congestion_blocks": 3049,
-    "contested_cell_steps": 672,
-    "evacuations": 154,
-    "exit_active_steps": 174,
-    "exit_throughput": 0.8851,
-    "hotspot_cells": 140,
-    "movement_attempts": 4853,
-    "peak_contested_cells": 13
-   },
-   "scenarios": [
-    {
-     "name": "v1-pub-01-single-exit-sparse",
-     "episodes": 1,
-     "score": 99.1417,
-     "safety": 1.0,
-     "worst": 99.1417
-    },
-    {
-     "name": "v1-pub-02-single-exit-dense",
-     "episodes": 1,
-     "score": 3.1665,
-     "safety": 0.0326,
-     "worst": 3.1665
-    },
-    {
-     "name": "v1-pub-03-corridor-bottleneck",
-     "episodes": 1,
-     "score": 26.0151,
-     "safety": 0.2693,
-     "worst": 26.0151
-    },
-    {
-     "name": "v1-pub-04-unequal-exits",
-     "episodes": 1,
-     "score": 100.0,
-     "safety": 1.0,
-     "worst": 100.0
-    },
-    {
-     "name": "v1-pub-05-central-ignition",
-     "episodes": 1,
-     "score": 4.0625,
-     "safety": 0.0792,
-     "worst": 4.0625
-    },
-    {
-     "name": "v1-pub-06-threatened-exit",
-     "episodes": 1,
-     "score": 0.0,
-     "safety": 0.0,
-     "worst": 0.0
-    },
-    {
-     "name": "v1-pub-07-multiple-ignitions",
-     "episodes": 1,
-     "score": 9.0423,
-     "safety": 0.0985,
-     "worst": 9.0423
-    },
-    {
-     "name": "v1-pub-08-maze-deceptive-exit",
-     "episodes": 1,
-     "score": 0.0,
-     "safety": 0.0,
-     "worst": 0.0
-    },
-    {
-     "name": "v1-pub-09-crowd-100-split-flow",
-     "episodes": 1,
-     "score": 0.9187,
-     "safety": 0.0116,
-     "worst": 0.9187
-    },
-    {
-     "name": "v1-pub-10-route-invalidation",
-     "episodes": 10,
-     "score": 19.6527,
-     "safety": 0.2039,
-     "worst": 0.0
-    }
-   ],
-   "episodes": [
-    {
-     "index": 0,
-     "scenario_id": "v1-pub-01-single-exit-sparse",
-     "seed": 0,
-     "status": "scored",
-     "score": 99.1417,
-     "safety": 1.0,
-     "quality": 0.9884,
-     "evacuated": 4,
-     "casualties": 0,
-     "stranded": 0,
-     "population": 4
-    },
-    {
-     "index": 1,
-     "scenario_id": "v1-pub-02-single-exit-dense",
-     "seed": 0,
-     "status": "scored",
-     "score": 3.1665,
-     "safety": 0.0326,
-     "quality": 0.9607,
-     "evacuated": 27,
-     "casualties": 9,
-     "stranded": 0,
-     "population": 36
-    },
-    {
-     "index": 2,
-     "scenario_id": "v1-pub-03-corridor-bottleneck",
-     "seed": 0,
-     "status": "scored",
-     "score": 26.0151,
-     "safety": 0.2693,
-     "quality": 0.9543,
-     "evacuated": 7,
-     "casualties": 1,
-     "stranded": 0,
-     "population": 8
-    },
-    {
-     "index": 3,
-     "scenario_id": "v1-pub-04-unequal-exits",
-     "seed": 0,
-     "status": "scored",
-     "score": 100.0,
-     "safety": 1.0,
-     "quality": 1.0,
-     "evacuated": 5,
-     "casualties": 0,
-     "stranded": 0,
-     "population": 5
-    },
-    {
-     "index": 4,
-     "scenario_id": "v1-pub-05-central-ignition",
-     "seed": 0,
-     "status": "scored",
-     "score": 4.0625,
-     "safety": 0.0792,
-     "quality": 0.8221,
-     "evacuated": 6,
-     "casualties": 2,
-     "stranded": 0,
-     "population": 8
-    },
-    {
-     "index": 5,
-     "scenario_id": "v1-pub-06-threatened-exit",
-     "seed": 0,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.6828,
-     "evacuated": 3,
-     "casualties": 3,
-     "stranded": 0,
-     "population": 6
-    },
-    {
-     "index": 6,
-     "scenario_id": "v1-pub-07-multiple-ignitions",
-     "seed": 0,
-     "status": "scored",
-     "score": 9.0423,
-     "safety": 0.0985,
-     "quality": 0.8902,
-     "evacuated": 7,
-     "casualties": 2,
-     "stranded": 0,
-     "population": 9
-    },
-    {
-     "index": 7,
-     "scenario_id": "v1-pub-08-maze-deceptive-exit",
-     "seed": 0,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.0,
-     "evacuated": 0,
-     "casualties": 2,
-     "stranded": 3,
-     "population": 5
-    },
-    {
-     "index": 8,
-     "scenario_id": "v1-pub-09-crowd-100-split-flow",
-     "seed": 0,
-     "status": "scored",
-     "score": 0.9187,
-     "safety": 0.0116,
-     "quality": 0.7247,
-     "evacuated": 72,
-     "casualties": 28,
-     "stranded": 0,
-     "population": 100
-    },
-    {
-     "index": 9,
-     "scenario_id": "v1-pub-10-route-invalidation",
-     "seed": 0,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.7263,
-     "evacuated": 1,
-     "casualties": 5,
-     "stranded": 0,
-     "population": 6
-    },
-    {
-     "index": 10,
-     "scenario_id": "v1-pub-10-route-invalidation",
-     "seed": 1,
-     "status": "scored",
-     "score": 1.9533,
-     "safety": 0.0391,
-     "quality": 0.737,
-     "evacuated": 4,
-     "casualties": 2,
-     "stranded": 0,
-     "population": 6
-    },
-    {
-     "index": 11,
-     "scenario_id": "v1-pub-10-route-invalidation",
-     "seed": 2,
-     "status": "scored",
-     "score": 96.7729,
-     "safety": 1.0,
-     "quality": 0.9565,
-     "evacuated": 6,
-     "casualties": 0,
-     "stranded": 0,
-     "population": 6
-    },
-    {
-     "index": 12,
-     "scenario_id": "v1-pub-10-route-invalidation",
-     "seed": 3,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.7389,
-     "evacuated": 3,
-     "casualties": 3,
-     "stranded": 0,
-     "population": 6
-    },
-    {
-     "index": 13,
-     "scenario_id": "v1-pub-10-route-invalidation",
-     "seed": 4,
-     "status": "scored",
-     "score": 97.801,
-     "safety": 1.0,
-     "quality": 0.9703,
-     "evacuated": 6,
-     "casualties": 0,
-     "stranded": 0,
-     "population": 6
-    },
-    {
-     "index": 14,
-     "scenario_id": "v1-pub-10-route-invalidation",
-     "seed": 5,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.7199,
-     "evacuated": 2,
-     "casualties": 4,
-     "stranded": 0,
-     "population": 6
-    },
-    {
-     "index": 15,
-     "scenario_id": "v1-pub-10-route-invalidation",
-     "seed": 6,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.3297,
-     "evacuated": 0,
-     "casualties": 6,
-     "stranded": 0,
-     "population": 6
-    },
-    {
-     "index": 16,
-     "scenario_id": "v1-pub-10-route-invalidation",
-     "seed": 7,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.685,
-     "evacuated": 1,
-     "casualties": 5,
-     "stranded": 0,
-     "population": 6
-    },
-    {
-     "index": 17,
-     "scenario_id": "v1-pub-10-route-invalidation",
-     "seed": 8,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.3289,
-     "evacuated": 0,
-     "casualties": 6,
-     "stranded": 0,
-     "population": 6
-    },
-    {
-     "index": 18,
-     "scenario_id": "v1-pub-10-route-invalidation",
-     "seed": 9,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.3297,
-     "evacuated": 0,
-     "casualties": 6,
-     "stranded": 0,
-     "population": 6
-    }
-   ]
+   "rank": 9
   },
   {
    "id": "openrouter-nace-ai_drex-max-choice-r1",
@@ -3368,6 +7134,111 @@ export default {
    ],
    "safety": 0.2757,
    "quality": 0.7039,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 98.758556428,
+     "worst_episode": 98.758556428
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.009725122549,
+     "score": 0.762874708,
+     "worst_episode": 0.762874708
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.021457672119,
+     "score": 1.910033784,
+     "worst_episode": 1.910033784
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 98.995474339,
+     "worst_episode": 98.995474339
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.269277191162,
+     "score": 25.0956441,
+     "worst_episode": 25.0956441
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0390688382,
+     "score": 1.946854895,
+     "worst_episode": 1.946854895
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.295962110564,
+     "score": 25.696128016,
+     "worst_episode": 25.696128016
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.009364961219,
+     "score": 0.062134536,
+     "worst_episode": 0.062134536
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.112190044464,
+     "score": 8.3320363801,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "e4b710779b8a8efe03a624bd0973b8111bee0b4a626b2c93dda4652aaa867189",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "f6db01c23eb9ecdbc4d8b662e35a00d9665200caea429e631e95d1992783c5bb"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 25.74077682141,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "6169d0c5dfec9deb85f3c55d14c7eda6aa01dc2e975673af0e46ae12071bc730",
+     "statistic": "family_balanced_mean",
+     "upper": 26.56042748563525
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "a2cc029e056a6860b8a31bb92d61406ece9b0752501e53ae1c0e4f30e18e8a5c",
+    "protocol": "public-development"
+   },
    "averages": {
     "family_balanced": 26.156,
     "micro": 17.7131,
@@ -3531,10 +7402,23 @@ export default {
      "score": 98.7586,
      "safety": 1.0,
      "quality": 0.9832,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9666666666666667
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -3544,10 +7428,23 @@ export default {
      "score": 0.7629,
      "safety": 0.0097,
      "quality": 0.7193,
+     "failure": null,
+     "components": {
+      "casualty": 0.023825631046,
+      "evacuation": 0.408179012346,
+      "hazard": 0.913043478261,
+      "path": 0.8653846153846154,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5769230769230769
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 23,
      "casualties": 13,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -3557,10 +7454,23 @@ export default {
      "score": 1.91,
      "safety": 0.0215,
      "quality": 0.8539,
+     "failure": null,
+     "components": {
+      "casualty": 0.054931640625,
+      "evacuation": 0.390625,
+      "hazard": 0.830769230769,
+      "path": 0.9272727272727272,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8461538461538461
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 3,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -3570,10 +7480,23 @@ export default {
      "score": 98.9955,
      "safety": 1.0,
      "quality": 0.9864,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.972972972972973
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -3583,10 +7506,23 @@ export default {
      "score": 25.0956,
      "safety": 0.2693,
      "quality": 0.9088,
+     "failure": null,
+     "components": {
+      "casualty": 0.351708984375,
+      "evacuation": 0.765625,
+      "hazard": 0.942307692308,
+      "path": 0.9166666666666666,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8846153846153846
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 7,
      "casualties": 1,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -3596,10 +7532,25 @@ export default {
      "score": 1.9469,
      "safety": 0.0391,
      "quality": 0.6765,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.886363636364,
+      "path": 0.7674418604651163,
+      "replanning": 0.4153846153846154,
+      "stranding": 1.0,
+      "time": 0.75
+     },
+     "severity": 0.664615384615,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -3609,10 +7560,23 @@ export default {
      "score": 25.6961,
      "safety": 0.296,
      "quality": 0.8255,
+     "failure": null,
+     "components": {
+      "casualty": 0.374577046182,
+      "evacuation": 0.79012345679,
+      "hazard": 0.864864864865,
+      "path": 0.8787878787878788,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.7837837837837838
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 8,
      "casualties": 1,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -3622,10 +7586,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.24576,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.023825493745,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 1,
      "stranded": 4,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -3635,10 +7612,26 @@ export default {
      "score": 0.0621,
      "safety": 0.0094,
      "quality": 0.407,
+     "failure": null,
+     "components": {
+      "casualty": 0.019112165753,
+      "evacuation": 0.49,
+      "hazard": 0.994519392917,
+      "path": 0.6890672016048145,
+      "replanning": 0.11486486486486487,
+      "stranding": 1.0,
+      "time": 0.4376053962900506
+     },
+     "severity": 0.128679640855,
+     "severe": [
+      "time",
+      "replanning"
+     ],
      "evacuated": 70,
      "casualties": 30,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -3648,10 +7641,23 @@ export default {
      "score": 15.7199,
      "safety": 0.2009,
      "quality": 0.7167,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.883040935673,
+      "path": 0.7483443708609272,
+      "replanning": 0.6345177664974619,
+      "stranding": 1.0,
+      "time": 0.6666666666666666
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -3661,10 +7667,23 @@ export default {
      "score": 15.0383,
      "safety": 0.2009,
      "quality": 0.6749,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.910344827586,
+      "path": 0.6212121212121212,
+      "replanning": 0.6556291390728477,
+      "stranding": 1.0,
+      "time": 0.5793103448275863
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -3674,10 +7693,23 @@ export default {
      "score": 14.6251,
      "safety": 0.2009,
      "quality": 0.6498,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.917808219178,
+      "path": 0.6612903225806451,
+      "replanning": 0.5474452554744526,
+      "stranding": 1.0,
+      "time": 0.5753424657534246
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -3687,10 +7719,23 @@ export default {
      "score": 2.7276,
      "safety": 0.0391,
      "quality": 0.6141,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.928571428571,
+      "path": 0.5806451612903226,
+      "replanning": 0.5338983050847458,
+      "stranding": 1.0,
+      "time": 0.5214285714285715
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -3700,10 +7745,23 @@ export default {
      "score": 14.2809,
      "safety": 0.2009,
      "quality": 0.6292,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.866666666667,
+      "path": 0.640625,
+      "replanning": 0.5390070921985816,
+      "stranding": 1.0,
+      "time": 0.56
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -3713,10 +7771,23 @@ export default {
      "score": 14.6318,
      "safety": 0.2009,
      "quality": 0.6502,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.856382978723,
+      "path": 0.6687898089171974,
+      "replanning": 0.6028708133971292,
+      "stranding": 1.0,
+      "time": 0.5638297872340425
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -3726,10 +7797,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6625,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.959459459459,
+      "path": 0.8,
+      "replanning": 0.4295774647887324,
+      "stranding": 1.0,
+      "time": 0.6486486486486487
+     },
+     "severity": 0.687323943662,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -3739,10 +7825,23 @@ export default {
      "score": 3.1624,
      "safety": 0.0391,
      "quality": 0.7506,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.924369747899,
+      "path": 0.8363636363636363,
+      "replanning": 0.5434782608695652,
+      "stranding": 1.0,
+      "time": 0.7815126050420168
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -3752,10 +7851,23 @@ export default {
      "score": 3.1343,
      "safety": 0.0391,
      "quality": 0.7416,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.940298507463,
+      "path": 0.792,
+      "replanning": 0.5606060606060606,
+      "stranding": 1.0,
+      "time": 0.746268656716418
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -3765,10 +7877,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6883,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.88785046729,
+      "path": 0.7659574468085106,
+      "replanning": 0.5232067510548524,
+      "stranding": 1.0,
+      "time": 0.6728971962616822
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
    ],
    "api": {
@@ -3784,8 +7909,801 @@ export default {
     "wall_clock_s": 1084.0,
     "mean_act_latency_s": 1.323,
     "first_response_s": null,
-    "median_response_s": null
-   }
+    "median_response_s": null,
+    "cache_hits": 37,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 10
+  },
+  {
+   "id": "nearest-exit-greedy-v1",
+   "name": "nearest-exit-greedy-v1",
+   "kind": "Reference agent",
+   "score": 26.1999,
+   "ci": [
+    24.2347,
+    29.0939
+   ],
+   "safety": 0.2695,
+   "quality": 0.7675,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 99.141668369,
+     "worst_episode": 99.141668369
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.032613843748,
+     "score": 3.166462107,
+     "worst_episode": 3.166462107
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.269277191162,
+     "score": 26.015088379,
+     "worst_episode": 26.015088379
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 4.062494931,
+     "worst_episode": 4.062494931
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.098517012719,
+     "score": 9.042266683,
+     "worst_episode": 9.042266683
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.01164817721,
+     "score": 0.918717752,
+     "worst_episode": 0.918717752
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.20390688382,
+     "score": 19.6527312858,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "dff940ffd15aff6a47a4a5b65540a432d2aac3d0f572350560c42de8869228a7",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "568aaa0a53acf8c6a99ba6ae2618222ada7aab2e98ecc85d83c7c2cd492e0df3"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 24.2346698221,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "57ea03c1e07b57b44d6dacac318c0e2a228f1499423ed8adeddfe727ade3c2de",
+     "statistic": "family_balanced_mean",
+     "upper": 29.0938785882
+    }
+   },
+   "averages": {
+    "family_balanced": 26.1999,
+    "micro": 23.0986,
+    "scenario_balanced": 26.1999
+   },
+   "totals": {
+    "avoidable_casualties": 84,
+    "avoidable_stranded": 3,
+    "escapable": 241,
+    "evacuated": 154,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.3027,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.555,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": 0.8428,
+     "defined": 15,
+     "total": 19
+    },
+    "path": {
+     "value": 1.0,
+     "defined": 15,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.3122,
+     "defined": 9,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9102,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": 0.9425,
+     "defined": 15,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 9,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 6.5524,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 3,
+     "path": 0,
+     "replanning": 9,
+     "time": 0
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-06-threatened-exit",
+    "zero_score_episode_trials": 9
+   },
+   "diagnostics": {
+    "congestion_block_rate": 0.6283,
+    "congestion_blocks": 3049,
+    "contested_cell_steps": 672,
+    "evacuations": 154,
+    "exit_active_steps": 174,
+    "exit_throughput": 0.8851,
+    "hotspot_cells": 140,
+    "movement_attempts": 4853,
+    "peak_contested_cells": 13
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 99.1417,
+     "safety": 1.0,
+     "worst": 99.1417
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 3.1665,
+     "safety": 0.0326,
+     "worst": 3.1665
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 26.0151,
+     "safety": 0.2693,
+     "worst": 26.0151
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 100.0,
+     "safety": 1.0,
+     "worst": 100.0
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 4.0625,
+     "safety": 0.0792,
+     "worst": 4.0625
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 9.0423,
+     "safety": 0.0985,
+     "worst": 9.0423
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 0.9187,
+     "safety": 0.0116,
+     "worst": 0.9187
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 19.6527,
+     "safety": 0.2039,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "scored",
+     "score": 99.1417,
+     "safety": 1.0,
+     "quality": 0.9884,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.965517241379,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "scored",
+     "score": 3.1665,
+     "safety": 0.0326,
+     "quality": 0.9607,
+     "failure": null,
+     "components": {
+      "casualty": 0.057980166664,
+      "evacuation": 0.5625,
+      "hazard": 0.886710239651,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 27,
+     "casualties": 9,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "scored",
+     "score": 26.0151,
+     "safety": 0.2693,
+     "quality": 0.9543,
+     "failure": null,
+     "components": {
+      "casualty": 0.351708984375,
+      "evacuation": 0.765625,
+      "hazard": 0.869047619048,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 7,
+     "casualties": 1,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "scored",
+     "score": 100.0,
+     "safety": 1.0,
+     "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "scored",
+     "score": 4.0625,
+     "safety": 0.0792,
+     "quality": 0.8221,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.555555555556,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.592592592593,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 6,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6828,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.8,
+      "path": 1.0,
+      "replanning": 0.2717391304347826,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.434782608696,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "scored",
+     "score": 9.0423,
+     "safety": 0.0985,
+     "quality": 0.8902,
+     "failure": null,
+     "components": {
+      "casualty": 0.162854653678,
+      "evacuation": 0.604938271605,
+      "hazard": 0.775510204082,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9387755102040817
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 7,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 2,
+     "stranded": 3,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.9187,
+     "safety": 0.0116,
+     "quality": 0.7247,
+     "failure": null,
+     "components": {
+      "casualty": 0.022469477642,
+      "evacuation": 0.5184,
+      "hazard": 0.948181365222,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5440956651718983
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 72,
+     "casualties": 28,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7263,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.785714285714,
+      "path": 1.0,
+      "replanning": 0.3541666666666667,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.566666666667,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "scored",
+     "score": 1.9533,
+     "safety": 0.0391,
+     "quality": 0.737,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.753846153846,
+      "path": 1.0,
+      "replanning": 0.391304347826087,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.626086956522,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "scored",
+     "score": 96.7729,
+     "safety": 1.0,
+     "quality": 0.9565,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.875,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 6,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7389,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.787234042553,
+      "path": 1.0,
+      "replanning": 0.37857142857142856,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.605714285714,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "scored",
+     "score": 97.801,
+     "safety": 1.0,
+     "quality": 0.9703,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.913461538462,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 6,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7199,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.733333333333,
+      "path": 1.0,
+      "replanning": 0.36619718309859156,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.458316118936,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3297,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32972972972972975,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.527567567568,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.685,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.642857142857,
+      "path": 1.0,
+      "replanning": 0.3424657534246575,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.375733855186,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3289,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3288888888888889,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.526222222222,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3297,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32972972972972975,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.527567567568,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "rank": 11
   },
   {
    "id": "openrouter-perplexity_pplx-decider-v1.2-choice-r1",
@@ -3798,6 +8716,111 @@ export default {
    ],
    "safety": 0.2747,
    "quality": 0.7175,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 98.758556428,
+     "worst_episode": 98.758556428
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.009725122549,
+     "score": 0.71534566,
+     "worst_episode": 0.71534566
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 98.995474339,
+     "worst_episode": 98.995474339
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.269277191162,
+     "score": 25.815039318,
+     "worst_episode": 25.815039318
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0390688382,
+     "score": 1.5071774,
+     "worst_episode": 1.5071774
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.295962110564,
+     "score": 26.26307927,
+     "worst_episode": 26.26307927
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.024913986177,
+     "score": 0.122104323,
+     "worst_episode": 0.122104323
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.108283160644,
+     "score": 8.0744641222,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "ac6d5f4cab4e4f9c6662090c7e227f6cbbc8051f0112915473e7acee2fc4f145",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "405fce32798b5329f19a02d5db27d813c118f16fada948613e614dd81e70cb10"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 25.598241115386,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "9d9be34d08bacc72be28739536958843d466e6f10342defdf8a9cd4f1e86aad1",
+     "statistic": "family_balanced_mean",
+     "upper": 26.44677074044225
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "a2cc029e056a6860b8a31bb92d61406ece9b0752501e53ae1c0e4f30e18e8a5c",
+    "protocol": "public-development"
+   },
    "averages": {
     "family_balanced": 26.0251,
     "micro": 17.5222,
@@ -3961,10 +8984,23 @@ export default {
      "score": 98.7586,
      "safety": 1.0,
      "quality": 0.9832,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9666666666666667
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -3974,10 +9010,23 @@ export default {
      "score": 0.7153,
      "safety": 0.0097,
      "quality": 0.6592,
+     "failure": null,
+     "components": {
+      "casualty": 0.023825631046,
+      "evacuation": 0.408179012346,
+      "hazard": 0.914715719064,
+      "path": 0.5107033639143731,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5769230769230769
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 23,
      "casualties": 13,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -3987,10 +9036,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.9539,
+     "failure": null,
+     "components": {
+      "casualty": 0.019088120712,
+      "evacuation": 0.25,
+      "hazard": 0.895833333333,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9791666666666666
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 4,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -4000,10 +9062,23 @@ export default {
      "score": 98.9955,
      "safety": 1.0,
      "quality": 0.9864,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.972972972972973
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -4013,10 +9088,23 @@ export default {
      "score": 25.815,
      "safety": 0.2693,
      "quality": 0.9443,
+     "failure": null,
+     "components": {
+      "casualty": 0.351708984375,
+      "evacuation": 0.765625,
+      "hazard": 0.960784313725,
+      "path": 0.9215686274509803,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9411764705882353
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 7,
      "casualties": 1,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -4026,10 +9114,25 @@ export default {
      "score": 1.5072,
      "safety": 0.0391,
      "quality": 0.729,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.970588235294,
+      "path": 1.0,
+      "replanning": 0.30434782608695654,
+      "stranding": 1.0,
+      "time": 0.9705882352941176
+     },
+     "severity": 0.486956521739,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -4039,10 +9142,23 @@ export default {
      "score": 26.2631,
      "safety": 0.296,
      "quality": 0.8503,
+     "failure": null,
+     "components": {
+      "casualty": 0.374577046182,
+      "evacuation": 0.79012345679,
+      "hazard": 0.842857142857,
+      "path": 0.9354838709677419,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8285714285714286
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 8,
      "casualties": 1,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -4052,10 +9168,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.24576,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.023825493745,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 1,
      "stranded": 4,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -4065,10 +9194,27 @@ export default {
      "score": 0.1221,
      "safety": 0.0249,
      "quality": 0.3901,
+     "failure": null,
+     "components": {
+      "casualty": 0.039919862485,
+      "evacuation": 0.6241,
+      "hazard": 0.978471474704,
+      "path": 0.4743351886209029,
+      "replanning": 0.10907335907335908,
+      "stranding": 1.0,
+      "time": 0.4628632938643703
+     },
+     "severity": 0.098088190227,
+     "severe": [
+      "time",
+      "path",
+      "replanning"
+     ],
      "evacuated": 79,
      "casualties": 21,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -4078,10 +9224,23 @@ export default {
      "score": 2.8864,
      "safety": 0.0391,
      "quality": 0.6631,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.812949640288,
+      "path": 0.6496350364963503,
+      "replanning": 0.5664739884393064,
+      "stranding": 1.0,
+      "time": 0.6474820143884892
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -4091,10 +9250,23 @@ export default {
      "score": 15.5536,
      "safety": 0.2009,
      "quality": 0.7064,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.863945578231,
+      "path": 0.5586206896551724,
+      "replanning": 0.8928571428571429,
+      "stranding": 1.0,
+      "time": 0.5714285714285714
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -4104,10 +9276,23 @@ export default {
      "score": 15.2562,
      "safety": 0.2009,
      "quality": 0.6882,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.923076923077,
+      "path": 0.5774647887323944,
+      "replanning": 0.7101449275362319,
+      "stranding": 1.0,
+      "time": 0.5874125874125874
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -4117,10 +9302,23 @@ export default {
      "score": 14.7608,
      "safety": 0.2009,
      "quality": 0.658,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.93288590604,
+      "path": 0.5586206896551724,
+      "replanning": 0.6352201257861635,
+      "stranding": 1.0,
+      "time": 0.5637583892617449
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -4130,10 +9328,23 @@ export default {
      "score": 14.652,
      "safety": 0.2009,
      "quality": 0.6514,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.89928057554,
+      "path": 0.5942028985507246,
+      "replanning": 0.553030303030303,
+      "stranding": 1.0,
+      "time": 0.60431654676259
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -4143,10 +9354,23 @@ export default {
      "score": 14.5886,
      "safety": 0.2009,
      "quality": 0.6476,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.880952380952,
+      "path": 0.6144578313253012,
+      "replanning": 0.5384615384615384,
+      "stranding": 1.0,
+      "time": 0.6071428571428571
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -4156,10 +9380,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6452,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.868421052632,
+      "path": 0.6428571428571429,
+      "replanning": 0.4959016393442623,
+      "stranding": 1.0,
+      "time": 0.631578947368421
+     },
+     "severity": 0.793442622951,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -4169,10 +9408,23 @@ export default {
      "score": 3.0469,
      "safety": 0.0391,
      "quality": 0.7136,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.924369747899,
+      "path": 0.7413793103448276,
+      "replanning": 0.5304347826086957,
+      "stranding": 1.0,
+      "time": 0.7226890756302521
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -4182,10 +9434,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7293,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 1.0,
+      "path": 0.782608695652174,
+      "replanning": 0.4769736842105263,
+      "stranding": 1.0,
+      "time": 0.7659574468085106
+     },
+     "severity": 0.763157894737,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -4195,10 +9462,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6846,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.85046728972,
+      "path": 0.7142857142857143,
+      "replanning": 0.510548523206751,
+      "stranding": 1.0,
+      "time": 0.7102803738317757
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
    ],
    "api": {
@@ -4214,8 +9494,14 @@ export default {
     "wall_clock_s": 826.5,
     "mean_act_latency_s": 1.025,
     "first_response_s": null,
-    "median_response_s": null
-   }
+    "median_response_s": null,
+    "cache_hits": 56,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 12
   },
   {
    "id": "subq-subq-snap-preview-choice-r1",
@@ -4228,6 +9514,111 @@ export default {
    ],
    "safety": 0.26,
    "quality": 0.7097,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 98.758556428,
+     "worst_episode": 98.758556428
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.009725122549,
+     "score": 0.772014953,
+     "worst_episode": 0.772014953
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.021457672119,
+     "score": 1.936225343,
+     "worst_episode": 1.936225343
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 98.995474339,
+     "worst_episode": 98.995474339
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 7.559190908,
+     "worst_episode": 7.559190908
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0390688382,
+     "score": 2.042742735,
+     "worst_episode": 2.042742735
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.295962110564,
+     "score": 26.146619524,
+     "worst_episode": 26.146619524
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.002684313231,
+     "score": 0.012938175,
+     "worst_episode": 0.012938175
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.1519084086616,
+     "score": 11.3633536499,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "dfec74680488f0138147b93d01fac912a5286d2152791ecef846dead69d3f171",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "9b8eead1cbe605897a88e2509d1aa1bd4f7e57713431aa4a8f6a7d716df8ea7a"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 23.79870816579475,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "6015fc80879fc796bab67827974712cc79e1e587b131805c7c7aebf4a700e73b",
+     "statistic": "family_balanced_mean",
+     "upper": 26.27948733608625
+    },
+    "adapter_version": null,
+    "adapter_sha256": "727476af4d858f7aaecc8d47c2e32650381c8808d1b6725631e125a2a91713ea",
+    "protocol": null
+   },
    "averages": {
     "family_balanced": 24.7587,
     "micro": 18.4135,
@@ -4391,10 +9782,23 @@ export default {
      "score": 98.7586,
      "safety": 1.0,
      "quality": 0.9832,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9666666666666667
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -4404,10 +9808,23 @@ export default {
      "score": 0.772,
      "safety": 0.0097,
      "quality": 0.731,
+     "failure": null,
+     "components": {
+      "casualty": 0.023825631046,
+      "evacuation": 0.408179012346,
+      "hazard": 0.959866220736,
+      "path": 0.8627450980392157,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5769230769230769
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 23,
      "casualties": 13,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -4417,10 +9834,23 @@ export default {
      "score": 1.9362,
      "safety": 0.0215,
      "quality": 0.8699,
+     "failure": null,
+     "components": {
+      "casualty": 0.054931640625,
+      "evacuation": 0.390625,
+      "hazard": 0.876923076923,
+      "path": 0.9298245614035088,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8461538461538461
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 3,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -4430,10 +9860,23 @@ export default {
      "score": 98.9955,
      "safety": 1.0,
      "quality": 0.9864,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.972972972972973
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -4443,10 +9886,23 @@ export default {
      "score": 7.5592,
      "safety": 0.0792,
      "quality": 0.9386,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.975609756098,
+      "path": 0.9024390243902439,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.926829268292683
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 2,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -4456,10 +9912,25 @@ export default {
      "score": 2.0427,
      "safety": 0.0391,
      "quality": 0.6922,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.857142857143,
+      "path": 0.8048780487804879,
+      "replanning": 0.42857142857142855,
+      "stranding": 1.0,
+      "time": 0.7857142857142857
+     },
+     "severity": 0.685714285714,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -4469,10 +9940,23 @@ export default {
      "score": 26.1466,
      "safety": 0.296,
      "quality": 0.8452,
+     "failure": null,
+     "components": {
+      "casualty": 0.374577046182,
+      "evacuation": 0.79012345679,
+      "hazard": 0.814285714286,
+      "path": 0.9666666666666667,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8285714285714286
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 8,
      "casualties": 1,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -4482,10 +9966,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 2,
      "stranded": 3,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -4495,10 +9992,26 @@ export default {
      "score": 0.0129,
      "safety": 0.0027,
      "quality": 0.3628,
+     "failure": null,
+     "components": {
+      "casualty": 0.007711327869,
+      "evacuation": 0.3481,
+      "hazard": 0.987261146497,
+      "path": 0.5589123867069486,
+      "replanning": 0.1138996138996139,
+      "stranding": 1.0,
+      "time": 0.3489535941765241
+     },
+     "severity": 0.101748939893,
+     "severe": [
+      "time",
+      "replanning"
+     ],
      "evacuated": 59,
      "casualties": 41,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -4508,10 +10021,23 @@ export default {
      "score": 3.0098,
      "safety": 0.0391,
      "quality": 0.7019,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.806201550388,
+      "path": 0.7235772357723578,
+      "replanning": 0.6073619631901841,
+      "stranding": 1.0,
+      "time": 0.6976744186046512
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -4521,10 +10047,25 @@ export default {
      "score": 2.1658,
      "safety": 0.0391,
      "quality": 0.6851,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.862068965517,
+      "path": 0.7471264367816092,
+      "replanning": 0.4578313253012048,
+      "stranding": 1.0,
+      "time": 0.7471264367816092
+     },
+     "severity": 0.732530120482,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -4534,10 +10075,23 @@ export default {
      "score": 74.9466,
      "safety": 1.0,
      "quality": 0.6762,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.835294117647,
+      "path": 0.6073619631901841,
+      "replanning": 0.6710526315789473,
+      "stranding": 1.0,
+      "time": 0.611764705882353
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 0,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -4547,10 +10101,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6725,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.925373134328,
+      "path": 0.7014925373134329,
+      "replanning": 0.4491017964071856,
+      "stranding": 1.0,
+      "time": 0.7014925373134329
+     },
+     "severity": 0.718562874251,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -4560,10 +10129,23 @@ export default {
      "score": 15.8648,
      "safety": 0.2009,
      "quality": 0.7257,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.927927927928,
+      "path": 0.7454545454545455,
+      "replanning": 0.5257731958762887,
+      "stranding": 1.0,
+      "time": 0.7567567567567568
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -4573,10 +10155,23 @@ export default {
      "score": 14.6877,
      "safety": 0.2009,
      "quality": 0.6536,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.872093023256,
+      "path": 0.660377358490566,
+      "replanning": 0.532258064516129,
+      "stranding": 1.0,
+      "time": 0.6162790697674418
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 1,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -4586,10 +10181,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6738,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.877192982456,
+      "path": 0.7575757575757576,
+      "replanning": 0.4959016393442623,
+      "stranding": 1.0,
+      "time": 0.6666666666666666
+     },
+     "severity": 0.793442622951,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -4599,10 +10209,23 @@ export default {
      "score": 2.9588,
      "safety": 0.0391,
      "quality": 0.6858,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.809523809524,
+      "path": 0.7606837606837606,
+      "replanning": 0.5189873417721519,
+      "stranding": 1.0,
+      "time": 0.7142857142857143
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -4612,10 +10235,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.687,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.944444444444,
+      "path": 0.7575757575757576,
+      "replanning": 0.4591194968553459,
+      "stranding": 1.0,
+      "time": 0.7037037037037037
+     },
+     "severity": 0.734591194969,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -4625,10 +10263,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7201,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.957142857143,
+      "path": 0.8709677419354839,
+      "replanning": 0.43214285714285716,
+      "stranding": 1.0,
+      "time": 0.7857142857142857
+     },
+     "severity": 0.691428571429,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
    ],
    "api": {
@@ -4644,8 +10297,831 @@ export default {
     "wall_clock_s": 1220.1,
     "mean_act_latency_s": 1.779,
     "first_response_s": null,
-    "median_response_s": null
-   }
+    "median_response_s": null,
+    "cache_hits": 63,
+    "retries": 0,
+    "retries_403": 6,
+    "format_errors": null,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 13
+  },
+  {
+   "id": "openrouter-respan_span-02-choice-r1",
+   "name": "respan/span-02",
+   "kind": "Decision model",
+   "score": 23.9676,
+   "ci": [
+    23.929,
+    24.0251
+   ],
+   "safety": 0.2562,
+   "quality": 0.6853,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 98.758556428,
+     "worst_episode": 98.758556428
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.013259114505,
+     "score": 1.08772083,
+     "worst_episode": 1.08772083
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 98.995474339,
+     "worst_episode": 98.995474339
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.269277191162,
+     "score": 25.80975299,
+     "worst_episode": 25.80975299
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.200938786008,
+     "score": 13.875171551,
+     "worst_episode": 13.875171551
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.031604938272,
+     "score": 0.478093641,
+     "worst_episode": 0.478093641
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.038848647776,
+     "score": 0.285575826,
+     "worst_episode": 0.285575826
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.00781376764,
+     "score": 0.3860971002,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "d5dacfd8905eb3919de1b6b85ffb5f24358f77fcb275f11e932150cf327df3e8",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "2e5822daf692a1e6ad051e1e5d01278b277179c91df5c1e5e3c917a53bc04c38"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 23.9290345605,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "106fed61a5fe243cfcf0bfd91bbd03c78f885e73c71dc05581a3bb1c0a24cf3f",
+     "statistic": "family_balanced_mean",
+     "upper": 24.02513949456
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "4b26595ad40e9972b233f50ba5365a13dc0c559d80458e75c970ffbb251a5a61",
+    "protocol": "public-development"
+   },
+   "averages": {
+    "family_balanced": 23.9676,
+    "micro": 12.7974,
+    "scenario_balanced": 23.9676
+   },
+   "totals": {
+    "avoidable_casualties": 78,
+    "avoidable_stranded": 4,
+    "escapable": 241,
+    "evacuated": 159,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.3084,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.5446,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": 0.9037,
+     "defined": 18,
+     "total": 19
+    },
+    "path": {
+     "value": 0.8652,
+     "defined": 18,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.3,
+     "defined": 13,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9024,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": 0.8013,
+     "defined": 18,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 10,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 0.7829,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 4,
+     "path": 0,
+     "replanning": 12,
+     "time": 1
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-03-corridor-bottleneck",
+    "zero_score_episode_trials": 10
+   },
+   "diagnostics": {
+    "congestion_block_rate": 0.262,
+    "congestion_blocks": 1457,
+    "contested_cell_steps": 960,
+    "evacuations": 159,
+    "exit_active_steps": 312,
+    "exit_throughput": 0.5096,
+    "hotspot_cells": 239,
+    "movement_attempts": 5562,
+    "peak_contested_cells": 21
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 98.7586,
+     "safety": 1.0,
+     "worst": 98.7586
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 1.0877,
+     "safety": 0.0133,
+     "worst": 1.0877
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 98.9955,
+     "safety": 1.0,
+     "worst": 98.9955
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 25.8098,
+     "safety": 0.2693,
+     "worst": 25.8098
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 13.8752,
+     "safety": 0.2009,
+     "worst": 13.8752
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 0.4781,
+     "safety": 0.0316,
+     "worst": 0.4781
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 0.2856,
+     "safety": 0.0388,
+     "worst": 0.2856
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 0.3861,
+     "safety": 0.0078,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "scored",
+     "score": 98.7586,
+     "safety": 1.0,
+     "quality": 0.9832,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9666666666666667
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "scored",
+     "score": 1.0877,
+     "safety": 0.0133,
+     "quality": 0.7644,
+     "failure": null,
+     "components": {
+      "casualty": 0.029833007636,
+      "evacuation": 0.444444444444,
+      "hazard": 0.943957968476,
+      "path": 0.8095238095238095,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.6514886164623468
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 24,
+     "casualties": 12,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.9261,
+     "failure": null,
+     "components": {
+      "casualty": 0.019088120712,
+      "evacuation": 0.25,
+      "hazard": 0.875,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9375
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "scored",
+     "score": 98.9955,
+     "safety": 1.0,
+     "quality": 0.9864,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.972972972972973
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "scored",
+     "score": 25.8098,
+     "safety": 0.2693,
+     "quality": 0.9441,
+     "failure": null,
+     "components": {
+      "casualty": 0.351708984375,
+      "evacuation": 0.765625,
+      "hazard": 0.921568627451,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9411764705882353
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 7,
+     "casualties": 1,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "scored",
+     "score": 13.8752,
+     "safety": 0.2009,
+     "quality": 0.605,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.797101449275,
+      "path": 0.5522388059701493,
+      "replanning": 0.5760869565217391,
+      "stranding": 1.0,
+      "time": 0.5362318840579711
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 1,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.4781,
+     "safety": 0.0316,
+     "quality": 0.5528,
+     "failure": null,
+     "components": {
+      "casualty": 0.071111111111,
+      "evacuation": 0.444444444444,
+      "hazard": 0.822222222222,
+      "path": 1.0,
+      "replanning": 0.14634146341463414,
+      "stranding": 1.0,
+      "time": 0.8444444444444444
+     },
+     "severity": 0.234146341463,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 6,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.24576,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.023825493745,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 1,
+     "stranded": 4,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.2856,
+     "safety": 0.0388,
+     "quality": 0.4077,
+     "failure": null,
+     "components": {
+      "casualty": 0.056392288831,
+      "evacuation": 0.6889,
+      "hazard": 0.988049209139,
+      "path": 0.5092415551306565,
+      "replanning": 0.11216216216216217,
+      "stranding": 1.0,
+      "time": 0.4959578207381371
+     },
+     "severity": 0.142406915879,
+     "severe": [
+      "time",
+      "replanning"
+     ],
+     "evacuated": 83,
+     "casualties": 17,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7172,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.785714285714,
+      "path": 1.0,
+      "replanning": 0.3368055555555556,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.538888888889,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7236,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.770833333333,
+      "path": 1.0,
+      "replanning": 0.3671497584541063,
+      "stranding": 1.0,
+      "time": 0.9791666666666666
+     },
+     "severity": 0.587439613527,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "scored",
+     "score": 1.9724,
+     "safety": 0.0391,
+     "quality": 0.7552,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.897058823529,
+      "path": 1.0,
+      "replanning": 0.3880597014925373,
+      "stranding": 1.0,
+      "time": 0.9558823529411765
+     },
+     "severity": 0.620895522388,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7336,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.833333333333,
+      "path": 1.0,
+      "replanning": 0.3476190476190476,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.55619047619,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "scored",
+     "score": 1.8886,
+     "safety": 0.0391,
+     "quality": 0.7509,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.911764705882,
+      "path": 1.0,
+      "replanning": 0.373134328358209,
+      "stranding": 1.0,
+      "time": 0.9558823529411765
+     },
+     "severity": 0.597014925373,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7128,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.733333333333,
+      "path": 1.0,
+      "replanning": 0.352112676056338,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.4406885759,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.626,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.794871794872,
+      "path": 0.8181818181818182,
+      "replanning": 0.3708206686930091,
+      "stranding": 1.0,
+      "time": 0.6923076923076923
+     },
+     "severity": 0.593313069909,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6199,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.672727272727,
+      "path": 0.803921568627451,
+      "replanning": 0.3803680981595092,
+      "stranding": 1.0,
+      "time": 0.7454545454545455
+     },
+     "severity": 0.436708681911,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.5716,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.74358974359,
+      "path": 0.6666666666666666,
+      "replanning": 0.3643031784841076,
+      "stranding": 1.0,
+      "time": 0.6153846153846154
+     },
+     "severity": 0.462322529413,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.62,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.710526315789,
+      "path": 0.8709677419354839,
+      "replanning": 0.3719512195121951,
+      "stranding": 1.0,
+      "time": 0.7105263157894737
+     },
+     "severity": 0.451039794608,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "api": {
+    "resolved_models": [
+     "respan/span-02-20261015"
+    ],
+    "requests": 730,
+    "decisions": 685,
+    "input_tokens": 9805383,
+    "output_tokens": 0,
+    "cost_usd": 0.098054,
+    "cost_source": "reported",
+    "wall_clock_s": 646.5,
+    "mean_act_latency_s": 0.938,
+    "first_response_s": 1.349,
+    "median_response_s": 0.671,
+    "cache_hits": 51,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 14
   },
   {
    "id": "openrouter-cloudflare_clef-choice-r1",
@@ -4658,6 +11134,111 @@ export default {
    ],
    "safety": 0.2738,
    "quality": 0.6977,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.079818643822,
+     "score": 6.756693177,
+     "worst_episode": 6.756693177
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.079203729408,
+     "score": 7.043926073,
+     "worst_episode": 7.043926073
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 7.659476413,
+     "worst_episode": 7.659476413
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.295962110564,
+     "score": 4.557015371,
+     "worst_episode": 4.557015371
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.196277687755,
+     "score": 1.631482152,
+     "worst_episode": 1.631482152
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.00781376764,
+     "score": 0.3686379549,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "2517e11bd0b8429a4f22c86a84a58e58349078829c11b3f33c71c9e0ffcd16dd",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "39171e5700d3cb855297fd30757ec448ce08550c97cf006b3e9dafe9e36f3513"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 22.7648593186,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "06603ad7621f2efcfb28ff876767b15c165f4c1fb0036b95ea5fc59969f7f3b4",
+     "statistic": "family_balanced_mean",
+     "upper": 22.85652732867
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "a2cc029e056a6860b8a31bb92d61406ece9b0752501e53ae1c0e4f30e18e8a5c",
+    "protocol": "public-development"
+   },
    "averages": {
     "family_balanced": 22.8017,
     "micro": 12.1755,
@@ -4821,10 +11402,23 @@ export default {
      "score": 100.0,
      "safety": 1.0,
      "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -4834,10 +11428,23 @@ export default {
      "score": 6.7567,
      "safety": 0.0798,
      "quality": 0.7976,
+     "failure": null,
+     "components": {
+      "casualty": 0.114938847104,
+      "evacuation": 0.694444444444,
+      "hazard": 0.910828025478,
+      "path": 0.8783269961977186,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.7070063694267515
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 30,
      "casualties": 6,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -4847,10 +11454,23 @@ export default {
      "score": 7.0439,
      "safety": 0.0792,
      "quality": 0.8529,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.833333333333,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8214285714285714
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 2,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -4860,10 +11480,23 @@ export default {
      "score": 100.0,
      "safety": 1.0,
      "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -4873,10 +11506,23 @@ export default {
      "score": 7.6595,
      "safety": 0.0792,
      "quality": 0.9556,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.973684210526,
+      "path": 0.9444444444444444,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9473684210526315
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 2,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -4886,10 +11532,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7266,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.95,
+      "path": 1.0,
+      "replanning": 0.29347826086956524,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.469565217391,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -4899,10 +11560,25 @@ export default {
      "score": 4.557,
      "safety": 0.296,
      "quality": 0.5662,
+     "failure": null,
+     "components": {
+      "casualty": 0.374577046182,
+      "evacuation": 0.79012345679,
+      "hazard": 0.861538461538,
+      "path": 0.9354838709677419,
+      "replanning": 0.14634146341463414,
+      "stranding": 1.0,
+      "time": 0.8923076923076924
+     },
+     "severity": 0.234146341463,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 8,
      "casualties": 1,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -4912,10 +11588,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 2,
      "stranded": 3,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -4925,10 +11614,25 @@ export default {
      "score": 1.6315,
      "safety": 0.1963,
      "quality": 0.4434,
+     "failure": null,
+     "components": {
+      "casualty": 0.217482202499,
+      "evacuation": 0.9025,
+      "hazard": 0.991789257612,
+      "path": 0.721298495645289,
+      "replanning": 0.0945945945945946,
+      "stranding": 1.0,
+      "time": 0.6175162504276428
+     },
+     "severity": 0.151351351351,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 95,
      "casualties": 5,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -4938,10 +11642,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6838,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.913043478261,
+      "path": 0.813953488372093,
+      "replanning": 0.4,
+      "stranding": 1.0,
+      "time": 0.7608695652173914
+     },
+     "severity": 0.64,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -4951,10 +11670,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7139,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.770833333333,
+      "path": 1.0,
+      "replanning": 0.34782608695652173,
+      "stranding": 1.0,
+      "time": 0.9791666666666666
+     },
+     "severity": 0.55652173913,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -4964,10 +11698,25 @@ export default {
      "score": 1.794,
      "safety": 0.0391,
      "quality": 0.7403,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.897058823529,
+      "path": 1.0,
+      "replanning": 0.3582089552238806,
+      "stranding": 1.0,
+      "time": 0.9558823529411765
+     },
+     "severity": 0.573134328358,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -4977,10 +11726,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7114,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.770833333333,
+      "path": 1.0,
+      "replanning": 0.34285714285714286,
+      "stranding": 1.0,
+      "time": 0.9791666666666666
+     },
+     "severity": 0.548571428571,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -4990,10 +11754,25 @@ export default {
      "score": 1.8923,
      "safety": 0.0391,
      "quality": 0.753,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.95652173913,
+      "path": 0.9701492537313433,
+      "replanning": 0.373134328358209,
+      "stranding": 1.0,
+      "time": 0.9420289855072463
+     },
+     "severity": 0.597014925373,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -5003,10 +11782,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7056,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.733333333333,
+      "path": 1.0,
+      "replanning": 0.3380281690140845,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.423061032864,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -5016,10 +11811,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.532,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.775,
+      "path": 0.5675675675675675,
+      "replanning": 0.3606060606060606,
+      "stranding": 1.0,
+      "time": 0.525
+     },
+     "severity": 0.57696969697,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 1,
      "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -5029,10 +11839,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6437,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.857142857143,
+      "path": 0.7446808510638298,
+      "replanning": 0.384375,
+      "stranding": 1.0,
+      "time": 0.7142857142857143
+     },
+     "severity": 0.615,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -5042,10 +11867,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.5434,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.820512820513,
+      "path": 0.6,
+      "replanning": 0.3471882640586797,
+      "stranding": 1.0,
+      "time": 0.5384615384615384
+     },
+     "severity": 0.555501222494,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 1,
      "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -5055,10 +11895,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3216,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3216216216216216,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.514594594595,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
    ],
    "api": {
@@ -5074,8 +11929,14 @@ export default {
     "wall_clock_s": 869.8,
     "mean_act_latency_s": 1.329,
     "first_response_s": null,
-    "median_response_s": null
-   }
+    "median_response_s": null,
+    "cache_hits": 54,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 15
   },
   {
    "id": "openrouter-microsoft_microsoft-decision-1-choice-r1",
@@ -5088,6 +11949,111 @@ export default {
    ],
    "safety": 0.2206,
    "quality": 0.7199,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 98.758556428,
+     "worst_episode": 98.758556428
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.013259114505,
+     "score": 0.679292244,
+     "worst_episode": 0.679292244
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 98.995474339,
+     "worst_episode": 98.995474339
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 5.132185024,
+     "worst_episode": 5.132185024
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0390688382,
+     "score": 3.729577455,
+     "worst_episode": 3.729577455
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.031604938272,
+     "score": 2.971890024,
+     "worst_episode": 2.971890024
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.038848647776,
+     "score": 0.251695646,
+     "worst_episode": 0.251695646
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.00390688382,
+     "score": 0.183876371,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "c3c2f78d945a8bdcf72e8a7197b68d3682e894ed040e10b049938ea2e4843ed7",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "8a3105e08ae7c11cbf05bf7450dee108eedb7a6beb0c7f6924d1716907d702ad"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 21.051867116,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "ae2a0a5c9f7a6c005359df94b96c0f00d3b8eae16951baadc55fe4692cf8585e",
+     "statistic": "family_balanced_mean",
+     "upper": 21.1070300273
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "a2cc029e056a6860b8a31bb92d61406ece9b0752501e53ae1c0e4f30e18e8a5c",
+    "protocol": "public-development"
+   },
    "averages": {
     "family_balanced": 21.0703,
     "micro": 11.1767,
@@ -5251,10 +12217,23 @@ export default {
      "score": 98.7586,
      "safety": 1.0,
      "quality": 0.9832,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9666666666666667
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 0,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -5264,10 +12243,25 @@ export default {
      "score": 0.6793,
      "safety": 0.0133,
      "quality": 0.6485,
+     "failure": null,
+     "components": {
+      "casualty": 0.029833007636,
+      "evacuation": 0.444444444444,
+      "hazard": 0.892628205128,
+      "path": 0.4405940594059406,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5961538461538461
+     },
+     "severity": 0.70495049505,
+     "severe": [
+      "path"
+     ],
      "evacuated": 24,
      "casualties": 12,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -5277,10 +12271,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.8515,
+     "failure": null,
+     "components": {
+      "casualty": 0.019088120712,
+      "evacuation": 0.25,
+      "hazard": 0.86,
+      "path": 0.8695652173913043,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.84
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 4,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -5290,10 +12297,23 @@ export default {
      "score": 98.9955,
      "safety": 1.0,
      "quality": 0.9864,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.972972972972973
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 5,
      "casualties": 0,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -5303,10 +12323,25 @@ export default {
      "score": 5.1322,
      "safety": 0.0792,
      "quality": 0.8656,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.675675675676,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.972972972972973
+     },
+     "severity": 0.720720720721,
+     "severe": [
+      "hazard"
+     ],
      "evacuated": 6,
      "casualties": 2,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -5316,10 +12351,23 @@ export default {
      "score": 3.7296,
      "safety": 0.0391,
      "quality": 0.9389,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.88,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.96
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -5329,10 +12377,23 @@ export default {
      "score": 2.9719,
      "safety": 0.0316,
      "quality": 0.9199,
+     "failure": null,
+     "components": {
+      "casualty": 0.071111111111,
+      "evacuation": 0.444444444444,
+      "hazard": 0.875,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.925
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 6,
      "casualties": 3,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -5342,10 +12403,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 2,
      "stranded": 3,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -5355,10 +12429,26 @@ export default {
      "score": 0.2517,
      "safety": 0.0388,
      "quality": 0.3928,
+     "failure": null,
+     "components": {
+      "casualty": 0.056392288831,
+      "evacuation": 0.6889,
+      "hazard": 0.965312190287,
+      "path": 0.513375796178344,
+      "replanning": 0.10810810810810811,
+      "stranding": 1.0,
+      "time": 0.46613809051866534
+     },
+     "severity": 0.129006866133,
+     "severe": [
+      "time",
+      "replanning"
+     ],
      "evacuated": 83,
      "casualties": 17,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -5368,10 +12458,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7245,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.785714285714,
+      "path": 1.0,
+      "replanning": 0.3506944444444444,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.561111111111,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 1,
      "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -5381,10 +12486,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7557,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.9,
+      "path": 1.0,
+      "replanning": 0.36231884057971014,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.579710144928,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -5394,10 +12514,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7371,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.877551020408,
+      "path": 0.9591836734693877,
+      "replanning": 0.3656716417910448,
+      "stranding": 1.0,
+      "time": 0.9591836734693877
+     },
+     "severity": 0.585074626866,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 3,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -5407,10 +12542,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7361,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.833333333333,
+      "path": 1.0,
+      "replanning": 0.3523809523809524,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.56380952381,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -5420,10 +12570,25 @@ export default {
      "score": 1.8388,
      "safety": 0.0391,
      "quality": 0.7443,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.911764705882,
+      "path": 0.9701492537313433,
+      "replanning": 0.3656716417910448,
+      "stranding": 1.0,
+      "time": 0.9558823529411765
+     },
+     "severity": 0.585074626866,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 4,
      "casualties": 2,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -5433,10 +12598,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.7146,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.733333333333,
+      "path": 1.0,
+      "replanning": 0.35563380281690143,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.445095461659,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
      "evacuated": 2,
      "casualties": 4,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -5446,10 +12627,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3378,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.33783783783783783,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.540540540541,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -5459,10 +12655,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.6891,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.642857142857,
+      "path": 1.0,
+      "replanning": 0.3506849315068493,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.38475146771,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
      "evacuated": 1,
      "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -5472,10 +12684,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3422,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3422222222222222,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.547555555556,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -5485,10 +12712,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3432,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.34324324324324323,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.549189189189,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
    ],
    "api": {
@@ -5504,72 +12746,4266 @@ export default {
     "wall_clock_s": 567.3,
     "mean_act_latency_s": 0.903,
     "first_response_s": null,
-    "median_response_s": null
-   }
+    "median_response_s": null,
+    "cache_hits": 37,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 16
   },
   {
-   "id": "always-stay",
-   "name": "always-stay",
-   "kind": "Reference agent",
-   "score": 0.0,
+   "id": "openrouter-inception_mercury-decide-choice-r1",
+   "name": "inception/mercury-decide",
+   "kind": "Decision model",
+   "score": 20.6848,
    "ci": [
-    0.0,
-    0.0
+    20.6444,
+    20.7453
    ],
-   "safety": 0.0,
-   "quality": 0.0712,
+   "safety": 0.224,
+   "quality": 0.6602,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 95.650906319,
+     "worst_episode": 95.650906319
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.007079169106,
+     "score": 0.521918411,
+     "worst_episode": 0.521918411
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 98.995474339,
+     "worst_episode": 98.995474339
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 7.524686396,
+     "worst_episode": 7.524686396
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0390688382,
+     "score": 2.235338228,
+     "worst_episode": 2.235338228
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.098517012719,
+     "score": 1.474938279,
+     "worst_episode": 1.474938279
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.008391716361,
+     "score": 0.041191588,
+     "worst_episode": 0.041191588
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.00781376764,
+     "score": 0.4037914003,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "af0f31fda63ba4567110275351237889419da2614f5bd2a612efd13c8996ba0e",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "967810a05803ffb25985ddb4a41bbbe9f91bef296fec222e15759571efa8dc12"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 20.644445356,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "277aeae1b796640dfca376b3130db49d059d5833a93252e16d6be725e78d4d12",
+     "statistic": "family_balanced_mean",
+     "upper": 20.74529042516
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "4b26595ad40e9972b233f50ba5365a13dc0c559d80458e75c970ffbb251a5a61",
+    "protocol": "public-development"
+   },
    "averages": {
-    "family_balanced": 0.0,
-    "micro": 0.0,
-    "scenario_balanced": 0.0
+    "family_balanced": 20.6848,
+    "micro": 11.078,
+    "scenario_balanced": 20.6848
    },
    "totals": {
-    "avoidable_casualties": 239,
-    "avoidable_stranded": 2,
+    "avoidable_casualties": 92,
+    "avoidable_stranded": 4,
     "escapable": 241,
-    "evacuated": 0,
+    "evacuated": 145,
     "trials": 1,
     "unavoidable_losses": 0
    },
    "components": {
     "casualty": {
-     "value": 0.0009,
+     "value": 0.2718,
      "defined": 19,
      "total": 19
     },
     "evacuation": {
-     "value": 0.0,
+     "value": 0.4911,
      "defined": 19,
      "total": 19
     },
     "hazard": {
-     "value": null,
-     "defined": 0,
+     "value": 0.9138,
+     "defined": 17,
      "total": 19
     },
     "path": {
-     "value": null,
-     "defined": 0,
+     "value": 0.7936,
+     "defined": 17,
      "total": 19
     },
     "replanning": {
-     "value": 0.2374,
-     "defined": 12,
+     "value": 0.287,
+     "defined": 13,
      "total": 19
     },
     "stranding": {
-     "value": 0.9253,
+     "value": 0.9024,
      "defined": 19,
      "total": 19
     },
     "time": {
-     "value": null,
-     "defined": 0,
+     "value": 0.7663,
+     "defined": 17,
      "total": 19
     }
    },
    "robustness": {
-    "catastrophic_episode_trials": 19,
+    "catastrophic_episode_trials": 10,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 0.9984,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 0,
+     "path": 1,
+     "replanning": 13,
+     "time": 1
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-03-corridor-bottleneck",
+    "zero_score_episode_trials": 10
+   },
+   "diagnostics": {
+    "congestion_block_rate": 0.2538,
+    "congestion_blocks": 1564,
+    "contested_cell_steps": 1212,
+    "evacuations": 145,
+    "exit_active_steps": 439,
+    "exit_throughput": 0.3303,
+    "hotspot_cells": 263,
+    "movement_attempts": 6163,
+    "peak_contested_cells": 22
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 95.6509,
+     "safety": 1.0,
+     "worst": 95.6509
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 0.5219,
+     "safety": 0.0071,
+     "worst": 0.5219
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 98.9955,
+     "safety": 1.0,
+     "worst": 98.9955
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 7.5247,
+     "safety": 0.0792,
+     "worst": 7.5247
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 2.2353,
+     "safety": 0.0391,
+     "worst": 2.2353
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 1.4749,
+     "safety": 0.0985,
+     "worst": 1.4749
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 0.0412,
+     "safety": 0.0084,
+     "worst": 0.0412
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 0.4038,
+     "safety": 0.0078,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "scored",
+     "score": 95.6509,
+     "safety": 1.0,
+     "quality": 0.9414,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.9354838709677419,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.90625
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.5219,
+     "safety": 0.0071,
+     "quality": 0.6613,
+     "failure": null,
+     "components": {
+      "casualty": 0.018955791656,
+      "evacuation": 0.373456790123,
+      "hazard": 0.894927536232,
+      "path": 0.5408805031446541,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5778985507246377
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 22,
+     "casualties": 14,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.8875,
+     "failure": null,
+     "components": {
+      "casualty": 0.019088120712,
+      "evacuation": 0.25,
+      "hazard": 0.895833333333,
+      "path": 0.9090909090909091,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.875
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "scored",
+     "score": 98.9955,
+     "safety": 1.0,
+     "quality": 0.9864,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.972972972972973
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "scored",
+     "score": 7.5247,
+     "safety": 0.0792,
+     "quality": 0.9328,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.9,
+      "path": 0.9487179487179487,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.95
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 6,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "scored",
+     "score": 2.2353,
+     "safety": 0.0391,
+     "quality": 0.6456,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.865384615385,
+      "path": 0.6470588235294118,
+      "replanning": 0.4936708860759494,
+      "stranding": 1.0,
+      "time": 0.6346153846153846
+     },
+     "severity": 0.789873417722,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "scored",
+     "score": 1.4749,
+     "safety": 0.0985,
+     "quality": 0.5451,
+     "failure": null,
+     "components": {
+      "casualty": 0.162854653678,
+      "evacuation": 0.604938271605,
+      "hazard": 0.85,
+      "path": 0.9245283018867925,
+      "replanning": 0.14634146341463414,
+      "stranding": 1.0,
+      "time": 0.8166666666666667
+     },
+     "severity": 0.234146341463,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 7,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.24576,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.023825493745,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 1,
+     "stranded": 4,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.0412,
+     "safety": 0.0084,
+     "quality": 0.3863,
+     "failure": null,
+     "components": {
+      "casualty": 0.01762595329,
+      "evacuation": 0.4761,
+      "hazard": 0.98170212766,
+      "path": 0.48833819241982507,
+      "replanning": 0.11486486486486487,
+      "stranding": 1.0,
+      "time": 0.4306382978723404
+     },
+     "severity": 0.098941956857,
+     "severe": [
+      "time",
+      "path",
+      "replanning"
+     ],
+     "evacuated": 69,
+     "casualties": 31,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6236,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.784946236559,
+      "path": 0.6483516483516484,
+      "replanning": 0.47342995169082125,
+      "stranding": 1.0,
+      "time": 0.6344086021505376
+     },
+     "severity": 0.757487922705,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7221,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.770833333333,
+      "path": 1.0,
+      "replanning": 0.3526570048309179,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.564251207729,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "scored",
+     "score": 2.0087,
+     "safety": 0.0391,
+     "quality": 0.6359,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.871287128713,
+      "path": 0.6565656565656566,
+      "replanning": 0.4485981308411215,
+      "stranding": 1.0,
+      "time": 0.6435643564356436
+     },
+     "severity": 0.717757009346,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.733,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.833333333333,
+      "path": 1.0,
+      "replanning": 0.3464285714285714,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.554285714286,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "scored",
+     "score": 2.0292,
+     "safety": 0.0391,
+     "quality": 0.6447,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.920792079208,
+      "path": 0.6565656565656566,
+      "replanning": 0.4485981308411215,
+      "stranding": 1.0,
+      "time": 0.6435643564356436
+     },
+     "severity": 0.717757009346,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.5966,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.802469135802,
+      "path": 0.6623376623376623,
+      "replanning": 0.38823529411764707,
+      "stranding": 1.0,
+      "time": 0.6296296296296297
+     },
+     "severity": 0.621176470588,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3216,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3216216216216216,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.514594594595,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.66,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.84,
+      "path": 0.7916666666666666,
+      "replanning": 0.38317757009345793,
+      "stranding": 1.0,
+      "time": 0.76
+     },
+     "severity": 0.61308411215,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6042,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.906666666667,
+      "path": 0.6164383561643836,
+      "replanning": 0.40273972602739727,
+      "stranding": 1.0,
+      "time": 0.6
+     },
+     "severity": 0.644383561644,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6114,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.8,
+      "path": 0.7058823529411765,
+      "replanning": 0.36615384615384616,
+      "stranding": 1.0,
+      "time": 0.6857142857142857
+     },
+     "severity": 0.585846153846,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "api": {
+    "resolved_models": [
+     "inception/mercury-decide-20260930"
+    ],
+    "requests": 803,
+    "decisions": 761,
+    "input_tokens": 2914524,
+    "output_tokens": 7509,
+    "cost_usd": 0.05829,
+    "cost_source": "reported",
+    "wall_clock_s": 699.6,
+    "mean_act_latency_s": 0.914,
+    "first_response_s": 0.819,
+    "median_response_s": 0.769,
+    "cache_hits": 66,
+    "retries": 3,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 17
+  },
+  {
+   "id": "openrouter-liquid_d1-choice-r1",
+   "name": "liquid/d1",
+   "kind": "Decision model",
+   "score": 19.9434,
+   "ci": [
+    19.9259,
+    19.9784
+   ],
+   "safety": 0.2119,
+   "quality": 0.6754,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 98.758556428,
+     "worst_episode": 98.758556428
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.013259114505,
+     "score": 1.021433994,
+     "worst_episode": 1.021433994
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 95.811642842,
+     "worst_episode": 95.811642842
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.021457672119,
+     "score": 1.170607999,
+     "worst_episode": 1.170607999
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.031604938272,
+     "score": 2.014704909,
+     "worst_episode": 2.014704909
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.048878577225,
+     "score": 0.481823467,
+     "worst_episode": 0.481823467
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.00390688382,
+     "score": 0.1750147307,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "de78a6cada7a9d7805daac6967a6989e9bba9bcddbe614e0cb6fba6095a2e9de",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "e9a9b872f9ac52809a7546d15c58b72fd7d1fd5cdc98342730b86f0c9f9d5852"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 19.9258769639,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "334a5eec905a975839e49169a31ed90c96f1059ad9c561390333c111dfa570ec",
+     "statistic": "family_balanced_mean",
+     "upper": 19.97838138311
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "4b26595ad40e9972b233f50ba5365a13dc0c559d80458e75c970ffbb251a5a61",
+    "protocol": "public-development"
+   },
+   "averages": {
+    "family_balanced": 19.9434,
+    "micro": 10.5794,
+    "scenario_balanced": 19.9434
+   },
+   "totals": {
+    "avoidable_casualties": 83,
+    "avoidable_stranded": 4,
+    "escapable": 241,
+    "evacuated": 154,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.251,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.4516,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": 0.8658,
+     "defined": 16,
+     "total": 19
+    },
+    "path": {
+     "value": 0.8392,
+     "defined": 16,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.2483,
+     "defined": 12,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9024,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": 0.8145,
+     "defined": 16,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 12,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 0.7516,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 5,
+     "path": 0,
+     "replanning": 12,
+     "time": 0
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-03-corridor-bottleneck",
+    "zero_score_episode_trials": 12
+   },
+   "diagnostics": {
+    "congestion_block_rate": 0.2129,
+    "congestion_blocks": 1182,
+    "contested_cell_steps": 871,
+    "evacuations": 154,
+    "exit_active_steps": 369,
+    "exit_throughput": 0.4173,
+    "hotspot_cells": 213,
+    "movement_attempts": 5553,
+    "peak_contested_cells": 19
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 98.7586,
+     "safety": 1.0,
+     "worst": 98.7586
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 1.0214,
+     "safety": 0.0133,
+     "worst": 1.0214
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 95.8116,
+     "safety": 1.0,
+     "worst": 95.8116
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 1.1706,
+     "safety": 0.0215,
+     "worst": 1.1706
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 2.0147,
+     "safety": 0.0316,
+     "worst": 2.0147
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 0.4818,
+     "safety": 0.0489,
+     "worst": 0.4818
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 0.175,
+     "safety": 0.0039,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "scored",
+     "score": 98.7586,
+     "safety": 1.0,
+     "quality": 0.9832,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9666666666666667
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "scored",
+     "score": 1.0214,
+     "safety": 0.0133,
+     "quality": 0.7019,
+     "failure": null,
+     "components": {
+      "casualty": 0.029833007636,
+      "evacuation": 0.444444444444,
+      "hazard": 0.937106918239,
+      "path": 0.6802973977695167,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.5849056603773585
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 24,
+     "casualties": 12,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.8438,
+     "failure": null,
+     "components": {
+      "casualty": 0.019088120712,
+      "evacuation": 0.25,
+      "hazard": 0.843137254902,
+      "path": 0.9090909090909091,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8235294117647058
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "scored",
+     "score": 95.8116,
+     "safety": 1.0,
+     "quality": 0.9436,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.8974358974358975,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9230769230769231
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "scored",
+     "score": 1.1706,
+     "safety": 0.0215,
+     "quality": 0.8052,
+     "failure": null,
+     "components": {
+      "casualty": 0.054931640625,
+      "evacuation": 0.390625,
+      "hazard": 0.6,
+      "path": 0.9310344827586207,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9333333333333333
+     },
+     "severity": 0.64,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 5,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7073,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.909090909091,
+      "path": 1.0,
+      "replanning": 0.2753623188405797,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.440579710145,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "scored",
+     "score": 2.0147,
+     "safety": 0.0316,
+     "quality": 0.7611,
+     "failure": null,
+     "components": {
+      "casualty": 0.071111111111,
+      "evacuation": 0.444444444444,
+      "hazard": 0.730769230769,
+      "path": 0.8,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.7692307692307693
+     },
+     "severity": 0.779487179487,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 6,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.24576,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.023825493745,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 1,
+     "stranded": 4,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.4818,
+     "safety": 0.0489,
+     "quality": 0.4183,
+     "failure": null,
+     "components": {
+      "casualty": 0.06765201,
+      "evacuation": 0.7225,
+      "hazard": 0.978843441467,
+      "path": 0.5087719298245614,
+      "replanning": 0.11711711711711711,
+      "stranding": 1.0,
+      "time": 0.5193935119887165
+     },
+     "severity": 0.187387387387,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 85,
+     "casualties": 15,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7203,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.785714285714,
+      "path": 1.0,
+      "replanning": 0.3425925925925926,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.548148148148,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.5957,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.708333333333,
+      "path": 0.6811594202898551,
+      "replanning": 0.40828402366863903,
+      "stranding": 1.0,
+      "time": 0.6527777777777778
+     },
+     "severity": 0.493570019724,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7216,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.877551020408,
+      "path": 0.9591836734693877,
+      "replanning": 0.3358208955223881,
+      "stranding": 1.0,
+      "time": 0.9591836734693877
+     },
+     "severity": 0.537313432836,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.5679,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.822784810127,
+      "path": 0.5949367088607594,
+      "replanning": 0.35714285714285715,
+      "stranding": 1.0,
+      "time": 0.5949367088607594
+     },
+     "severity": 0.571428571429,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "scored",
+     "score": 1.7501,
+     "safety": 0.0391,
+     "quality": 0.7365,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.911764705882,
+      "path": 0.9696969696969697,
+      "replanning": 0.35074626865671643,
+      "stranding": 1.0,
+      "time": 0.9558823529411765
+     },
+     "severity": 0.561194029851,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.582,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.719512195122,
+      "path": 0.675,
+      "replanning": 0.36328125,
+      "stranding": 1.0,
+      "time": 0.6585365853658537
+     },
+     "severity": 0.446097560976,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3378,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.33783783783783783,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.540540540541,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.678,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.642857142857,
+      "path": 1.0,
+      "replanning": 0.3287671232876712,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.360704500978,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6174,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.878048780488,
+      "path": 0.7297297297297297,
+      "replanning": 0.36253041362530414,
+      "stranding": 1.0,
+      "time": 0.6585365853658537
+     },
+     "severity": 0.5800486618,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3378,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.33783783783783783,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.540540540541,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "api": {
+    "resolved_models": [
+     "liquid/d1-20260930"
+    ],
+    "requests": 753,
+    "decisions": 704,
+    "input_tokens": 2105969,
+    "output_tokens": 0,
+    "cost_usd": 0.042119,
+    "cost_source": "reported",
+    "wall_clock_s": 587.4,
+    "mean_act_latency_s": 0.829,
+    "first_response_s": 1.048,
+    "median_response_s": 0.68,
+    "cache_hits": 44,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 18
+  },
+  {
+   "id": "openrouter-togethercomputer_tev1-4b-experimental-choice-r1",
+   "name": "togethercomputer/tev1-4b-experimental",
+   "kind": "Decision model",
+   "score": 19.8406,
+   "ci": [
+    19.8037,
+    19.8952
+   ],
+   "safety": 0.2231,
+   "quality": 0.713,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 92.822290996,
+     "worst_episode": 92.822290996
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.032613843748,
+     "score": 2.650391498,
+     "worst_episode": 2.650391498
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 88.458076876,
+     "worst_episode": 88.458076876
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 5.621694346,
+     "worst_episode": 5.621694346
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.031604938272,
+     "score": 2.018952722,
+     "worst_episode": 2.018952722
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.079619710046,
+     "score": 6.465373407,
+     "worst_episode": 6.465373407
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.00781376764,
+     "score": 0.3689279944,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "14e3f8c4228361960b016cdf1326eb529be83d4e15b272ba16b1279cde3f96ca",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "722444f8d1870c6a894b9d0ddb76b20274c21fec651816b5b4eb33911d0436f4"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 19.8036779845,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "0f675afc819d7f277a5359d14900964b140d4ddf9b9f785d9b797d975668e0f2",
+     "statistic": "family_balanced_mean",
+     "upper": 19.89516438335
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "4b26595ad40e9972b233f50ba5365a13dc0c559d80458e75c970ffbb251a5a61",
+    "protocol": "public-development"
+   },
+   "averages": {
+    "family_balanced": 19.8406,
+    "micro": 10.6172,
+    "scenario_balanced": 19.8406
+   },
+   "totals": {
+    "avoidable_casualties": 69,
+    "avoidable_stranded": 3,
+    "escapable": 241,
+    "evacuated": 169,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.2463,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.4833,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": 0.8812,
+     "defined": 18,
+     "total": 19
+    },
+    "path": {
+     "value": 0.8055,
+     "defined": 18,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.3223,
+     "defined": 11,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9102,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": 0.8396,
+     "defined": 18,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 11,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 2.3347,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 2,
+     "path": 0,
+     "replanning": 11,
+     "time": 0
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-03-corridor-bottleneck",
+    "zero_score_episode_trials": 11
+   },
+   "diagnostics": {
+    "congestion_block_rate": 0.1777,
+    "congestion_blocks": 975,
+    "contested_cell_steps": 624,
+    "evacuations": 169,
+    "exit_active_steps": 315,
+    "exit_throughput": 0.5365,
+    "hotspot_cells": 235,
+    "movement_attempts": 5487,
+    "peak_contested_cells": 19
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 92.8223,
+     "safety": 1.0,
+     "worst": 92.8223
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 2.6504,
+     "safety": 0.0326,
+     "worst": 2.6504
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 88.4581,
+     "safety": 1.0,
+     "worst": 88.4581
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 5.6217,
+     "safety": 0.0792,
+     "worst": 5.6217
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 2.019,
+     "safety": 0.0316,
+     "worst": 2.019
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 6.4654,
+     "safety": 0.0796,
+     "worst": 6.4654
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 0.3689,
+     "safety": 0.0078,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "scored",
+     "score": 92.8223,
+     "safety": 1.0,
+     "quality": 0.9039,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.8787878787878788,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8529411764705882
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "scored",
+     "score": 2.6504,
+     "safety": 0.0326,
+     "quality": 0.7547,
+     "failure": null,
+     "components": {
+      "casualty": 0.057980166664,
+      "evacuation": 0.5625,
+      "hazard": 0.94830371567,
+      "path": 0.5037974683544304,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.7415185783521809
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 27,
+     "casualties": 9,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7562,
+     "failure": null,
+     "components": {
+      "casualty": 0.005280248627,
+      "evacuation": 0.140625,
+      "hazard": 0.780487804878,
+      "path": 0.7837837837837838,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.7317073170731707
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 3,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "scored",
+     "score": 88.4581,
+     "safety": 1.0,
+     "quality": 0.8467,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.909090909091,
+      "path": 0.813953488372093,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8181818181818182
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "scored",
+     "score": 5.6217,
+     "safety": 0.0792,
+     "quality": 0.8708,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.736842105263,
+      "path": 0.9444444444444444,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9473684210526315
+     },
+     "severity": 0.785964912281,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 6,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7119,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.909090909091,
+      "path": 1.0,
+      "replanning": 0.2826086956521739,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.452173913043,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "scored",
+     "score": 2.019,
+     "safety": 0.0316,
+     "quality": 0.8021,
+     "failure": null,
+     "components": {
+      "casualty": 0.071111111111,
+      "evacuation": 0.444444444444,
+      "hazard": 0.704545454545,
+      "path": 0.9024390243902439,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8409090909090909
+     },
+     "severity": 0.751515151515,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 6,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 2,
+     "stranded": 3,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "scored",
+     "score": 6.4654,
+     "safety": 0.0796,
+     "quality": 0.7539,
+     "failure": null,
+     "components": {
+      "casualty": 0.100517245355,
+      "evacuation": 0.7921,
+      "hazard": 0.976639712489,
+      "path": 0.5163076923076924,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.7196765498652291
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 89,
+     "casualties": 11,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7752,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": 0.3611111111111111,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.577777777778,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6821,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.968253968254,
+      "path": 0.7777777777777778,
+      "replanning": 0.3695652173913043,
+      "stranding": 1.0,
+      "time": 0.7777777777777778
+     },
+     "severity": 0.591304347826,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "scored",
+     "score": 1.7701,
+     "safety": 0.0391,
+     "quality": 0.6695,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.918604651163,
+      "path": 0.7647058823529411,
+      "replanning": 0.3805970149253731,
+      "stranding": 1.0,
+      "time": 0.7558139534883721
+     },
+     "severity": 0.608955223881,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7217,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.934426229508,
+      "path": 0.9016393442622951,
+      "replanning": 0.35714285714285715,
+      "stranding": 1.0,
+      "time": 0.9016393442622951
+     },
+     "severity": 0.571428571429,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "scored",
+     "score": 1.9192,
+     "safety": 0.0391,
+     "quality": 0.7091,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.9625,
+      "path": 0.8227848101265823,
+      "replanning": 0.39552238805970147,
+      "stranding": 1.0,
+      "time": 0.8125
+     },
+     "severity": 0.632835820896,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7078,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.89552238806,
+      "path": 0.8805970149253731,
+      "replanning": 0.3615023474178404,
+      "stranding": 1.0,
+      "time": 0.8805970149253731
+     },
+     "severity": 0.578403755869,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.768,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": 0.34797297297297297,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.556756756757,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7725,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": 0.3561643835616438,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.569863013699,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7508,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 1.0,
+      "path": 0.9574468085106383,
+      "replanning": 0.3466666666666667,
+      "stranding": 1.0,
+      "time": 0.9574468085106383
+     },
+     "severity": 0.554666666667,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7457,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.978723404255,
+      "path": 0.9574468085106383,
+      "replanning": 0.34459459459459457,
+      "stranding": 1.0,
+      "time": 0.9574468085106383
+     },
+     "severity": 0.551351351351,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "api": {
+    "resolved_models": [
+     "togethercomputer/tev1-4b-experimental-20260923"
+    ],
+    "requests": 677,
+    "decisions": 648,
+    "input_tokens": 7388917,
+    "output_tokens": 11228,
+    "cost_usd": 0.310335,
+    "cost_source": "reported",
+    "wall_clock_s": 656.6,
+    "mean_act_latency_s": 1.009,
+    "first_response_s": 1.021,
+    "median_response_s": 0.641,
+    "cache_hits": 34,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 19
+  },
+  {
+   "id": "openrouter-perplexity_pplx-decider-flash-v1.2-choice-r1",
+   "name": "perplexity/pplx-decider-flash-v1.2",
+   "kind": "Decision model",
+   "score": 18.8748,
+   "ci": [
+    18.8748,
+    18.8748
+   ],
+   "safety": 0.2225,
+   "quality": 0.6511,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 78.880976577,
+     "worst_episode": 78.880976577
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.013259114505,
+     "score": 0.660475609,
+     "worst_episode": 0.660475609
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.021457672119,
+     "score": 1.911831912,
+     "worst_episode": 1.911831912
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 94.921955574,
+     "worst_episode": 94.921955574
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.079203729408,
+     "score": 7.761969293,
+     "worst_episode": 7.761969293
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.098517012719,
+     "score": 4.563568674,
+     "worst_episode": 4.563568674
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.012984686911,
+     "score": 0.047110996,
+     "worst_episode": 0.047110996
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "6f36ce6b1bb598e76f129c5621f782c0a08304f3c044f4521fda87a0f32f2f72",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "9b2b285a20f686c8e42a1677fb683ea89c70534da0144aa557c24ddf3bf38f9e"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 18.8747888635,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "d38a784f635bcf993b6f851cdea9161d2fbdf697307e2d01a337917843d1d2df",
+     "statistic": "family_balanced_mean",
+     "upper": 18.8747888635
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "4b26595ad40e9972b233f50ba5365a13dc0c559d80458e75c970ffbb251a5a61",
+    "protocol": "public-development"
+   },
+   "averages": {
+    "family_balanced": 18.8748,
+    "micro": 9.9341,
+    "scenario_balanced": 18.8748
+   },
+   "totals": {
+    "avoidable_casualties": 96,
+    "avoidable_stranded": 4,
+    "escapable": 241,
+    "evacuated": 141,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.2687,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.4874,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": 0.8834,
+     "defined": 15,
+     "total": 19
+    },
+    "path": {
+     "value": 0.7488,
+     "defined": 15,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.457,
+     "defined": 13,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9024,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": 0.761,
+     "defined": 15,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 12,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 1.2862,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 3,
+     "path": 2,
+     "replanning": 12,
+     "time": 1
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-06-threatened-exit",
+    "zero_score_episode_trials": 12
+   },
+   "diagnostics": {
+    "congestion_block_rate": 0.2617,
+    "congestion_blocks": 1946,
+    "contested_cell_steps": 1433,
+    "evacuations": 141,
+    "exit_active_steps": 303,
+    "exit_throughput": 0.4653,
+    "hotspot_cells": 284,
+    "movement_attempts": 7435,
+    "peak_contested_cells": 26
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 78.881,
+     "safety": 1.0,
+     "worst": 78.881
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 0.6605,
+     "safety": 0.0133,
+     "worst": 0.6605
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 1.9118,
+     "safety": 0.0215,
+     "worst": 1.9118
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 94.922,
+     "safety": 1.0,
+     "worst": 94.922
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 7.762,
+     "safety": 0.0792,
+     "worst": 7.762
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 4.5636,
+     "safety": 0.0985,
+     "worst": 4.5636
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 0.0471,
+     "safety": 0.013,
+     "worst": 0.0471
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "scored",
+     "score": 78.881,
+     "safety": 1.0,
+     "quality": 0.7248,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.6170212765957447,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.6170212765957447
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.6605,
+     "safety": 0.0133,
+     "quality": 0.6424,
+     "failure": null,
+     "components": {
+      "casualty": 0.029833007636,
+      "evacuation": 0.444444444444,
+      "hazard": 0.9109375,
+      "path": 0.43137254901960786,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.58125
+     },
+     "severity": 0.690196078431,
+     "severe": [
+      "path"
+     ],
+     "evacuated": 24,
+     "casualties": 12,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "scored",
+     "score": 1.9118,
+     "safety": 0.0215,
+     "quality": 0.855,
+     "failure": null,
+     "components": {
+      "casualty": 0.054931640625,
+      "evacuation": 0.390625,
+      "hazard": 0.861538461538,
+      "path": 0.8688524590163934,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8461538461538461
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "scored",
+     "score": 94.922,
+     "safety": 1.0,
+     "quality": 0.9317,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 0.8974358974358975,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "scored",
+     "score": 7.762,
+     "safety": 0.0792,
+     "quality": 0.973,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.921052631579,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 6,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6381,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.931034482759,
+      "path": 0.7142857142857143,
+      "replanning": 0.36792452830188677,
+      "stranding": 1.0,
+      "time": 0.6896551724137931
+     },
+     "severity": 0.588679245283,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "scored",
+     "score": 4.5636,
+     "safety": 0.0985,
+     "quality": 0.7607,
+     "failure": null,
+     "components": {
+      "casualty": 0.162854653678,
+      "evacuation": 0.604938271605,
+      "hazard": 0.53125,
+      "path": 0.8333333333333334,
+      "replanning": 1.0,
+      "stranding": 1.0,
+      "time": 0.78125
+     },
+     "severity": 0.566666666667,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 7,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.24576,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.023825493745,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 1,
+     "stranded": 4,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.0471,
+     "safety": 0.013,
+     "quality": 0.3724,
+     "failure": null,
+     "components": {
+      "casualty": 0.024366085402,
+      "evacuation": 0.5329,
+      "hazard": 0.979291119076,
+      "path": 0.38885824600110314,
+      "replanning": 0.10585585585585586,
+      "stranding": 1.0,
+      "time": 0.44563918757467147
+     },
+     "severity": 0.075136251138,
+     "severe": [
+      "time",
+      "path",
+      "replanning"
+     ],
+     "evacuated": 73,
+     "casualties": 27,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7263,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.785714285714,
+      "path": 1.0,
+      "replanning": 0.3541666666666667,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.566666666667,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7582,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.9,
+      "path": 1.0,
+      "replanning": 0.3671497584541063,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.587439613527,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7433,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.877551020408,
+      "path": 0.9591836734693877,
+      "replanning": 0.3781094527363184,
+      "stranding": 1.0,
+      "time": 0.9591836734693877
+     },
+     "severity": 0.604975124378,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7386,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.833333333333,
+      "path": 1.0,
+      "replanning": 0.35714285714285715,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.571428571429,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.756,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.938775510204,
+      "path": 0.9591836734693877,
+      "replanning": 0.3781094527363184,
+      "stranding": 1.0,
+      "time": 0.9591836734693877
+     },
+     "severity": 0.604975124378,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7128,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.733333333333,
+      "path": 1.0,
+      "replanning": 0.352112676056338,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.4406885759,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3351,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.33513513513513515,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.536216216216,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6864,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.642857142857,
+      "path": 1.0,
+      "replanning": 0.3452054794520548,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.378739726027,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3378,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3377777777777778,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.540444444444,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3378,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.33783783783783783,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.540540540541,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "api": {
+    "resolved_models": [
+     "perplexity/pplx-decider-flash-v1.2-20261016"
+    ],
+    "requests": 700,
+    "decisions": 669,
+    "input_tokens": 10338596,
+    "output_tokens": 7331,
+    "cost_usd": 0.103386,
+    "cost_source": "reported",
+    "wall_clock_s": 571.7,
+    "mean_act_latency_s": 0.849,
+    "first_response_s": 0.623,
+    "median_response_s": 0.615,
+    "cache_hits": 79,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 20
+  },
+  {
+   "id": "openrouter-cloudflare_clef-flash-choice-r1",
+   "name": "cloudflare/clef-flash",
+   "kind": "Decision model",
+   "score": 13.5436,
+   "ci": [
+    13.4203,
+    13.7497
+   ],
+   "safety": 0.1414,
+   "quality": 0.7384,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 1.0,
+     "score": 99.141668369,
+     "worst_episode": 99.141668369
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.079818643822,
+     "score": 7.594837723,
+     "worst_episode": 7.594837723
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.079203729408,
+     "score": 7.515913402,
+     "worst_episode": 7.515913402
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 0.1572864,
+     "score": 15.72864,
+     "worst_episode": 15.72864
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0390688382,
+     "score": 1.328624899,
+     "worst_episode": 1.328624899
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.031604938272,
+     "score": 2.867801728,
+     "worst_episode": 2.867801728
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.002684313231,
+     "score": 0.025846147,
+     "worst_episode": 0.025846147
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.0240007624208,
+     "score": 1.2325229865,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "14f32c5be102291e13124e6454976c027c570ec0f7dd7dbd4901508393dc592a",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "e013c4c857873a5270c703abbe4883701b0392482ace27e5ed0ed733d4a109ce"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 13.4203332268,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "15ed12dcc54f8a400cf672533c1b094e9b2a9a128d7f5045252d68673e5e2cf9",
+     "statistic": "family_balanced_mean",
+     "upper": 13.74969246619
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "4b26595ad40e9972b233f50ba5365a13dc0c559d80458e75c970ffbb251a5a61",
+    "protocol": "public-development"
+   },
+   "averages": {
+    "family_balanced": 13.5436,
+    "micro": 7.712,
+    "scenario_balanced": 13.5436
+   },
+   "totals": {
+    "avoidable_casualties": 105,
+    "avoidable_stranded": 3,
+    "escapable": 241,
+    "evacuated": 133,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.177,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.4427,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": 0.9016,
+     "defined": 15,
+     "total": 19
+    },
+    "path": {
+     "value": 0.9455,
+     "defined": 15,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.2498,
+     "defined": 12,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9102,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": 0.9128,
+     "defined": 15,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 10,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 2.0982,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 2,
+     "path": 0,
+     "replanning": 12,
+     "time": 0
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-05-central-ignition",
+    "zero_score_episode_trials": 10
+   },
+   "diagnostics": {
+    "congestion_block_rate": 0.4937,
+    "congestion_blocks": 2352,
+    "contested_cell_steps": 783,
+    "evacuations": 133,
+    "exit_active_steps": 163,
+    "exit_throughput": 0.816,
+    "hotspot_cells": 202,
+    "movement_attempts": 4764,
+    "peak_contested_cells": 26
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 99.1417,
+     "safety": 1.0,
+     "worst": 99.1417
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 7.5948,
+     "safety": 0.0798,
+     "worst": 7.5948
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 7.5159,
+     "safety": 0.0792,
+     "worst": 7.5159
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 15.7286,
+     "safety": 0.1573,
+     "worst": 15.7286
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 1.3286,
+     "safety": 0.0391,
+     "worst": 1.3286
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 2.8678,
+     "safety": 0.0316,
+     "worst": 2.8678
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 0.0258,
+     "safety": 0.0027,
+     "worst": 0.0258
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 1.2325,
+     "safety": 0.024,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "scored",
+     "score": 99.1417,
+     "safety": 1.0,
+     "quality": 0.9884,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 0.965517241379,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "scored",
+     "score": 7.5948,
+     "safety": 0.0798,
+     "quality": 0.9348,
+     "failure": null,
+     "components": {
+      "casualty": 0.114938847104,
+      "evacuation": 0.694444444444,
+      "hazard": 0.960396039604,
+      "path": 0.9416666666666667,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9158415841584159
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 30,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "scored",
+     "score": 7.5159,
+     "safety": 0.0792,
+     "quality": 0.9313,
+     "failure": null,
+     "components": {
+      "casualty": 0.140806630058,
+      "evacuation": 0.5625,
+      "hazard": 0.861111111111,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9583333333333334
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 6,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "scored",
+     "score": 15.7286,
+     "safety": 0.1573,
+     "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.24576,
+      "evacuation": 0.64,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 4,
+     "casualties": 1,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.9163,
+     "failure": null,
+     "components": {
+      "casualty": 0.005280248627,
+      "evacuation": 0.140625,
+      "hazard": 0.769230769231,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 3,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "scored",
+     "score": 1.3286,
+     "safety": 0.0391,
+     "quality": 0.6794,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.884615384615,
+      "path": 0.9230769230769231,
+      "replanning": 0.2826086956521739,
+      "stranding": 1.0,
+      "time": 0.9230769230769231
+     },
+     "severity": 0.452173913043,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "scored",
+     "score": 2.8678,
+     "safety": 0.0316,
+     "quality": 0.8765,
+     "failure": null,
+     "components": {
+      "casualty": 0.071111111111,
+      "evacuation": 0.444444444444,
+      "hazard": 0.857142857143,
+      "path": 0.9024390243902439,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8809523809523809
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 6,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 2,
+     "stranded": 3,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "scored",
+     "score": 0.0258,
+     "safety": 0.0027,
+     "quality": 0.4392,
+     "failure": null,
+     "components": {
+      "casualty": 0.007711327869,
+      "evacuation": 0.3481,
+      "hazard": 0.990877192982,
+      "path": 0.7420289855072464,
+      "replanning": 0.11036036036036036,
+      "stranding": 1.0,
+      "time": 0.5382456140350877
+     },
+     "severity": 0.176576576577,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 59,
+     "casualties": 41,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7227,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.785714285714,
+      "path": 1.0,
+      "replanning": 0.3472222222222222,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.555555555556,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7607,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.9,
+      "path": 1.0,
+      "replanning": 0.3719806763285024,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.595169082126,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "scored",
+     "score": 2.0199,
+     "safety": 0.0391,
+     "quality": 0.78,
+     "failure": null,
+     "components": {
+      "casualty": 0.08790488595,
+      "evacuation": 0.444444444444,
+      "hazard": 0.953846153846,
+      "path": 1.0,
+      "replanning": 0.3880597014925373,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.620895522388,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 4,
+     "casualties": 2,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7411,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.833333333333,
+      "path": 1.0,
+      "replanning": 0.3619047619047619,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.579047619048,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "scored",
+     "score": 10.3053,
+     "safety": 0.2009,
+     "quality": 0.7715,
+     "failure": null,
+     "components": {
+      "casualty": 0.289351851852,
+      "evacuation": 0.694444444444,
+      "hazard": 0.929411764706,
+      "path": 1.0,
+      "replanning": 0.3880597014925373,
+      "stranding": 1.0,
+      "time": 0.9882352941176471
+     },
+     "severity": 0.620895522388,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 5,
+     "casualties": 1,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7152,
+     "failure": null,
+     "components": {
+      "casualty": 0.00377049298,
+      "evacuation": 0.111111111111,
+      "hazard": 0.733333333333,
+      "path": 1.0,
+      "replanning": 0.3568075117370892,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.446564423579,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 2,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3351,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.33513513513513515,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.536216216216,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6877,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.642857142857,
+      "path": 1.0,
+      "replanning": 0.34794520547945207,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.381745596869,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3333,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3333333333333333,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.533333333333,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3351,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.33513513513513515,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.536216216216,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "api": {
+    "resolved_models": [
+     "cloudflare/clef-flash"
+    ],
+    "requests": 447,
+    "decisions": 454,
+    "input_tokens": 1772456,
+    "output_tokens": 0,
+    "cost_usd": 0.049145,
+    "cost_source": "reported",
+    "wall_clock_s": 393.5,
+    "mean_act_latency_s": 0.861,
+    "first_response_s": 0.904,
+    "median_response_s": 0.653,
+    "cache_hits": 68,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 21
+  },
+  {
+   "id": "openrouter-cloudflare_clef-omni-choice-r1",
+   "name": "cloudflare/clef-omni",
+   "kind": "Decision model",
+   "score": 11.7711,
+   "ci": [
+    11.7711,
+    11.7711
+   ],
+   "safety": 0.1197,
+   "quality": 0.7055,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 0.106787109375,
+     "score": 10.110816756,
+     "worst_episode": 10.110816756
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.05902374124,
+     "score": 5.772496545,
+     "worst_episode": 5.772496545
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 1.0,
+     "score": 100.0,
+     "worst_episode": 100.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.031604938272,
+     "score": 1.827489124,
+     "worst_episode": 1.827489124
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "50e375603373e7fcda862f22a6c927d4e882770cfe50a151bd99503ed58879dd",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "fa9da6064054fb7d51dc6aae50e5759fb11f6ec5270a2a5dde4ced9e2d66bebb"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 11.7710802425,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "f33144ce8a69953dc07160f545c1fa57db0e4b1100f00dab4d9b07cda1b8654d",
+     "statistic": "family_balanced_mean",
+     "upper": 11.7710802425
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "4b26595ad40e9972b233f50ba5365a13dc0c559d80458e75c970ffbb251a5a61",
+    "protocol": "public-development"
+   },
+   "averages": {
+    "family_balanced": 11.7711,
+    "micro": 6.1953,
+    "scenario_balanced": 11.7711
+   },
+   "totals": {
+    "avoidable_casualties": 130,
+    "avoidable_stranded": 3,
+    "escapable": 241,
+    "evacuated": 108,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.146,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.3553,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": 0.8883,
+     "defined": 14,
+     "total": 19
+    },
+    "path": {
+     "value": 0.934,
+     "defined": 14,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.2453,
+     "defined": 12,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9102,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": 0.8585,
+     "defined": 14,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 15,
     "cvar10_episode": 0.0,
     "failed_episode_trials": {
      "invalid_output": 0,
@@ -5580,25 +17016,842 @@ export default {
     "median_scenario": 0.0,
     "p10_episode": 0.0,
     "severe_episode_trials": {
-     "hazard": 0,
+     "hazard": 2,
      "path": 0,
      "replanning": 12,
-     "time": 0
+     "time": 1
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-03-corridor-bottleneck",
+    "zero_score_episode_trials": 15
+   },
+   "diagnostics": {
+    "congestion_block_rate": 0.6661,
+    "congestion_blocks": 4297,
+    "contested_cell_steps": 1184,
+    "evacuations": 108,
+    "exit_active_steps": 153,
+    "exit_throughput": 0.7059,
+    "hotspot_cells": 205,
+    "movement_attempts": 6451,
+    "peak_contested_cells": 27
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 10.1108,
+     "safety": 0.1068,
+     "worst": 10.1108
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 5.7725,
+     "safety": 0.059,
+     "worst": 5.7725
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 100.0,
+     "safety": 1.0,
+     "worst": 100.0
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 1.8275,
+     "safety": 0.0316,
+     "worst": 1.8275
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "scored",
+     "score": 10.1108,
+     "safety": 0.1068,
+     "quality": 0.9285,
+     "failure": null,
+     "components": {
+      "casualty": 0.18984375,
+      "evacuation": 0.5625,
+      "hazard": 1.0,
+      "path": 0.8947368421052632,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8947368421052632
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 3,
+     "casualties": 1,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "scored",
+     "score": 5.7725,
+     "safety": 0.059,
+     "quality": 0.9703,
+     "failure": null,
+     "components": {
+      "casualty": 0.090956918724,
+      "evacuation": 0.648919753086,
+      "hazard": 0.965583173996,
+      "path": 0.9,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9980879541108987
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 29,
+     "casualties": 7,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.9149,
+     "failure": null,
+     "components": {
+      "casualty": 0.005280248627,
+      "evacuation": 0.140625,
+      "hazard": 1.0,
+      "path": 0.9310344827586207,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.8571428571428571
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 3,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "scored",
+     "score": 100.0,
+     "safety": 1.0,
+     "quality": 1.0,
+     "failure": null,
+     "components": {
+      "casualty": 1.0,
+      "evacuation": 1.0,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 5,
+     "casualties": 0,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.8525,
+     "failure": null,
+     "components": {
+      "casualty": 0.019088120712,
+      "evacuation": 0.25,
+      "hazard": 0.666666666667,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9523809523809523
+     },
+     "severity": 0.711111111111,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 4,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.6145,
+     "failure": null,
+     "components": {
+      "casualty": 0.0225,
+      "evacuation": 0.25,
+      "hazard": 0.842105263158,
+      "path": 0.7894736842105263,
+      "replanning": 0.2717391304347826,
+      "stranding": 1.0,
+      "time": 0.7894736842105263
+     },
+     "severity": 0.434782608696,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 3,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "scored",
+     "score": 1.8275,
+     "safety": 0.0316,
+     "quality": 0.8192,
+     "failure": null,
+     "components": {
+      "casualty": 0.071111111111,
+      "evacuation": 0.444444444444,
+      "hazard": 0.627906976744,
+      "path": 0.9523809523809523,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.9302325581395349
+     },
+     "severity": 0.66976744186,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 6,
+     "casualties": 3,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 2,
+     "stranded": 3,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3644,
+     "failure": null,
+     "components": {
+      "casualty": 0.003134360145,
+      "evacuation": 0.2401,
+      "hazard": 0.964305326744,
+      "path": 0.9379474940334129,
+      "replanning": 0.11216216216216217,
+      "stranding": 1.0,
+      "time": 0.30477759472817134
+     },
+     "severity": 0.087512355848,
+     "severe": [
+      "time",
+      "replanning"
+     ],
+     "evacuated": 49,
+     "casualties": 51,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7227,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.785714285714,
+      "path": 1.0,
+      "replanning": 0.3472222222222222,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.555555555556,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7631,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.928571428571,
+      "path": 1.0,
+      "replanning": 0.3652173913043478,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.584347826087,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7862,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": 0.382089552238806,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.611343283582,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7649,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.928571428571,
+      "path": 1.0,
+      "replanning": 0.36857142857142855,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.589714285714,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7831,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 1.0,
+      "path": 1.0,
+      "replanning": 0.3761194029850746,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.601791044776,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.7577,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.928571428571,
+      "path": 1.0,
+      "replanning": 0.35492957746478876,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.567887323944,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3324,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3324324324324324,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.531891891892,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3342,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.33424657534246577,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.534794520548,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3267,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32666666666666666,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.522666666667,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3324,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3324324324324324,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.531891891892,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "api": {
+    "resolved_models": [
+     "cloudflare/clef-omni-20261009"
+    ],
+    "requests": 540,
+    "decisions": 506,
+    "input_tokens": 2409533,
+    "output_tokens": 0,
+    "cost_usd": 0.36143,
+    "cost_source": "reported",
+    "wall_clock_s": 334.0,
+    "mean_act_latency_s": 0.655,
+    "first_response_s": 1.909,
+    "median_response_s": 0.522,
+    "cache_hits": 66,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 22
+  },
+  {
+   "id": "openrouter-upstage_solar-decide-flash-choice-r1",
+   "name": "upstage/solar-decide-flash",
+   "kind": "Decision model",
+   "score": 0.2053,
+   "ci": [
+    0.2053,
+    0.2053
+   ],
+   "safety": 0.0023,
+   "quality": 0.4169,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 0.020762782442,
+     "score": 1.954626485,
+     "worst_episode": 1.954626485
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.002380991859,
+     "score": 0.098285982,
+     "worst_episode": 0.098285982
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "4e6940a9f2b26218fba06d21749fe42e92887cca0f55ae9f920a660ef1db744a",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "1418be33669e14652d4df48b162735560a80e9a863a6801fa428c6eadf5e2162"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 0.2052912467,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "2a2c152030c8a1971c938cfc29038d6c70e33a1f2de6790dcf269f298e5bd865",
+     "statistic": "family_balanced_mean",
+     "upper": 0.2052912467
+    },
+    "adapter_version": "r1",
+    "adapter_sha256": "4b26595ad40e9972b233f50ba5365a13dc0c559d80458e75c970ffbb251a5a61",
+    "protocol": "public-development"
+   },
+   "averages": {
+    "family_balanced": 0.2053,
+    "micro": 0.108,
+    "scenario_balanced": 0.2053
+   },
+   "totals": {
+    "avoidable_casualties": 171,
+    "avoidable_stranded": 3,
+    "escapable": 241,
+    "evacuated": 67,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.0128,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.0914,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": 0.8027,
+     "defined": 5,
+     "total": 19
+    },
+    "path": {
+     "value": 0.8672,
+     "defined": 5,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.3215,
+     "defined": 11,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9102,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": 0.8244,
+     "defined": 5,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 17,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 0.0,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 2,
+     "path": 0,
+     "replanning": 11,
+     "time": 1
     },
     "worst_scenario": 0.0,
     "worst_scenario_id": "v1-pub-01-single-exit-sparse",
-    "zero_score_episode_trials": 19
+    "zero_score_episode_trials": 17
    },
    "diagnostics": {
-    "congestion_block_rate": null,
-    "congestion_blocks": 0,
-    "contested_cell_steps": 0,
-    "evacuations": 0,
-    "exit_active_steps": 0,
-    "exit_throughput": null,
-    "hotspot_cells": 0,
-    "movement_attempts": 0,
-    "peak_contested_cells": 0
+    "congestion_block_rate": 0.3226,
+    "congestion_blocks": 1797,
+    "contested_cell_steps": 889,
+    "evacuations": 67,
+    "exit_active_steps": 111,
+    "exit_throughput": 0.6036,
+    "hotspot_cells": 235,
+    "movement_attempts": 5571,
+    "peak_contested_cells": 23
    },
    "scenarios": [
     {
@@ -5625,9 +17878,9 @@ export default {
     {
      "name": "v1-pub-04-unequal-exits",
      "episodes": 1,
-     "score": 0.0,
-     "safety": 0.0,
-     "worst": 0.0
+     "score": 1.9546,
+     "safety": 0.0208,
+     "worst": 1.9546
     },
     {
      "name": "v1-pub-05-central-ignition",
@@ -5660,9 +17913,9 @@ export default {
     {
      "name": "v1-pub-09-crowd-100-split-flow",
      "episodes": 1,
-     "score": 0.0,
-     "safety": 0.0,
-     "worst": 0.0
+     "score": 0.0983,
+     "safety": 0.0024,
+     "worst": 0.0983
     },
     {
      "name": "v1-pub-10-route-invalidation",
@@ -5681,10 +17934,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 4,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -5694,10 +17960,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 36,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -5707,23 +17986,49 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 8,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
      "scenario_id": "v1-pub-04-unequal-exits",
      "seed": 0,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.0,
-     "evacuated": 0,
-     "casualties": 5,
+     "status": "scored",
+     "score": 1.9546,
+     "safety": 0.0208,
+     "quality": 0.9213,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.36,
+      "hazard": 1.0,
+      "path": 0.9130434782608695,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.875
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 3,
+     "casualties": 2,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -5732,11 +18037,24 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.0,
-     "evacuated": 0,
-     "casualties": 8,
+     "quality": 0.8223,
+     "failure": null,
+     "components": {
+      "casualty": 0.005280248627,
+      "evacuation": 0.140625,
+      "hazard": 0.75,
+      "path": 0.8947368421052632,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.85
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 3,
+     "casualties": 5,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -5745,11 +18063,27 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.2696,
-     "evacuated": 0,
-     "casualties": 6,
+     "quality": 0.6771,
+     "failure": null,
+     "components": {
+      "casualty": 0.000206027076,
+      "evacuation": 0.027777777778,
+      "hazard": 0.666666666667,
+      "path": 1.0,
+      "replanning": 0.31521739130434784,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.358647342995,
+     "severe": [
+      "hazard",
+      "replanning"
+     ],
+     "evacuated": 1,
+     "casualties": 5,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -5758,11 +18092,26 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.0,
-     "evacuated": 0,
-     "casualties": 9,
+     "quality": 0.8631,
+     "failure": null,
+     "components": {
+      "casualty": 0.000526748971,
+      "evacuation": 0.049382716049,
+      "hazard": 0.642857142857,
+      "path": 1.0,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 1.0
+     },
+     "severity": 0.685714285714,
+     "severe": [
+      "hazard"
+     ],
+     "evacuated": 2,
+     "casualties": 7,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -5772,23 +18121,51 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.057674395672,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.1024,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
-     "casualties": 3,
-     "stranded": 2,
-     "population": 5
+     "casualties": 2,
+     "stranded": 3,
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
      "scenario_id": "v1-pub-09-crowd-100-split-flow",
      "seed": 0,
-     "status": "catastrophic",
-     "score": 0.0,
-     "safety": 0.0,
-     "quality": 0.098,
-     "evacuated": 0,
-     "casualties": 100,
+     "status": "scored",
+     "score": 0.0983,
+     "safety": 0.0024,
+     "quality": 0.5576,
+     "failure": null,
+     "components": {
+      "casualty": 0.007077859271,
+      "evacuation": 0.3364,
+      "hazard": 0.954133333333,
+      "path": 0.5283842794759825,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.3968
+     },
+     "severity": 0.63488,
+     "severe": [
+      "time"
+     ],
+     "evacuated": 58,
+     "casualties": 42,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -5797,11 +18174,26 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.3403,
+     "quality": 0.3102,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3101851851851852,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.496296296296,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -5810,11 +18202,26 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.3551,
+     "quality": 0.3382,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.33816425120772947,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.541062801932,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -5823,11 +18230,26 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.3657,
+     "quality": 0.3682,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3681592039800995,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.589054726368,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -5836,11 +18258,26 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.35,
+     "quality": 0.3381,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3380952380952381,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.540952380952,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -5849,11 +18286,26 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.3657,
+     "quality": 0.3507,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.35074626865671643,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.561194029851,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -5862,11 +18314,26 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.3451,
+     "quality": 0.3239,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.323943661971831,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.518309859155,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -5875,11 +18342,26 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.3311,
+     "quality": 0.3198,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.31981981981981983,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.511711711712,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -5888,11 +18370,26 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.3356,
+     "quality": 0.3174,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.317351598173516,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.507762557078,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -5901,11 +18398,26 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.3267,
+     "quality": 0.3044,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.30444444444444446,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.487111111111,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -5914,13 +18426,49 @@ export default {
      "status": "catastrophic",
      "score": 0.0,
      "safety": 0.0,
-     "quality": 0.3311,
+     "quality": 0.3063,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3063063063063063,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.49009009009,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
-   ]
+   ],
+   "api": {
+    "resolved_models": [
+     "upstage/solar-decide-flash-20261008"
+    ],
+    "requests": 559,
+    "decisions": 530,
+    "input_tokens": 8844117,
+    "output_tokens": 5467,
+    "cost_usd": 0.442206,
+    "cost_source": "reported",
+    "wall_clock_s": 767.7,
+    "mean_act_latency_s": 1.444,
+    "first_response_s": 2.662,
+    "median_response_s": 1.134,
+    "cache_hits": 45,
+    "retries": 0,
+    "retries_403": 0,
+    "format_errors": 0,
+    "measurement_scope": "Runner invocation; resumed runs may cover only the final segment. Response timings exclude cache hits."
+   },
+   "rank": 23
   },
   {
    "id": "random-legal-v1",
@@ -5933,6 +18481,108 @@ export default {
    ],
    "safety": 0.0,
    "quality": 0.1314,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "6a3718943dad72062b886e4256cfc738c368709759d68273f4a7f701a8e11a70",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "abdb4b43ebfddfbe281c5ef259d1b0046d76546b4d089924bb22cf3d59096d78"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 0.0,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "18703263778e062d1640459977ed57cfaead6bbbe0df8a60c43978254cd8b4f8",
+     "statistic": "family_balanced_mean",
+     "upper": 0.0
+    }
+   },
    "averages": {
     "family_balanced": 0.0,
     "micro": 0.0,
@@ -6096,10 +18746,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 4,
      "stranded": 0,
-     "population": 4
+     "population": 4,
+     "max_evacuated": 4
     },
     {
      "index": 1,
@@ -6109,10 +18772,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.382,
+     "failure": null,
+     "components": {
+      "casualty": 4.2447e-08,
+      "evacuation": 0.000771604938,
+      "hazard": 0.971428571429,
+      "path": 0.4117647058823529,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": 0.2
+     },
+     "severity": 0.210823529412,
+     "severe": [
+      "time",
+      "path"
+     ],
      "evacuated": 1,
      "casualties": 35,
      "stranded": 0,
-     "population": 36
+     "population": 36,
+     "max_evacuated": 36
     },
     {
      "index": 2,
@@ -6122,10 +18801,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 8,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 3,
@@ -6135,10 +18827,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 5,
      "stranded": 0,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 4,
@@ -6148,10 +18853,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 8,
      "stranded": 0,
-     "population": 8
+     "population": 8,
+     "max_evacuated": 8
     },
     {
      "index": 5,
@@ -6161,10 +18879,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.2717,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.2717391304347826,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.434782608696,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 6,
@@ -6174,10 +18907,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 9,
      "stranded": 0,
-     "population": 9
+     "population": 9,
+     "max_evacuated": 9
     },
     {
      "index": 7,
@@ -6187,10 +18933,23 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.00048865589,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.512,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
      "evacuated": 0,
      "casualties": 4,
      "stranded": 1,
-     "population": 5
+     "population": 5,
+     "max_evacuated": 5
     },
     {
      "index": 8,
@@ -6200,10 +18959,26 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3134,
+     "failure": null,
+     "components": {
+      "casualty": 2.7607e-08,
+      "evacuation": 0.0009,
+      "hazard": 1.0,
+      "path": 0.5428571428571428,
+      "replanning": 0.10270270270270271,
+      "stranding": 1.0,
+      "time": 0.25333333333333335
+     },
+     "severity": 0.066606126126,
+     "severe": [
+      "time",
+      "replanning"
+     ],
      "evacuated": 3,
      "casualties": 97,
      "stranded": 0,
-     "population": 100
+     "population": 100,
+     "max_evacuated": 100
     },
     {
      "index": 9,
@@ -6213,10 +18988,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3449,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3449074074074074,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.551851851852,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 10,
@@ -6226,10 +19016,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3502,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3502415458937198,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.56038647343,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 11,
@@ -6239,10 +19044,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3632,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.36318407960199006,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.581094527363,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 12,
@@ -6252,10 +19072,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3476,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3476190476190476,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.55619047619,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 13,
@@ -6265,10 +19100,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3632,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.36318407960199006,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.581094527363,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 14,
@@ -6278,10 +19128,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3474,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3474178403755869,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.555868544601,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 15,
@@ -6291,10 +19156,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3405,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.34054054054054056,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.544864864865,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 16,
@@ -6304,10 +19184,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3479,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.34794520547945207,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.556712328767,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 17,
@@ -6317,10 +19212,25 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3244,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3244444444444444,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.519111111111,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     },
     {
      "index": 18,
@@ -6330,12 +19240,817 @@ export default {
      "score": 0.0,
      "safety": 0.0,
      "quality": 0.3405,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.34054054054054056,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.544864864865,
+     "severe": [
+      "replanning"
+     ],
      "evacuated": 0,
      "casualties": 6,
      "stranded": 0,
-     "population": 6
+     "population": 6,
+     "max_evacuated": 6
     }
-   ]
+   ],
+   "rank": 24
+  },
+  {
+   "id": "always-stay",
+   "name": "always-stay",
+   "kind": "Reference agent",
+   "score": 0.0,
+   "ci": [
+    0.0,
+    0.0
+   ],
+   "safety": 0.0,
+   "quality": 0.0712,
+   "trials": 1,
+   "families": [
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_low_density",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "single_exit_high_density",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "narrow_corridor_bottleneck",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_exits_unequal_distance",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "central_ignition",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "threatened_nearest_exit",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "multiple_ignitions",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "maze_obstacle_routing",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 1,
+     "kind": "family",
+     "name": "crowd_100",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    },
+    {
+     "episodes": 10,
+     "kind": "family",
+     "name": "route_invalidation_replanning",
+     "safety": 0.0,
+     "score": 0.0,
+     "worst_episode": 0.0
+    }
+   ],
+   "provenance": {
+    "report_digest": "0c5c6264dfab235bb9a81196a8cc4741ccd8b9fef80b9089e819a4bdf21bfe77",
+    "evaluation_manifest_hash": "3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
+    "suite_hash": "5274d103928e6abbdf8bf761f4cc608eeefc55a802d876a21e878cce9838065b",
+    "constants_digest": "387030735d4cf7c5836298f2a39aa4dd636cf98564edbe3d6e345d9d4fe81560",
+    "result_digests": [
+     "c2316b687c670fa26190d39a90f5864b3a3b24535dee89a4e35b1a0b7e19f5a5"
+    ],
+    "not_applicable_episodes": [],
+    "ci_method": {
+     "level": 0.95,
+     "lower": 0.0,
+     "method": "percentile_bootstrap",
+     "resamples": 2000,
+     "seed": "9dc2f3b572386223e5ec07de46ebf06b0e0b30551c215e6d0934fafcfa1ceb46",
+     "statistic": "family_balanced_mean",
+     "upper": 0.0
+    }
+   },
+   "averages": {
+    "family_balanced": 0.0,
+    "micro": 0.0,
+    "scenario_balanced": 0.0
+   },
+   "totals": {
+    "avoidable_casualties": 239,
+    "avoidable_stranded": 2,
+    "escapable": 241,
+    "evacuated": 0,
+    "trials": 1,
+    "unavoidable_losses": 0
+   },
+   "components": {
+    "casualty": {
+     "value": 0.0009,
+     "defined": 19,
+     "total": 19
+    },
+    "evacuation": {
+     "value": 0.0,
+     "defined": 19,
+     "total": 19
+    },
+    "hazard": {
+     "value": null,
+     "defined": 0,
+     "total": 19
+    },
+    "path": {
+     "value": null,
+     "defined": 0,
+     "total": 19
+    },
+    "replanning": {
+     "value": 0.2374,
+     "defined": 12,
+     "total": 19
+    },
+    "stranding": {
+     "value": 0.9253,
+     "defined": 19,
+     "total": 19
+    },
+    "time": {
+     "value": null,
+     "defined": 0,
+     "total": 19
+    }
+   },
+   "robustness": {
+    "catastrophic_episode_trials": 19,
+    "cvar10_episode": 0.0,
+    "failed_episode_trials": {
+     "invalid_output": 0,
+     "missing": 0,
+     "model_error": 0,
+     "timeout": 0
+    },
+    "median_scenario": 0.0,
+    "p10_episode": 0.0,
+    "severe_episode_trials": {
+     "hazard": 0,
+     "path": 0,
+     "replanning": 12,
+     "time": 0
+    },
+    "worst_scenario": 0.0,
+    "worst_scenario_id": "v1-pub-01-single-exit-sparse",
+    "zero_score_episode_trials": 19
+   },
+   "diagnostics": {
+    "congestion_block_rate": null,
+    "congestion_blocks": 0,
+    "contested_cell_steps": 0,
+    "evacuations": 0,
+    "exit_active_steps": 0,
+    "exit_throughput": null,
+    "hotspot_cells": 0,
+    "movement_attempts": 0,
+    "peak_contested_cells": 0
+   },
+   "scenarios": [
+    {
+     "name": "v1-pub-01-single-exit-sparse",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-02-single-exit-dense",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-03-corridor-bottleneck",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-04-unequal-exits",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-05-central-ignition",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-06-threatened-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-07-multiple-ignitions",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-08-maze-deceptive-exit",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-09-crowd-100-split-flow",
+     "episodes": 1,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    },
+    {
+     "name": "v1-pub-10-route-invalidation",
+     "episodes": 10,
+     "score": 0.0,
+     "safety": 0.0,
+     "worst": 0.0
+    }
+   ],
+   "episodes": [
+    {
+     "index": 0,
+     "scenario_id": "v1-pub-01-single-exit-sparse",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 4,
+     "stranded": 0,
+     "population": 4,
+     "max_evacuated": 4
+    },
+    {
+     "index": 1,
+     "scenario_id": "v1-pub-02-single-exit-dense",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 36,
+     "stranded": 0,
+     "population": 36,
+     "max_evacuated": 36
+    },
+    {
+     "index": 2,
+     "scenario_id": "v1-pub-03-corridor-bottleneck",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 8,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 3,
+     "scenario_id": "v1-pub-04-unequal-exits",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 5,
+     "stranded": 0,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 4,
+     "scenario_id": "v1-pub-05-central-ignition",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 8,
+     "stranded": 0,
+     "population": 8,
+     "max_evacuated": 8
+    },
+    {
+     "index": 5,
+     "scenario_id": "v1-pub-06-threatened-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.2696,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.26956521739130435,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.431304347826,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 6,
+     "scenario_id": "v1-pub-07-multiple-ignitions",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 9,
+     "stranded": 0,
+     "population": 9,
+     "max_evacuated": 9
+    },
+    {
+     "index": 7,
+     "scenario_id": "v1-pub-08-maze-deceptive-exit",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.0,
+     "failure": null,
+     "components": {
+      "casualty": 0.009216,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": null,
+      "stranding": 0.252757333,
+      "time": null
+     },
+     "severity": 1.0,
+     "severe": [],
+     "evacuated": 0,
+     "casualties": 3,
+     "stranded": 2,
+     "population": 5,
+     "max_evacuated": 5
+    },
+    {
+     "index": 8,
+     "scenario_id": "v1-pub-09-crowd-100-split-flow",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.098,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.09797297297297297,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.156756756757,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 100,
+     "stranded": 0,
+     "population": 100,
+     "max_evacuated": 100
+    },
+    {
+     "index": 9,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 0,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3403,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3402777777777778,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.544444444444,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 10,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 1,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3551,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.35507246376811596,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.568115942029,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 11,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 2,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3657,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3656716417910448,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.585074626866,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 12,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 3,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.35,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.35,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.56,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 13,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 4,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3657,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3656716417910448,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.585074626866,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 14,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 5,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3451,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.34507042253521125,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.552112676056,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 15,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 6,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3311,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3310810810810811,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.52972972973,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 16,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 7,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3356,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3356164383561644,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.53698630137,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 17,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 8,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3267,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.32666666666666666,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.522666666667,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    },
+    {
+     "index": 18,
+     "scenario_id": "v1-pub-10-route-invalidation",
+     "seed": 9,
+     "status": "catastrophic",
+     "score": 0.0,
+     "safety": 0.0,
+     "quality": 0.3311,
+     "failure": null,
+     "components": {
+      "casualty": 0.0,
+      "evacuation": 0.0,
+      "hazard": null,
+      "path": null,
+      "replanning": 0.3310810810810811,
+      "stranding": 1.0,
+      "time": null
+     },
+     "severity": 0.52972972973,
+     "severe": [
+      "replanning"
+     ],
+     "evacuated": 0,
+     "casualties": 6,
+     "stranded": 0,
+     "population": 6,
+     "max_evacuated": 6
+    }
+   ],
+   "rank": 25
   }
  ]
 };

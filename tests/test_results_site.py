@@ -135,7 +135,12 @@ def test_summary_private_operational_context_is_not_exported(tmp_path: Path, off
     assert "private" not in serialized and "endpoint" not in serialized and "cache_path" not in serialized
 
 
-@pytest.mark.parametrize("key,value", [("input_tokens", -1), ("requests_sent", 1.5), ("cost", float("nan")), ("mean_act_latency_s", float("inf")), ("wall_clock_s", -1), ("input_tokens", True)])
+def test_runner_latency_string_is_accepted(official_report: dict[str, Any]) -> None:
+    api = model_entry(official_report, remote_summary(official_report, mean_act_latency_s="0.577"))["api"]
+    assert api["mean_act_latency_s"] == 0.577
+
+
+@pytest.mark.parametrize("key,value", [("input_tokens", -1), ("requests_sent", 1.5), ("cost", float("nan")), ("mean_act_latency_s", float("inf")), ("mean_act_latency_s", "-1"), ("mean_act_latency_s", "nan"), ("wall_clock_s", -1), ("input_tokens", True)])
 def test_invalid_operational_metrics_rejected(official_report: dict[str, Any], key: str, value: Any) -> None:
     with pytest.raises(ValueError):
         model_entry(official_report, remote_summary(official_report, **{key: value}))

@@ -17,9 +17,9 @@ All routes use relative assets and ordinary HTML paths. Model links stay in the 
 
 `data/results.js` is generated exclusively by `tools/build_results_site.py`. Never enter results in UI source files. The module format avoids using a `.json` extension reserved by the public-asset guard for benchmark assets.
 
-The redesign retains the existing generated snapshot byte-for-byte. Original run directories are not included in this checkout, so it cannot regenerate that snapshot or recover missing provenance. Missing constants/manifest/report digests display **—**, with an explicit notice. No evaluation date or latest-to-oldest order is inferred. The existing snapshot contains one trial per model; reported CIs do not capture between-trial variability from a single trial.
+The snapshot is regenerated from the original run directories: the evaluation-pack reference run, the TypeSafe Jev and SubQ Snap runs, and 15 OpenRouter decision-model runs. The 15 models of the PR #36 snapshot keep identical scores, Safety, Quality and per-world outcomes. No evaluation date or latest-to-oldest order is inferred. The snapshot contains one trial per model; reported CIs do not capture between-trial variability from a single trial.
 
-Future builds expose schema version 2, suite/manifest/constants digests, deterministic source report digests, trial counts, families, failure/component details, and authoritative ranks computed before display rounding. Legacy data uses the scoring tiebreak policy on the existing snapshot; its current score buckets and Safety differences are unambiguous. Rank is descriptive, never a significance claim.
+The data uses schema version 2: suite/manifest/constants digests, deterministic source report digests, trial counts, families, failure/component details, and authoritative ranks computed before display rounding. Legacy (pre-v2) data uses the scoring tiebreak policy on the rounded values. Rank is descriptive, never a significance claim.
 
 Paired differences match `(index, scenario_id, seed)` and average repeated trials within each world. Their unweighted mean is descriptive and differs from the family-balanced aggregate score. Incomplete trial groups are excluded and coverage is reported. No official comparison inference is present in the snapshot.
 
@@ -33,7 +33,9 @@ Use Python 3.12+ and every original finished run directory, each containing `sco
 python tools/build_results_site.py --run ../pack-run --run ../jev-run --run ../subq-run --out docs/site/data/results.js
 ```
 
-Optional `--price MODEL_ID=INPUT,OUTPUT` supplies USD per million tokens where the API reported no cost. Estimation requires both token counts; measured zero cost is preserved. Current snapshot prices were supplied by the previous generation, not embedded in the UI.
+Optional `--price MODEL_ID=INPUT,OUTPUT` supplies USD per million tokens where the API reported no cost. Estimation requires both token counts; measured zero cost is preserved. The current snapshot uses `--price typesafe-jev-latest-choice-r1=0.042,0 --price subq-subq-snap-preview-choice-r1=0.05,0`; OpenRouter runs report their own cost.
+
+`run_remote.py` writes `mean_act_latency_s` as a fixed-point string (`"0.577"`); the builder accepts that form and rejects any other string.
 
 Generation rejects nonofficial reports, mismatched packs, scoring versions, constants, suite/manifest hashes, scheduled worlds, model identities and summary provenance. It uses explicit field allowlists and emits no endpoint URLs, keys, cache paths or nondeterministic timestamps. This validates report consistency; it does not replace the evaluator's replay authentication.
 

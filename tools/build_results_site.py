@@ -174,7 +174,13 @@ def model_entry(report: dict[str, Any], summary: dict[str, Any] | None, price: t
             cost, source = round((tokens_in * price[0] + tokens_out * price[1]) / 1e6, 6), "list price"
         if source != "not reported" and cost is None:
             raise ValueError("API cost source has no measured or estimated cost")
-        latency = _number(api.get("mean_act_latency_s"), "mean_act_latency_s")
+        # run_remote.py writes the mean latency as a fixed-point string ("0.577").
+        raw_latency = api.get("mean_act_latency_s")
+        if isinstance(raw_latency, str):
+            if re.fullmatch(r"\d+(\.\d+)?", raw_latency) is None:
+                raise ValueError("mean_act_latency_s: expected a finite non-negative number or null")
+            raw_latency = float(raw_latency)
+        latency = _number(raw_latency, "mean_act_latency_s")
         entry["api"] = {
             "resolved_models": summary.get("resolved_models") or [],
             "requests": _number(api.get("requests_sent"), "requests_sent", integer=True),
