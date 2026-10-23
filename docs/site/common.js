@@ -1,157 +1,254 @@
-// Shared helpers of the EMBERBench results site: data loading, plain-language formats, tooltips and charts.
+import {
+  provider,
+  rankOf,
+  selectedIds,
+  leaderboardOrder,
+} from "./analytics.js";
 
-// Reference programs in plain words. The model ID stays in the technical details.
-const REFERENCE_NAMES = {
-  "cooperative-forecast-whca-r1": "Team route planner with fire forecast",
-  "forecast-shortest-path-r1": "Shortest path with fire forecast",
-  "congestion-aware-v1": "Shortest path that avoids crowds",
-  "fire-aware-shortest-path-v1": "Shortest path that avoids fire",
-  "static-shortest-path-v1": "Shortest path, ignores fire",
-  "nearest-exit-greedy-v1": "Walk to the nearest exit",
-  "always-stay": "Nobody moves",
-  "random-legal-v1": "Random moves",
+export const esc = (v) =>
+  String(v ?? "").replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+export const fmt = (v, digits = 2) =>
+  Number.isFinite(v) ? v.toFixed(digits) : "—";
+export const count = (v) =>
+  Number.isFinite(v) ? v.toLocaleString("en-US") : "—";
+export const money = (v, estimated = false) =>
+  Number.isFinite(v)
+    ? `${estimated ? "≈ " : ""}$${v.toFixed(v < 0.01 ? 4 : 2)}`
+    : "—";
+export const duration = (v) =>
+  Number.isFinite(v)
+    ? v < 1
+      ? `${Math.round(v * 1000)} ms`
+      : `${fmt(v, 2)} s`
+    : "—";
+export const isDecision = (m) => m.kind === "Decision model";
+export const ratio = (v) => (Number.isFinite(v) ? fmt(v, 3) : "—");
+export const modelLink = (m) =>
+  `<a class="model-name" href="model.html?id=${encodeURIComponent(m.id)}">${esc(m.name)}</a>`;
+export const kindBadge = (m) =>
+  `<span class="badge ${isDecision(m) ? "decision" : "reference"}">${esc(m.kind)}</span>`;
+export const ciText = (m) =>
+  m.ci?.every(Number.isFinite) ? `${fmt(m.ci[0])}–${fmt(m.ci[1])}` : "—";
+export const costText = (m) =>
+  money(m.api?.cost_usd, m.api?.cost_source === "list price");
+export const scenarioName = (id) =>
+  id
+    .replace(/^v1-pub-\d+-/, "")
+    .replaceAll("-", " ")
+    .replace(/^./, (c) => c.toUpperCase());
+export const COMPONENTS = {
+  evacuation: "Evacuation",
+  casualty: "Casualty penalty",
+  stranding: "Stranding penalty",
+  time: "Time efficiency",
+  hazard: "Hazard avoidance",
+  path: "Path efficiency",
+  replanning: "Replanning",
 };
+export const REPO = "https://github.com/Aryabhatta-0/EMBERBench";
 
 export async function loadResults() {
   const data = (await import("./data/results.js")).default;
-  for (const m of data.models) if (m.kind === "Reference agent" && REFERENCE_NAMES[m.id]) m.name = REFERENCE_NAMES[m.id];
+  if (!data.models?.length || !data.pack_digest || !data.scoring_version)
+    throw new Error("Results data is incomplete.");
+  // New builds carry full-precision report ranks. Legacy snapshots predate
+  // that field; their safe, unambiguous values use the scoring tie policy.
+  if (!data.models.every((m) => Number.isInteger(m.rank)))
+    leaderboardOrder(data.models).forEach((m, i) => {
+      m.rank = i + 1;
+    });
   return data;
 }
-
-export const esc = (value) =>
-  String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-
-export const fmt = (value, digits = 2) => (value === null || value === undefined ? "–" : Number(value).toFixed(digits));
-
-export const isDecision = (m) => m.kind === "Decision model";
-
-// ------------------------------------------------------------------ plain-language formats
-
-export function money(usd, estimated = false) {
-  if (usd === null || usd === undefined) return "–";
-  const text = usd < 0.01 ? `$${usd.toFixed(4)}` : `$${usd.toFixed(2)}`;
-  return estimated ? `≈ ${text}` : text;
+function safeStorage(key, value) {
+  try {
+    if (value !== undefined) localStorage.setItem(key, value);
+    else return localStorage.getItem(key);
+  } catch {
+    /* Storage is optional. */
+  }
+  return null;
 }
-
-export function duration(seconds) {
-  if (seconds === null || seconds === undefined) return "–";
-  if (seconds < 1) return `${Math.round(seconds * 1000)} ms`;
-  if (seconds < 60) return `${seconds.toFixed(seconds < 10 ? 2 : 1)} s`;
-  const m = Math.floor(seconds / 60);
-  const s = Math.round(seconds - m * 60);
-  return s ? `${m} min ${s} s` : `${m} min`;
+export function getSelection(data) {
+  return selectedIds(safeStorage("ember-compare"), data.models);
 }
-
-export function count(n) {
-  if (n === null || n === undefined) return "–";
-  if (n >= 1e6) return `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)} M`;
-  if (n >= 1e4) return `${Math.round(n / 1e3)} k`;
-  return n.toLocaleString("en-US");
+export function setSelection(ids) {
+  safeStorage("ember-compare", JSON.stringify([...new Set(ids)].slice(0, 4)));
 }
-
-export const pct = (part, whole) => (whole ? `${((part / whole) * 100).toFixed(0)}%` : "–");
-
-// The 10 scenarios in words a general reader understands.
-export const SCENARIOS = {
-  "v1-pub-01-single-exit-sparse": "One exit, few people",
-  "v1-pub-02-single-exit-dense": "One exit, crowded room",
-  "v1-pub-03-corridor-bottleneck": "Narrow corridor",
-  "v1-pub-04-unequal-exits": "One near exit, one far exit",
-  "v1-pub-05-central-ignition": "Fire starts in the middle",
-  "v1-pub-06-threatened-exit": "Fire spreads toward an exit",
-  "v1-pub-07-multiple-ignitions": "Several fires at once",
-  "v1-pub-08-maze-deceptive-exit": "Maze with a misleading exit",
-  "v1-pub-09-crowd-100-split-flow": "Crowd of 100, two routes",
-  "v1-pub-10-route-invalidation": "Fire blocks the planned route",
-};
-export const scenarioName = (id) => SCENARIOS[id] ?? id.replace(/^v1-pub-\d+-/, "").replaceAll("-", " ");
-
-// ------------------------------------------------------------------ tooltip
-
-// One tooltip for the page. Any element with data-tip shows it on hover and focus.
+export function selectionBar(data) {
+  const ids = getSelection(data);
+  return `<div class="selection-bar" aria-live="polite"><span><b>${ids.length} of 4</b> selected for comparison</span><a class="button primary" href="compare.html?models=${encodeURIComponent(ids.join(","))}" ${ids.length < 2 ? 'aria-disabled="true" tabindex="-1"' : ""}>Compare models</a><button class="button small" id="clear-selection" type="button">Clear</button><span class="muted">Select 2–4. Ranks refer to this public pack.</span></div>`;
+}
+export function bindSelection(data, rerender = () => {}) {
+  for (const input of document.querySelectorAll("[data-select-model]"))
+    input.addEventListener("change", () => {
+      let ids = getSelection(data);
+      if (input.checked && !ids.includes(input.value)) {
+        if (ids.length === 4) {
+          input.checked = false;
+          document.getElementById("selection-status").textContent =
+            "Four models selected. Remove one to choose another.";
+          return;
+        }
+        ids.push(input.value);
+      } else ids = ids.filter((id) => id !== input.value);
+      setSelection(ids);
+      rerender();
+    });
+  document.getElementById("clear-selection")?.addEventListener("click", () => {
+    setSelection([]);
+    rerender();
+  });
+}
+export function metricCard(label, value, note = "") {
+  return `<div class="metric"><span class="metric-label">${esc(label)}</span><strong class="metric-value">${esc(value)}</strong><span class="metric-note">${esc(note)}</span></div>`;
+}
+export function section(title, note, body, extra = "") {
+  return `<section class="panel ${extra}"><div class="section-head"><div><h2>${esc(title)}</h2>${note ? `<p class="muted">${esc(note)}</p>` : ""}</div></div>${body}</section>`;
+}
+export function table(headers, rows, caption = "", cls = "") {
+  return `<div class="table-wrap" role="region" aria-label="${esc(caption || "Results table")}" tabindex="0"><table class="${cls}">${caption ? `<caption class="sr-only">${esc(caption)}</caption>` : ""}<thead><tr>${headers.map((h) => `<th scope="col">${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+export function provenance(data, m = null) {
+  const fields = [
+    ["EnvironmentPack", data.pack_id],
+    ["Pack digest", data.pack_digest],
+    ["Suite ID", data.suite_id],
+    ["Scoring version", data.scoring_version],
+    ["Constants digest", data.constants_digest],
+    ["Evaluation manifest", data.evaluation_manifest_hash],
+    ["Suite hash", data.suite_hash],
+    ["Data generator", "tools/build_results_site.py"],
+    ["Evaluation date", null],
+  ];
+  if (m)
+    fields.push(
+      ["Model ID", m.id],
+      ["Trials", m.totals?.trials],
+      ["Result digests", m.provenance?.result_digests?.join(", ")],
+    );
+  return `<dl class="provenance">${fields.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd><code>${esc(v ?? "—")}</code></dd></div>`).join("")}</dl><p class="note">Generated official report data. Missing fields are shown as —. No evaluation timestamp is recorded in this data snapshot. Scoring and benchmark results are unchanged.</p>`;
+}
+export function shell(data, active) {
+  const pages = [
+    ["overview", "index.html", "Overview"],
+    ["leaderboard", "leaderboard.html", "Leaderboard"],
+    ["compare", "compare.html", "Compare models"],
+    ["model", "model.html", "Model details"],
+    ["scenarios", "scenarios.html", "Scenarios"],
+    ["methodology", "methodology.html", "Methodology"],
+  ];
+  const main = document.querySelector("main");
+  main.classList.add("container");
+  document.body.insertAdjacentHTML(
+    "afterbegin",
+    `<a class="skip-link" href="#main">Skip to content</a><header class="site-header"><a href="index.html" class="brand" aria-label="EMBERBench overview"><span class="brand-mark" aria-hidden="true">E<span>↗</span></span><span>EMBER<span class="brand-light">Bench</span><small class="brand-sub">Decision intelligence / V1</small></span></a><button class="nav-toggle button" aria-expanded="false" aria-controls="site-nav">Menu</button><nav class="site-nav" id="site-nav" aria-label="Main navigation">${pages.map(([id, url, label]) => `<a href="${url}" class="${id === active ? "active" : ""}" ${id === active ? 'aria-current="page"' : ""}>${label}</a>`).join("")}</nav><div class="header-actions"><a class="repo-link" href="${REPO}">Repository ↗</a><button class="theme-toggle button small" type="button" aria-label="Switch color theme">Dark</button></div></header><div class="status-banner"><span class="status-dot" aria-hidden="true"></span><span class="status-copy">${esc(data.label)}</span><a href="methodology.html#public-development">Read the scope</a></div>`,
+  );
+  main.insertAdjacentHTML(
+    "afterend",
+    `<footer class="site-footer container"><div><a href="index.html" class="footer-brand">EMBERBench</a><p>Decision-making under dynamic fire evacuation.</p><p class="muted">Public development results. Generated from official score reports.</p></div><div><span>Pack <code>${esc(data.pack_digest.slice(0, 12))}…</code></span><span>Scoring ${esc(data.scoring_version)} · ${esc(data.suite_id)}</span><a href="methodology.html#provenance">Data provenance</a><a href="${REPO}/blob/main/docs/scoring.md">Scoring specification ↗</a></div></footer>`,
+  );
+  const themeButton = document.querySelector(".theme-toggle");
+  const applyTheme = (theme) => {
+    document.documentElement.dataset.theme = theme;
+    themeButton.textContent = theme === "dark" ? "Light" : "Dark";
+    themeButton.setAttribute(
+      "aria-label",
+      `Switch to ${theme === "dark" ? "light" : "dark"} theme`,
+    );
+  };
+  applyTheme(
+    safeStorage("ember-theme") ??
+      (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
+  );
+  themeButton.addEventListener("click", () => {
+    const theme =
+      document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    safeStorage("ember-theme", theme);
+    applyTheme(theme);
+  });
+  const navButton = document.querySelector(".nav-toggle");
+  const updateOffset = () =>
+    document.documentElement.style.setProperty(
+      "--header-offset",
+      `${Math.ceil(document.querySelector(".site-header").getBoundingClientRect().height + 14)}px`,
+    );
+  const toggleNav = (expanded) => {
+    navButton.setAttribute("aria-expanded", String(expanded));
+    document.getElementById("site-nav").classList.toggle("open", expanded);
+    updateOffset();
+  };
+  navButton.addEventListener("click", () =>
+    toggleNav(navButton.getAttribute("aria-expanded") !== "true"),
+  );
+  document
+    .querySelector(".skip-link")
+    .addEventListener("click", () => toggleNav(false));
+  new ResizeObserver(updateOffset).observe(
+    document.querySelector(".site-header"),
+  );
+  updateOffset();
+  installTooltip();
+}
 export function installTooltip() {
   const tip = document.createElement("div");
   tip.id = "tip";
-  tip.setAttribute("role", "tooltip");
+  tip.role = "tooltip";
   document.body.append(tip);
-  const show = (target, x, y) => {
-    tip.innerHTML = target.dataset.tip;
-    tip.classList.add("on");
-    const w = tip.offsetWidth;
-    const h = tip.offsetHeight;
-    tip.style.left = `${Math.min(x + 14, window.innerWidth - w - 8)}px`;
-    tip.style.top = `${Math.max(y - h - 12, 8)}px`;
+  let target = null;
+  let hideTimer = null;
+  const hide = () => {
+    clearTimeout(hideTimer);
+    target?.removeAttribute("aria-describedby");
+    target = null;
+    tip.classList.remove("on");
   };
-  document.addEventListener("mousemove", (e) => {
-    const target = e.target.closest?.("[data-tip]");
-    if (target) show(target, e.clientX, e.clientY);
-    else tip.classList.remove("on");
+  const scheduleHide = () => {
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hide, 180);
+  };
+  const show = (el, x, y) => {
+    clearTimeout(hideTimer);
+    if (target !== el) target?.removeAttribute("aria-describedby");
+    target = el;
+    tip.textContent = el.dataset.tip;
+    el.setAttribute("aria-describedby", "tip");
+    tip.classList.add("on");
+    tip.style.left = `${Math.max(8, Math.min(x + 12, innerWidth - tip.offsetWidth - 8))}px`;
+    tip.style.top = `${Math.max(8, Math.min(y + 14, innerHeight - tip.offsetHeight - 8))}px`;
+  };
+  document.addEventListener("pointerover", (e) => {
+    const el = e.target.closest?.("[data-tip]");
+    if (e.target.closest?.("#tip")) {
+      clearTimeout(hideTimer);
+      return;
+    }
+    if (el) show(el, e.clientX, e.clientY);
+    else scheduleHide();
   });
   document.addEventListener("focusin", (e) => {
-    const target = e.target.closest?.("[data-tip]");
-    if (!target) return;
-    const r = target.getBoundingClientRect();
-    show(target, r.left + Math.min(r.width / 2, 240), r.top);
+    const el = e.target.closest?.("[data-tip]");
+    if (el) {
+      const r = el.getBoundingClientRect();
+      show(el, r.left, r.bottom);
+    } else hide();
   });
-  document.addEventListener("focusout", () => tip.classList.remove("on"));
-}
-
-// ------------------------------------------------------------------ charts
-
-// Horizontal bars, one row per model or item. The highlighted row is in the series color; the others are
-// recessive gray, so one model stands out against the rest.
-// rows: [{id, label, value, display, tip, highlight, kind, estimated, note, mark}]; mark is a reference tick.
-export function barChart(rows, { max = null, highlight = true, clickable = false } = {}) {
-  const top = max ?? Math.max(...rows.map((r) => r.value ?? 0), 0) * 1.05;
-  const body = rows
-    .map((r) => {
-      const w = top > 0 ? Math.max(0, Math.min(1, (r.value ?? 0) / top)) * 100 : 0;
-      const cls = ["brow", r.highlight ? "hl" : "", !highlight || r.highlight ? "" : "dim", r.kind === "Reference agent" ? "ref" : "", clickable ? "click" : ""]
-        .filter(Boolean)
-        .join(" ");
-      let bar = r.value === null || r.value === undefined ? "" : `<span class="bbar${r.estimated ? " est" : ""}" style="width:${w.toFixed(2)}%"></span>`;
-      if (r.mark !== undefined && r.mark !== null && top > 0) {
-        bar += `<span class="bmark" style="left:${(Math.max(0, Math.min(1, r.mark / top)) * 100).toFixed(2)}%"></span>`;
-      }
-      return `<div class="${cls}" ${r.id ? `data-id="${esc(r.id)}"` : ""} tabindex="0" data-tip="${esc(r.tip ?? `${r.label}: ${r.display}`)}">
-        <span class="blabel">${esc(r.label)}${r.note ? ` <span class="bnote">${esc(r.note)}</span>` : ""}</span>
-        <span class="btrack">${bar}</span>
-        <span class="bval">${esc(r.display)}</span></div>`;
-    })
-    .join("");
-  return `<div class="bchart">${body}</div>`;
-}
-
-// One stacked horizontal bar (part to whole). parts: [{label, value, color}]
-export function stackedBar(parts, total) {
-  const width = 1040;
-  const h = 28;
-  let svg = `<svg viewBox="0 0 ${width} ${h}" preserveAspectRatio="none" role="img" aria-label="People outcomes">`;
-  let x = 0;
-  parts.forEach((part, i) => {
-    const w = (part.value / total) * width;
-    if (w <= 0) return;
-    const last = i === parts.length - 1 || parts.slice(i + 1).every((p) => p.value === 0);
-    const segW = Math.max(0, w - (last ? 0 : 2)); // 2px surface gap between fills
-    svg += `<g class="mark" tabindex="0" data-tip="${esc(`${part.label}: ${part.value} of ${total} people (${pct(part.value, total)})`)}">`;
-    svg += `<rect x="${x}" y="0" width="${segW}" height="${h}" rx="${i === 0 || last ? 4 : 0}" fill="${part.color}"/>`;
-    svg += `</g>`;
-    x += w;
+  document.addEventListener("focusout", hide);
+  document.addEventListener("pointerout", (e) => {
+    if (!e.relatedTarget?.closest?.("[data-tip], #tip")) scheduleHide();
   });
-  return svg + `</svg>`;
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") hide();
+  });
+  addEventListener("scroll", hide, true);
 }
-
-export function dataTable(headers, rows, { open = false, title = "Show table" } = {}) {
-  const head = headers.map((h) => `<th${h.num ? ' class="num"' : ""}>${esc(h.label)}</th>`).join("");
-  const body = rows
-    .map((r) => `<tr>${r.map((c, i) => `<td${headers[i].num ? ' class="num"' : ""}>${esc(c)}</td>`).join("")}</tr>`)
-    .join("");
-  return `<details${open ? " open" : ""}><summary>${esc(title)}</summary><div class="table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></details>`;
+export function errorPage(error) {
+  document.querySelector("main").innerHTML =
+    `<div class="empty"><h1>Results unavailable</h1><p>${esc(error.message)}</p><a href="index.html">Return to overview</a></div>`;
 }
-
-export function openModel(id) {
-  const url = `model.html?id=${encodeURIComponent(id)}`;
-  const win = window.open(url, `ember-${id}`, "popup,width=1180,height=900");
-  if (win) win.focus();
-  else window.location.href = url; // pop-up blocked: open in this window
-}
+export { provider, rankOf };

@@ -13,6 +13,15 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
 jobs:
+  results-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: node --test tests/site.test.mjs
+
   test:
     runs-on: ${{ matrix.os }}
     strategy:

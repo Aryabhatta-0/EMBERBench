@@ -1,60 +1,26 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EMBERBench V1 — Results</title>
-  <meta name="description" content="How well AI decision models guide people out of a building fire: EMBERBench V1 results, cost and speed.">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-<main>
-  <h1>EMBERBench: can an AI get people out of a burning building?</h1>
-  <p class="sub">Each model controls an evacuation in 19 simulated building fires. At every step it tells each person
-    which way to move. The fire spreads, corridors get crowded and exits can become blocked. A model scores high when
-    many people reach an exit, quickly and away from the fire.</p>
-  <div class="banner" id="label"></div>
-
-  <div class="tiles" id="facts"></div>
-
-  <section class="card">
-    <div class="card-head">
-      <div>
-        <h2>Overall ranking</h2>
-        <p class="muted">EMBER Score from 0 to 100. Higher is better. Select a model to see its details.</p>
-      </div>
-      <div class="legend">
-        <span style="--c:var(--series-1)">AI decision model</span>
-        <span style="--c:var(--ref-bar)">Reference program (rules, no AI)</span>
-      </div>
-    </div>
-    <div class="filters" role="group" aria-label="Filter models">
-      <button class="chip" data-kind="all" aria-pressed="true">All</button>
-      <button class="chip" data-kind="Decision model" aria-pressed="false">AI decision models</button>
-      <button class="chip" data-kind="Reference agent" aria-pressed="false">Reference programs</button>
-    </div>
-    <div class="rank-head" aria-hidden="true">
-      <span>#</span><span>Model</span><span>EMBER Score</span><span class="num">People saved</span><span class="num">Cost</span>
-    </div>
-    <div id="ranking" class="ranking"><p class="muted">Loading results…</p></div>
-    <p class="muted foot-note">People saved: people who reached an exit, out of 241 in all 19 fires. Cost: what the
-      API charged for the whole test. ≈ marks an estimate from the published price. Reference programs run on a
-      computer without an AI API, so they cost nothing.</p>
-  </section>
-
-  <div class="grid2">
-    <section class="card">
-      <div class="card-head"><div><h2>Cost of the whole test</h2><p class="muted">US dollars for all 19 fires. Lower is better.</p></div></div>
-      <div id="cost"></div>
-    </section>
-    <section class="card">
-      <div class="card-head"><div><h2>Time to finish the whole test</h2><p class="muted">All 19 fires, start to end. Lower is better.</p></div></div>
-      <div id="time"></div>
-    </section>
-  </div>
-
-  <footer class="muted" id="footer"></footer>
-</main>
-<script type="module" src="index.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="EMBERBench public development evaluation: decision models and reference agents on frozen fire evacuation worlds."
+    />
+    <title>Overview | EMBERBench</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-page="index">
+    <main id="main" tabindex="-1">
+      <p class="empty">Loading official public development results...</p>
+    </main>
+    <noscript
+      >This portal needs JavaScript to display generated results. Read the
+      <a
+        href="https://github.com/Aryabhatta-0/EMBERBench/blob/main/docs/scoring.md"
+        >scoring specification</a
+      >.</noscript
+    >
+    <script type="module" src="index.js"></script>
+  </body>
 </html>

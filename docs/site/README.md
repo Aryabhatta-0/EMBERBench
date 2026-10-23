@@ -1,52 +1,62 @@
-# EMBERBench results website (first version)
+# EMBERBench results portal
 
-A static website with the EMBER Scores of every evaluated model on the V1 public development pack.
+A dependency-free, GitHub Pages-compatible explorer of official **public development** score reports. The portal does not present a hidden-suite leaderboard.
 
-The pages are written for readers who do not know the benchmark: plain words, and charts for the
-important numbers.
+## Pages
 
-- `index.html`: the overall ranking as a bar chart, with the people saved and the cost of each model. A
-  filter shows all models, AI decision models or reference programs. Two more charts compare the cost
-  and the time to finish of the AI decision models. Select a model to open its page in a new window.
-- `model.html?id=<model-id>`: one model. It shows the people saved, the EMBER Score, the cost, the time
-  to finish, the response time and the tokens used. Comparison charts show this model in color and
-  every other model in gray. A chart shows the score in each type of fire against the best AI decision
-  model. The score parts, robustness, crowding, API use and every world are in the technical details.
-  Every chart has a hover tooltip.
-- `data/results.js`: the data of both pages, made by `tools/build_results_site.py`. It is a JavaScript
-  module, not a `.json` file, because the public-asset guard keeps `.json` files for benchmark assets.
+- `index.html`: overview, leaders, interactive EMBER bars, relationship selector, scenario heatmap, provenance.
+- `leaderboard.html`: searchable, sortable table with type/provider filters, score CIs, API metrics and comparison selection. Query parameters preserve filters and sorting.
+- `compare.html?models=ID,ID`: 2–4 model profiles, components, scenarios, world scores, robustness, congestion and API metrics. Exactly two entries also show descriptive paired world differences.
+- `model.html?id=ID`: model profile with nine evidence sections and reproducibility metadata.
+- `scenarios.html?scenario=ID`: documented public scenarios, generated populations/world counts, sortable scenario rankings and heatmap ordering.
+- `methodology.html`: scoring, frozen environments, replay verification, uncertainty, public/hidden distinction and provenance.
 
-The site has no build step and no external dependency. It is plain HTML, CSS and JavaScript modules,
-so any static host can serve it (for example GitHub Pages). It must be served over HTTP: browsers do
-not load JavaScript modules from files opened directly from disk.
+All routes use relative assets and ordinary HTML paths. Model links stay in the same tab and support normal browser open-in-new-tab behavior. Color theme and up to four selected IDs are stored locally when browser storage is available.
 
-## Update the data
+## Data and scientific boundaries
 
-Give every finished run directory (each with `scores/`, and `summary.json` for API runs):
+`data/results.js` is generated exclusively by `tools/build_results_site.py`. Never enter results in UI source files. The module format avoids using a `.json` extension reserved by the public-asset guard for benchmark assets.
 
-```bash
-python tools/build_results_site.py --run ../pack-run --run ../jev-run --run ../subq-run --run ../decision-run-1 --out docs/site/data/results.js
-```
+The redesign retains the existing generated snapshot byte-for-byte. Original run directories are not included in this checkout, so it cannot regenerate that snapshot or recover missing provenance. Missing constants/manifest/report digests display **—**, with an explicit notice. No evaluation date or latest-to-oldest order is inferred. The existing snapshot contains one trial per model; reported CIs do not capture between-trial variability from a single trial.
 
-The build stops if a score report is not official or was scored against another environment pack.
+Future builds expose schema version 2, suite/manifest/constants digests, deterministic source report digests, trial counts, families, failure/component details, and authoritative ranks computed before display rounding. Legacy data uses the scoring tiebreak policy on the existing snapshot; its current score buckets and Safety differences are unambiguous. Rank is descriptive, never a significance claim.
 
-Cost is what the API reported (OpenRouter). For a run whose API reported no cost, give the published
-list price in USD per million input and output tokens with `--price MODEL_ID=IN,OUT`. The site marks
-that cost with ≈ and a striped bar. The current data uses `--price typesafe-jev-latest-choice-r1=0.042,0`
-and `--price subq-subq-snap-preview-choice-r1=0.05,0`.
+Paired differences match `(index, scenario_id, seed)` and average repeated trials within each world. Their unweighted mean is descriptive and differs from the family-balanced aggregate score. Incomplete trial groups are excluded and coverage is reported. No official comparison inference is present in the snapshot.
 
-The response time is the mean wait for one decision. The decision APIs do not stream, so the first token
-arrives with the whole answer: the response time is the time to first token. The time to finish is the
-wall-clock time of the run. A run that was resumed records only its last part, and it includes the
-provider's rate-limit waits.
+API usage is operational metadata, not a score input. Missing usage/cost is not zero; reference-agent compute cost is unmeasured. Mean decision latency is not measured streaming time to first token. Resumed run metadata can cover only the final invocation and include provider waits. **≈** means estimated API cost at supplied list prices. Cost-frontier lines are descriptive and mix reported/estimated invocation metadata; they do not imply price guarantees.
 
-## Preview
+## Generate data
+
+Use Python 3.12+ and every original finished run directory, each containing `scores/` and a matching `summary.json` for API models:
 
 ```bash
-python -m http.server 8765 --directory docs/site
+python tools/build_results_site.py --run ../pack-run --run ../jev-run --run ../subq-run --out docs/site/data/results.js
 ```
 
-Then open `http://localhost:8765/`.
+Optional `--price MODEL_ID=INPUT,OUTPUT` supplies USD per million tokens where the API reported no cost. Estimation requires both token counts; measured zero cost is preserved. Current snapshot prices were supplied by the previous generation, not embedded in the UI.
 
-The suite is public, so every number on the site is a development result, not a hidden-suite
-leaderboard score.
+Generation rejects nonofficial reports, mismatched packs, scoring versions, constants, suite/manifest hashes, scheduled worlds, model identities and summary provenance. It uses explicit field allowlists and emits no endpoint URLs, keys, cache paths or nondeterministic timestamps. This validates report consistency; it does not replace the evaluator's replay authentication.
+
+## Preview and tests
+
+```bash
+python -m http.server 8765 --bind 127.0.0.1 --directory docs/site
+node --test tests/site.test.mjs
+python -m pytest -q tests/test_results_site.py
+python -m mypy --strict tools/build_results_site.py tests/test_results_site.py
+python tools/check_public_assets.py --untracked
+```
+
+Open `http://127.0.0.1:8765/`. The site must be served over HTTP because it uses JavaScript modules. No application build step, external fonts, analytics, CDNs, or production JavaScript dependencies are required. CI runs the Node tests separately from the Python test matrix.
+
+## Design research
+
+The live Artificial Analysis leaderboard, model catalogue and model profile informed analytical hierarchy, filter discoverability, consistent chart controls and explicit unavailable values. EMBERBench uses its own content, structure, slate/teal/copper palette, typography, CSS and mark. No reference assets, branding, text or styles were copied.
+
+Reference pages inspected: https://artificialanalysis.ai/leaderboards/models, https://artificialanalysis.ai/models, https://artificialanalysis.ai/models/muse-wonder-full.
+
+## Browser verification inventory
+
+Validate desktop, tablet and narrow mobile; light/dark themes; shared navigation and mobile menu; direct paths and query parameters; search/type/provider filter cycles; ascending/descending sorts; missing API values; table horizontal scroll/focus preservation; empty search; invalid model/metric IDs; 2–4 selections and fifth-selection rejection; profile navigation; all relationship charts, highlights, hover/focus tooltips and Escape; heatmap keyboard visibility; scenario navigation/sorting; and console errors.
+
+Desktop Chromium checks and narrow viewport captures are recorded in the task's screenshot artifacts. Public development scope and one-trial uncertainty caveats remain visible throughout.
