@@ -2,11 +2,17 @@
 
 A static website with the EMBER Scores of every evaluated model on the V1 public development pack.
 
-- `index.html`: the leaderboard. A filter shows all models, decision models or reference agents.
-  Select a model to open its metrics in a new window.
-- `model.html?id=<model-id>`: one model. It shows the headline numbers, people outcomes, the score per
-  scenario, the score components, the score per world, the robustness counts, congestion diagnostics
-  and, for API models, the API use. Each chart has a hover tooltip and a table view.
+The pages are written for readers who do not know the benchmark: plain words, and charts for the
+important numbers.
+
+- `index.html`: the overall ranking as a bar chart, with the people saved and the cost of each model. A
+  filter shows all models, AI decision models or reference programs. Two more charts compare the cost
+  and the time to finish of the AI decision models. Select a model to open its page in a new window.
+- `model.html?id=<model-id>`: one model. It shows the people saved, the EMBER Score, the cost, the time
+  to finish, the response time and the tokens used. Comparison charts show this model in color and
+  every other model in gray. A chart shows the score in each type of fire against the best AI decision
+  model. The score parts, robustness, crowding, API use and every world are in the technical details.
+  Every chart has a hover tooltip.
 - `data/results.js`: the data of both pages, made by `tools/build_results_site.py`. It is a JavaScript
   module, not a `.json` file, because the public-asset guard keeps `.json` files for benchmark assets.
 
@@ -23,6 +29,16 @@ python tools/build_results_site.py --run ../pack-run --run ../jev-run --run ../s
 ```
 
 The build stops if a score report is not official or was scored against another environment pack.
+
+Cost is what the API reported (OpenRouter). For a run whose API reported no cost, give the published
+list price in USD per million input and output tokens with `--price MODEL_ID=IN,OUT`. The site marks
+that cost with ≈ and a striped bar. The current data uses `--price typesafe-jev-latest-choice-r1=0.042,0`
+and `--price subq-subq-snap-preview-choice-r1=0.05,0`.
+
+The response time is the mean wait for one decision. The decision APIs do not stream, so the first token
+arrives with the whole answer: the response time is the time to first token. The time to finish is the
+wall-clock time of the run. A run that was resumed records only its last part, and it includes the
+provider's rate-limit waits.
 
 ## Preview
 

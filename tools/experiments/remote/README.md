@@ -45,6 +45,12 @@ If the base URL already ends with the endpoint path, the runner uses it as it is
   HTTP 403, for a provider that throttles with 403 (SubQ preview).
 - **Defaults.** `temperature` 0 (`--temperature omit` for models that reject it). `max_tokens` is not
   sent, except 2048 for `anthropic`. `--extra-body '{"reasoning_effort": "low"}'` adds provider fields.
+- **Cost.** The runner adds up the cost that the API reports (OpenRouter: `usage.cost`). If the API
+  reports no cost, give the list price with `--input-price` and `--output-price` (USD per million
+  tokens). `summary.json` records the cost and its source: `reported`, `list price` or `not reported`.
+- **Time.** `summary.json` records the wall-clock time of the run, the mean time per `act` call and the
+  first and median response times. No API style streams, so the first token arrives with the whole
+  answer: the response time is the time to first token. Answers from the cache are not timed.
 
 ## Reproducibility
 

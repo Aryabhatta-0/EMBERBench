@@ -49,6 +49,7 @@ import hashlib
 import json
 import os
 import re
+import statistics
 import sys
 import time
 import urllib.error
@@ -350,6 +351,7 @@ class RemoteClient:
         self.calls = self.cache_hits = self.retries = self.retries_403 = self.format_errors = 0
         self.input_tokens = self.output_tokens = 0
         self.cost = 0.0  # the provider's reported cost (OpenRouter: usage.cost), 0 when not reported
+        self.response_seconds: list[float] = []  # one per answered HTTP request, in request order
         self.resolved_models: set[str] = set()
 
     # ------------------------------------------------------------ request bodies
@@ -484,10 +486,13 @@ class RemoteClient:
         attempt = forbidden = 0
         while True:
             try:
+                started = time.perf_counter()
                 with urllib.request.urlopen(request, timeout=self.timeout) as reply:
                     body = json.loads(reply.read().decode("utf-8"))
                     if not isinstance(body, dict):
                         raise AdapterError(f"{self.url}: the response is not a JSON object")
+                    # No style here streams, so the first token arrives with the whole answer: this is time to first token.
+                    self.response_seconds.append(time.perf_counter() - started)
                     return body
             except urllib.error.HTTPError as error:
                 detail = error.read().decode("utf-8", "replace")[:500]
@@ -649,8 +654,9 @@ def render_report(summary: Mapping[str, Any], report: ScoreReport, refs: Sequenc
         f"| Transport retries (429/5xx/network, 403) | {api['retries']}, {api['retries_403']} |",
         f"| Invalid answers re-asked | {api['format_errors']} |",
         f"| Input / output tokens | {api['input_tokens']:,} / {api['output_tokens']:,} |",
-        f"| Reported cost | {api['cost']} |",
+        f"| Cost (USD, {api['cost_source']}) | {api['cost']} |",
         f"| Mean `act` latency | {api['mean_act_latency_s']} s |",
+        f"| First / median response time | {api['first_response_s']} s / {api['median_response_s']} s |",
         f"| Wall-clock time | {api['wall_clock_s']} s |",
     ]
     if refs:
@@ -725,6 +731,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--format-retries", type=int, default=FORMAT_RETRIES, help="chat re-asks after an invalid answer")
     parser.add_argument("--timeout", type=float, default=TIMEOUT_SECONDS, help="seconds per HTTP request")
     parser.add_argument("--retry-403", action="store_true", help="retry HTTP 403 with long waits (a provider that throttles with 403)")
+    parser.add_argument("--input-price", type=float, help="USD per million input tokens, used when the API reports no cost")
+    parser.add_argument("--output-price", type=float, help="USD per million output tokens, used when the API reports no cost")
     args = parser.parse_args(argv)
 
     key = os.environ.get(args.key_env, "")
@@ -783,6 +791,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     (out / "scores" / f"{model_id}.json").write_text(report.to_json() + "\n", encoding="ascii", newline="\n")
 
     refs = [(r, compare_scores(report, r, resamples=protocol.resamples)) for _, r in reference_results(args.reference_run, pack, protocol, model_id)]
+    cost, cost_source = client.cost, "reported"
+    if cost == 0 and (args.input_price is not None or args.output_price is not None):
+        cost = (client.input_tokens * (args.input_price or 0) + client.output_tokens * (args.output_price or 0)) / 1e6
+        cost_source = "list price"
+    elif cost == 0:
+        cost_source = "not reported"
     summary: dict[str, Any] = {
         "model_id": model_id,
         "api_style": args.api,
@@ -806,9 +820,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             "format_errors": client.format_errors,
             "input_tokens": client.input_tokens,
             "output_tokens": client.output_tokens,
-            "cost": round(client.cost, 6),
+            "cost": round(cost, 6),
+            "cost_source": cost_source,
             "act_calls": len(steps),
             "mean_act_latency_s": _f(sum(s.latency_seconds for s in steps) / len(steps), 3) if steps else None,
+            "first_response_s": round(client.response_seconds[0], 3) if client.response_seconds else None,
+            "median_response_s": round(statistics.median(client.response_seconds), 3) if client.response_seconds else None,
             "wall_clock_s": round(elapsed, 1),
         },
         "references": {

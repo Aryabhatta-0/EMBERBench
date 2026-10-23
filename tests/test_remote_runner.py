@@ -151,6 +151,8 @@ def test_openai_run_is_official_cached_and_byte_identical(server: tuple[str, Fak
     assert summary["resolved_models"] == ["fake-gpt-1"]
     assert summary["api"]["requests_sent"] == len(model.requests) > 0
     assert summary["api"]["input_tokens"] == 5 * len(model.requests)
+    assert summary["api"]["cost"] == 0 and summary["api"]["cost_source"] == "not reported"
+    assert 0 < summary["api"]["first_response_s"] and 0 < summary["api"]["median_response_s"]
     assert "always-stay" in summary["references"]  # the missing reference run was made first, offline
     assert (out / "REPORT.md").read_text(encoding="utf-8").startswith("# `127.0.0.1-gpt_test-chat-r1`")
     path, headers, body = model.requests[0]
@@ -168,6 +170,7 @@ def test_openai_run_is_official_cached_and_byte_identical(server: tuple[str, Fak
     sent = len(model.requests)
     summary2 = _run(base_url, again, "--model", "gpt/test")
     assert len(model.requests) == sent and summary2["api"]["requests_sent"] == 0
+    assert summary2["api"]["first_response_s"] is None  # answers from the cache are not timed
     for sub in ("results", "scores"):
         assert _files(again / sub) == _files(out / sub)
 
@@ -189,8 +192,11 @@ def test_anthropic_style_headers_and_body(server: tuple[str, FakeModel], tmp_pat
 def test_decision_style_matches_the_jev_request(server: tuple[str, FakeModel], tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     base_url, model = server
     monkeypatch.setenv(KEY_ENV, KEY)
-    summary = _run(base_url, tmp_path / "run", "--api", "decision", "--model", "jev-latest", "--provider", "typesafe")
+    summary = _run(base_url, tmp_path / "run", "--api", "decision", "--model", "jev-latest", "--provider", "typesafe", "--input-price", "0.042")
     assert summary["model_id"] == "typesafe-jev-latest-choice-r1"
+    # The API reports no cost, so the cost comes from the list price of the input tokens.
+    assert summary["api"]["cost_source"] == "list price"
+    assert summary["api"]["cost"] == round(summary["api"]["input_tokens"] * 0.042 / 1e6, 6) > 0
     path, _, body = model.requests[0]
     assert path == "/v1/systemone"
     assert sorted(body) == ["model", "questions", "state"]

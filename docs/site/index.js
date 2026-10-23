@@ -1,78 +1,110 @@
-import { esc, fmt, installTooltip, loadResults } from "./common.js";
+import { barChart, duration, esc, fmt, installTooltip, isDecision, loadResults, money, openModel, pct } from "./common.js";
 
-function scoreBar(m) {
-  const x = (v) => Math.max(0, Math.min(100, v)) * 2; // viewBox width 200
-  const w = x(m.score ?? 0);
-  const r = Math.min(4, w);
-  const bar = w > 0 ? `<path class="bar" d="M0,4h${w - r}a${r},${r} 0 0 1 ${r},${r}v${10 - 2 * r}a${r},${r} 0 0 1 -${r},${r}h-${w - r}z"/>` : "";
-  let ci = "";
-  if (m.ci && m.ci[1] - m.ci[0] > 0.05) {
-    const [a, b] = [x(m.ci[0]), x(m.ci[1])];
-    ci = `<path d="M${a},6v6M${a},9H${b}M${b},6v6" stroke="var(--text-primary)" stroke-width="1.5" fill="none"/>`;
-  }
-  return `<svg viewBox="0 0 200 18" preserveAspectRatio="none" aria-hidden="true">
-    <rect class="track" x="0" y="4" width="200" height="10" rx="4"/>${bar}${ci}</svg>`;
+const tile = (label, value, note = "") =>
+  `<div class="tile"><div class="label">${esc(label)}</div><div class="value">${esc(value)}</div>` +
+  (note ? `<div class="note">${esc(note)}</div>` : "") + `</div>`;
+
+function costText(m) {
+  if (!isDecision(m)) return "free";
+  return money(m.api?.cost_usd, m.api?.cost_source === "list price");
 }
 
-function modelUrl(m) {
-  return `model.html?id=${encodeURIComponent(m.id)}`;
-}
-
-function openModel(m) {
-  const win = window.open(modelUrl(m), `ember-${m.id}`, "popup,width=1180,height=900");
-  if (win) win.focus();
-  else window.location.href = modelUrl(m); // pop-up blocked: open in this window
-}
-
-function render(data, kind) {
-  const rows = document.getElementById("rows");
+function renderRanking(data, kind) {
   const models = data.models.filter((m) => kind === "all" || m.kind === kind);
-  rows.innerHTML = models
-    .map((m, i) => {
+  document.getElementById("ranking").innerHTML = models
+    .map((m) => {
+      const rank = data.models.indexOf(m) + 1;
       const t = m.totals;
-      const ciText = m.ci ? `${fmt(m.ci[0])}–${fmt(m.ci[1])}` : "–";
-      const tip = `<b>${esc(m.name)}</b><br>EMBER Score ${fmt(m.score)} (95% CI ${ciText})<br>Safety ${fmt(m.safety, 3)} · Quality ${fmt(m.quality, 3)}`;
-      return `<tr class="row" data-index="${data.models.indexOf(m)}">
-        <td class="rank">${i + 1}</td>
-        <td><a class="model-link" href="${modelUrl(m)}" target="_blank" rel="noopener">${esc(m.name)}</a></td>
-        <td><span class="kind ${m.kind === "Decision model" ? "decision" : ""}">${esc(m.kind)}</span></td>
-        <td class="score-cell"><div class="score-wrap" data-tip="${esc(tip)}"><span class="score-val">${fmt(m.score)}</span>${scoreBar(m)}</div></td>
-        <td class="num muted">${ciText}</td>
-        <td class="num">${fmt(m.safety, 3)}</td>
-        <td class="num">${fmt(m.quality, 3)}</td>
-        <td class="num">${t.evacuated} / ${t.escapable}</td>
-        <td class="num">${t.avoidable_casualties}</td>
-      </tr>`;
+      const w = Math.max(0, Math.min(100, m.score ?? 0));
+      const ci = m.ci && m.ci[1] - m.ci[0] > 0.05 ? `<br>95% range ${fmt(m.ci[0])} to ${fmt(m.ci[1])}` : "";
+      const tip =
+        `<b>${esc(m.name)}</b><br>EMBER Score ${fmt(m.score)} of 100${ci}<br>` +
+        `Saved ${t.evacuated} of ${t.escapable} people · ${t.avoidable_casualties} avoidable deaths` +
+        (isDecision(m) ? `<br>Cost ${esc(costText(m))} · finished in ${esc(duration(m.api?.wall_clock_s))}` : "");
+      return `<a class="rrow ${isDecision(m) ? "" : "ref"}" href="model.html?id=${encodeURIComponent(m.id)}" data-id="${esc(m.id)}" data-tip="${esc(tip)}">
+        <span class="rnum">${rank}</span>
+        <span class="rname">${esc(m.name)}<span class="rkind">${isDecision(m) ? "AI decision model" : "Reference program"}</span></span>
+        <span class="rscore"><span class="btrack"><span class="bbar" style="width:${w}%"></span></span><b>${fmt(m.score)}</b></span>
+        <span class="num">${t.evacuated} <span class="muted">(${pct(t.evacuated, t.escapable)})</span></span>
+        <span class="num">${esc(costText(m))}</span>
+      </a>`;
     })
     .join("");
+}
+
+function render(data) {
+  const decision = data.models.filter(isDecision);
+  const best = decision[0];
+  const people = data.models[0].totals.escapable;
+  document.getElementById("facts").innerHTML = [
+    tile("Models tested", `${data.models.length}`, `${decision.length} AI decision models, ${data.models.length - decision.length} reference programs`),
+    tile("Simulated fires", `${data.models[0].episodes.length}`, "10 building layouts"),
+    tile("People in danger", `${people}`, "in all fires together"),
+    tile("Best AI model", best ? best.name : "–", best ? `EMBER Score ${fmt(best.score)} · saved ${best.totals.evacuated} of ${people}` : ""),
+  ].join("");
+
+  const byCost = [...decision].sort((a, b) => (a.api?.cost_usd ?? Infinity) - (b.api?.cost_usd ?? Infinity));
+  document.getElementById("cost").innerHTML = barChart(
+    byCost.map((m) => {
+      const est = m.api?.cost_source === "list price";
+      return {
+        id: m.id,
+        label: m.name,
+        value: m.api?.cost_usd,
+        display: costText(m),
+        estimated: est,
+        tip: `<b>${esc(m.name)}</b><br>${esc(costText(m))} for all 19 fires${est ? "<br>Estimate from the published price per token" : ""}<br>EMBER Score ${fmt(m.score)}`,
+      };
+    }),
+    { highlight: false, clickable: true },
+  );
+
+  const byTime = [...decision].sort((a, b) => (a.api?.wall_clock_s ?? Infinity) - (b.api?.wall_clock_s ?? Infinity));
+  document.getElementById("time").innerHTML = barChart(
+    byTime.map((m) => ({
+      id: m.id,
+      label: m.name,
+      value: m.api?.wall_clock_s,
+      display: duration(m.api?.wall_clock_s),
+      tip: `<b>${esc(m.name)}</b><br>${esc(duration(m.api?.wall_clock_s))} for all 19 fires<br>${esc(duration(m.api?.mean_act_latency_s))} per decision on average`,
+    })),
+    { highlight: false, clickable: true },
+  );
 }
 
 async function main() {
   installTooltip();
   const data = await loadResults();
   document.getElementById("label").textContent = data.label;
-  document.getElementById("unit").textContent = data.unit;
   document.getElementById("footer").innerHTML =
     `Suite <code>${esc(data.suite_id)}</code> · pack <code>${esc(data.pack_id)}</code> · digest <code>${esc(data.pack_digest.slice(0, 16))}…</code> · scoring version ${esc(data.scoring_version)}. ` +
-    `The suite is public, so these are development results, not hidden-suite scores.`;
+    `${esc(data.unit)}. The suite is public, so these are development results, not hidden-suite scores.`;
 
+  render(data);
   let kind = "all";
-  render(data, kind);
+  renderRanking(data, kind);
   for (const chip of document.querySelectorAll(".chip")) {
     chip.addEventListener("click", () => {
       kind = chip.dataset.kind;
       for (const c of document.querySelectorAll(".chip")) c.setAttribute("aria-pressed", String(c === chip));
-      render(data, kind);
+      renderRanking(data, kind);
     });
   }
-  document.getElementById("rows").addEventListener("click", (e) => {
-    const row = e.target.closest("tr.row");
-    if (!row) return;
+  document.addEventListener("click", (e) => {
+    const row = e.target.closest("[data-id]");
+    if (!row || e.ctrlKey || e.metaKey || e.shiftKey) return; // keep the browser's own new-tab clicks
     e.preventDefault();
-    openModel(data.models[Number(row.dataset.index)]);
+    openModel(row.dataset.id);
+  });
+  document.addEventListener("keydown", (e) => {
+    const row = e.target.closest?.(".brow.click");
+    if (row && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      openModel(row.dataset.id);
+    }
   });
 }
 
 main().catch((error) => {
-  document.getElementById("rows").innerHTML = `<tr><td colspan="9">Could not load the results: ${esc(error.message)}</td></tr>`;
+  document.getElementById("ranking").innerHTML = `<p>Could not load the results: ${esc(error.message)}</p>`;
 });

@@ -1671,10 +1671,15 @@ export default {
      "jev-1.13.0"
     ],
     "requests": 484,
+    "decisions": 475,
     "input_tokens": 2009901,
     "output_tokens": 258131,
-    "cost_usd": null,
-    "mean_act_latency_s": "0.753"
+    "cost_usd": 0.084416,
+    "cost_source": "list price",
+    "wall_clock_s": 365.0,
+    "mean_act_latency_s": 0.753,
+    "first_response_s": null,
+    "median_response_s": null
    }
   },
   {
@@ -2926,10 +2931,15 @@ export default {
      "openai/gpt-6-luna-decisions-20261006"
     ],
     "requests": 674,
+    "decisions": 624,
     "input_tokens": 2801095,
     "output_tokens": 0,
     "cost_usd": 0.280109,
-    "mean_act_latency_s": "0.577"
+    "cost_source": "reported",
+    "wall_clock_s": 367.9,
+    "mean_act_latency_s": 0.577,
+    "first_response_s": null,
+    "median_response_s": null
    }
   },
   {
@@ -3766,10 +3776,15 @@ export default {
      "nace-ai/drex-max-20261016"
     ],
     "requests": 1062,
+    "decisions": 810,
     "input_tokens": 3458629,
     "output_tokens": 1357604,
     "cost_usd": 0.207518,
-    "mean_act_latency_s": "1.323"
+    "cost_source": "reported",
+    "wall_clock_s": 1084.0,
+    "mean_act_latency_s": 1.323,
+    "first_response_s": null,
+    "median_response_s": null
    }
   },
   {
@@ -4191,10 +4206,15 @@ export default {
      "perplexity/pplx-decider-v1.2-20261016"
     ],
     "requests": 844,
+    "decisions": 796,
     "input_tokens": 2609239,
     "output_tokens": 7602,
     "cost_usd": 0.052185,
-    "mean_act_latency_s": "1.025"
+    "cost_source": "reported",
+    "wall_clock_s": 826.5,
+    "mean_act_latency_s": 1.025,
+    "first_response_s": null,
+    "median_response_s": null
    }
   },
   {
@@ -4616,10 +4636,15 @@ export default {
      "subq-snap-preview"
     ],
     "requests": 878,
+    "decisions": 680,
     "input_tokens": 2672686,
     "output_tokens": 0,
-    "cost_usd": null,
-    "mean_act_latency_s": "1.779"
+    "cost_usd": 0.133634,
+    "cost_source": "list price",
+    "wall_clock_s": 1220.1,
+    "mean_act_latency_s": 1.779,
+    "first_response_s": null,
+    "median_response_s": null
    }
   },
   {
@@ -5041,10 +5066,15 @@ export default {
      "cloudflare/clef"
     ],
     "requests": 669,
+    "decisions": 647,
     "input_tokens": 2466057,
     "output_tokens": 0,
     "cost_usd": 0.304658,
-    "mean_act_latency_s": "1.329"
+    "cost_source": "reported",
+    "wall_clock_s": 869.8,
+    "mean_act_latency_s": 1.329,
+    "first_response_s": null,
+    "median_response_s": null
    }
   },
   {
@@ -5466,10 +5496,15 @@ export default {
      "microsoft/microsoft-decision-1-20261009"
     ],
     "requests": 682,
+    "decisions": 619,
     "input_tokens": 2258095,
     "output_tokens": 6881,
     "cost_usd": 0.09484,
-    "mean_act_latency_s": "0.903"
+    "cost_source": "reported",
+    "wall_clock_s": 567.3,
+    "mean_act_latency_s": 0.903,
+    "first_response_s": null,
+    "median_response_s": null
    }
   },
   {
