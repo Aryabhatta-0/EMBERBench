@@ -17,7 +17,7 @@ All routes use relative assets and ordinary HTML paths. Model links stay in the 
 
 `data/results.js` is generated exclusively by `tools/build_results_site.py`. Never enter results in UI source files. The module format avoids using a `.json` extension reserved by the public-asset guard for benchmark assets.
 
-The snapshot is regenerated from the original run directories: the evaluation-pack reference run, the TypeSafe Jev and SubQ Snap runs, and 15 OpenRouter decision-model runs. The 15 models of the PR #36 snapshot keep identical scores, Safety, Quality and per-world outcomes. No evaluation date or latest-to-oldest order is inferred. The snapshot contains one trial per model; reported CIs do not capture between-trial variability from a single trial.
+The snapshot is regenerated from the original run directories: the evaluation-pack reference run, the TypeSafe Jev and SubQ Snap runs, and 16 OpenRouter decision-model runs. The 15 models of the PR #36 snapshot keep identical scores, Safety, Quality and per-world outcomes. No evaluation date or latest-to-oldest order is inferred. The snapshot contains one trial per model; reported CIs do not capture between-trial variability from a single trial.
 
 The data uses schema version 2: suite/manifest/constants digests, deterministic source report digests, trial counts, families, failure/component details, and authoritative ranks computed before display rounding. Legacy (pre-v2) data uses the scoring tiebreak policy on the rounded values. Rank is descriptive, never a significance claim.
 

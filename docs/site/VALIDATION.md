@@ -1,6 +1,6 @@
 # Results portal validation
 
-The redesign changes presentation and the report-to-site export only. It does not modify scoring, simulator semantics, suites, pack hashes, reference results, model results, or `.claude/`. `data/results.js` is regenerated from the original run directories and adds 10 OpenRouter decision models (see below). The 15 models of the PR #36 snapshot keep identical scores, Safety, Quality and per-world outcomes.
+The redesign changes presentation and the report-to-site export only. It does not modify scoring, simulator semantics, suites, pack hashes, reference results, model results, or `.claude/`. `data/results.js` is regenerated from the original run directories and adds 11 OpenRouter decision models (see below). The 15 models of the PR #36 snapshot keep identical scores, Safety, Quality and per-world outcomes.
 
 ## Scope and files
 
@@ -35,9 +35,10 @@ The redesign changes presentation and the report-to-site export only. It does no
 | `perplexity/pplx-decider-flash-v1.2-20261016` | 18.87 (18.87–18.87) | 0.2225 | 0.6511 | 141 | 700 | 0.103 | 572 s |
 | `cloudflare/clef-flash` | 13.54 (13.42–13.75) | 0.1414 | 0.7384 | 133 | 447 | 0.049 | 394 s |
 | `cloudflare/clef-omni-20261009` | 11.77 (11.77–11.77) | 0.1197 | 0.7055 | 108 | 540 | 0.361 | 334 s |
+| `upstage/solar-decide-20260928` | 0.20 (0.20–0.20) | 0.0107 | 0.3742 | 53 | 77 of 628 | 0.014 (≈0.47 in total) | 976 s (last segment) |
 | `upstage/solar-decide-flash-20261008` | 0.21 (0.21–0.21) | 0.0023 | 0.4169 | 67 | 559 | 0.442 | 768 s |
 
-The `upstage/solar-decide-flash` answers were inspected: they are valid, varied moves with low model confidence, not a degenerate adapter output. Rebuild checks: builder and remote-runner tests **56 passed**, Node tests **16 passed**, `mypy --strict` on the builder and its tests passed, public-asset guard **0 violations**.
+The two Upstage models rank by the official Safety tiebreak (0.0107 against 0.0023). Their answers were inspected: they are valid, varied moves, not a degenerate adapter output. `upstage/solar-decide` was slow (median response 12 s) and ran in three segments: an HTTP 402 on the first key, then a DNS failure after 551 accepted answers. Its summary covers only the last segment (77 requests); the ≈0.47 USD total comes from the key's usage. Rebuild checks: builder and remote-runner tests **56 passed**, Node tests **16 passed**, `mypy --strict` on the builder and its tests passed, public-asset guard **0 violations**.
 
 ## Browser checks
 
@@ -50,7 +51,7 @@ Independent scientific, UI/UX, security/leakage, and responsive/accessibility re
 ## Explicit limits
 
 - Run directories are not committed. The snapshot was regenerated from them with `tools/build_results_site.py`, never hand-edited.
-- Nine of the new OpenRouter runs were resumed after an HTTP 402 (no credits) on a first key. Their first segment sent 2–27 accepted requests. Their API usage and cost cover the final invocation only, so they slightly undercount.
+- Ten of the new OpenRouter runs were resumed after an HTTP 402 (no credits) on a first key. Their first segment sent 2–27 accepted requests. Their API usage and cost cover the final invocation only, so they slightly undercount. `upstage/solar-decide` undercounts much more (see above).
 - No evaluation timestamps or official paired-inference output are available. There is no invented latest-model ordering, p-value, significance badge, or hidden-suite claim.
 - Current reports contain one trial per model. Their intervals cannot measure unobserved between-trial variability.
 - API usage may cover the final invocation of a resumed run. List-price cost estimates are marked `≈`; reference-agent local compute is unmeasured.
