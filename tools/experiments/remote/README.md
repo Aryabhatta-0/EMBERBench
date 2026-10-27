@@ -34,13 +34,19 @@ If the base URL already ends with the endpoint path, the runner uses it as it is
 - **State text.** The same text as the Jev adapter: the rules, an ASCII map (`#` wall, `F` fire, `E`
   exit, `@` person, `.` floor), the exits and the people. For each person, every allowed move with the
   cell it leads to and the straight-line distances to the nearest exit and fire.
-- **Chat styles.** One request per step for all people (`--max-people` splits large crowds). The model
-  must answer with one JSON object: each key is a person ID, each value is an allowed move. Code fences
-  and `<think>` blocks are skipped. Nothing is repaired: a wrong case, a missing person or an unknown
-  move is an invalid answer. The runner re-asks up to `--format-retries` times (default 2) with the
-  reason. If the answer is still invalid, the run stops (fail-closed) and you can resume it.
-- **Decision style.** One `choice` question per person, up to 32 per request. The request bodies are
-  byte-identical to the Jev adapter `r1`.
+- **Harness protocol (harness `1.0`, [docs/harness-protocol.md](../../../docs/harness-protocol.md)).**
+  The canonical protocol is full joint: all active people of a step go in one request, for every API
+  style. `--joint-mode fixed_chunk --chunk-size N` (or `--max-people N`) is a declared variant for a
+  provider with a request cap; its model ID gets the suffix `-chunkN`. Before harness `1.0` the decision
+  style used chunks of 32 by default.
+- **Chat styles.** The model must answer with one JSON object: each key is a person ID, each value is
+  an allowed move. Code fences and `<think>` blocks are skipped. Nothing is repaired: a wrong case, a
+  missing person or an unknown move is an invalid answer. The runner re-asks up to `--format-retries`
+  times (default 2) with the reason. If the answer is still invalid, the run stops (fail-closed) and
+  you can resume it.
+- **Decision style.** One `choice` question per person. The request bodies are byte-identical to the
+  Jev adapter `r1`. Only the invalid questions are re-asked, with the same state, up to
+  `--format-retries` times; then the run stops (fail-closed).
 - **Errors.** Up to 5 retries on HTTP 429, 5xx and network errors. `--retry-403` adds long waits on
   HTTP 403, for a provider that throttles with 403 (SubQ preview).
 - **Defaults.** `temperature` 0 (`--temperature omit` for models that reject it). `max_tokens` is not

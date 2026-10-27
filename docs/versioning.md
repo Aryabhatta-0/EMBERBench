@@ -31,14 +31,14 @@ source, not from installed metadata.
   that moves with it is `cli.version-json`, the bytes of
   `emberbench version --json` itself.
 - **Not the benchmark revision.** The two are independent numbers. Package
-  `0.1.0` implements benchmark revision `2`. A benchmark revision never
+  `0.1.0` implements benchmark revision `3`. A benchmark revision never
   sets the package version, and a package release never sets the revision.
 
 **Current decision.** The package version stays `0.1.0`. No version of
 EMBERBench has been tagged or published, so `0.1.0` is still the first
-release. Benchmark revision 2 is a pre-release revision: it replaced
-revision 1 before anything was released, and no published package or score
-used revision 1. Choosing a different first version (for example `1.0.0`
+release. Benchmark revisions 2 and 3 are pre-release revisions: revision 2
+replaced revision 1 and revision 3 replaced revision 2 before anything was
+released, and no published package or score used revision 1 or 2. Choosing a different first version (for example `1.0.0`
 for the V1 benchmark) is a maintainer decision at tag time; until one is
 recorded, the version stays `0.1.0`. Changing it is a release step (see
 [release-checklist.md](release-checklist.md)), not part of feature work.
@@ -58,7 +58,7 @@ not ready for one waits. Do not ship it in a smaller release.
 
 ## 2. Benchmark revision
 
-`BENCHMARK_REVISION = "2"` is the V1 benchmark. The revision defines what a
+`BENCHMARK_REVISION = "3"` is the V1 benchmark. The revision defines what a
 score means. Scores and provenance from different revisions are never
 compared, and provenance of another revision fails verification
 ([integrity.md](integrity.md), section 12).
@@ -70,6 +70,15 @@ identity (`ENVIRONMENT_PACK_VERSION`, `ENVIRONMENT_WORLD_VERSION`), generator
 the suite-definition contracts (family rules, calibration panel, difficulty
 and admission rules, composition, selection, recipe catalog, suite freeze
 record). Revision 1 was never released.
+
+Revision 3 is one pre-release step from revision 2. It adds the evaluator
+protocol for remote models: the harness joint protocol, validation, re-ask
+and fail-closed rules (`HARNESS_VERSION` `1.0`,
+[harness-protocol.md](harness-protocol.md)), the `r1` prompt design
+(`ADAPTER_VERSION`, unchanged), the run accounting
+(`ACCOUNTING_VERSION` `1.0`) and the hidden-suite commitment
+(`COMMITMENT_VERSION` `1.0`). No simulator, scenario, metric or scoring rule
+changed: offline baseline results are byte-identical under revision 3.
 
 A new benchmark revision is **mandatory** for:
 
@@ -100,7 +109,7 @@ versions are tooling contracts: they never change what a score means.
 
 | Constant | Value | In provenance | Owner | Owned hashes and artifacts |
 |----------|-------|---------------|-------|----------------------------|
-| `BENCHMARK_REVISION` | `2` | yes | `src/emberbench/integrity.py`, [integrity.md](integrity.md) | Meaning of every score |
+| `BENCHMARK_REVISION` | `3` | yes | `src/emberbench/integrity.py`, [integrity.md](integrity.md) | Meaning of every score |
 | `SIMULATOR_VERSION` | `0.2.0` | yes | `src/emberbench/__init__.py`, [simulation-contract.md](simulation-contract.md) | Run record bytes and digests, golden trajectories, stochastic golden traces |
 | `OBSERVATION_VERSION` | `1.0` | yes | `src/emberbench/observation.py`, [v1-fairness-spec.md](v1-fairness-spec.md) | Run record header, model input |
 | `ACTION_SCHEMA_VERSION` | `1.0` | yes | `src/emberbench/agent.py`, [model-interface.md](model-interface.md) | Model output format |
@@ -124,11 +133,16 @@ versions are tooling contracts: they never change what a score means.
 | `SELECTION_RULES_VERSION` | `1.0` | yes | `src/emberbench/composition.py`, [generator.md](generator.md) | Composition rule set digest (selection) |
 | `RECIPE_CATALOG_VERSION` | `1.0` | yes | `src/emberbench/composition.py`, [generator.md](generator.md) | Composition rule set digest (recipes) |
 | `SUITE_FREEZE_RECORD_VERSION` | `1.0` | yes | `src/emberbench/composition.py`, [generator.md](generator.md) | Suite freeze record format |
-| `CLI_VERSION` | `1.0` | no | `src/emberbench/cli.py`, [cli.md](cli.md) | Command tree, exit codes, JSON output keys, CLI artifact bytes |
+| `HARNESS_VERSION` | `1.0` | yes | `src/emberbench/harness.py`, [harness-protocol.md](harness-protocol.md) | Remote-model joint protocol, validation, re-ask and fail-closed rules; run provenance `harness_protocol` |
+| `ADAPTER_VERSION` | `r1` | yes | `src/emberbench/harness.py`, [harness-protocol.md](harness-protocol.md) | Remote-model prompt design: state text, questions, chat and system prompts; request body bytes |
+| `ACCOUNTING_VERSION` | `1.0` | yes | `src/emberbench/accounting.py`, [harness-protocol.md](harness-protocol.md) | Run accounting record (calls, tokens, cost, time, re-asks, horizon hits) |
+| `COMMITMENT_VERSION` | `1.0` | yes | `src/emberbench/commitment.py`, [harness-protocol.md](harness-protocol.md) | Hidden-suite commitment digests |
+| `CLI_VERSION` | `1.1` | no | `src/emberbench/cli.py`, [cli.md](cli.md) | Command tree, exit codes, JSON output keys, CLI artifact bytes |
 | `BASELINES_VERSION` | `1.0` | no | `src/emberbench/baselines.py`, [baselines.md](baselines.md) | Baseline config and result digests |
 | `INTEGRITY_PROTOCOL_VERSION` | `1.0` | no | `src/emberbench/integrity.py`, [integrity.md](integrity.md) | Provenance record format and digests |
 | `REPLAY_AUDIT_VERSION` | `1.0` | no | `src/emberbench/audit.py`, [replay-visualization.md](replay-visualization.md) | Replay audit digests |
 | `ANIMATION_FORMAT_VERSION` | `1.0` | no | `src/emberbench/visualization.py`, [replay-visualization.md](replay-visualization.md) | Animation JSON digests |
+| `RUN_RECORD_VERSION` | `1.0` | no | `src/emberbench/run.py`, [cli.md](cli.md) | `emberbench run` run record format |
 | `GENERATED_SUITE_VERSION` | `1.0.0` | no | `src/emberbench/generator.py` | `suite_version` label of every generated suite manifest; content identity is the generated suite hash, owned by `GENERATOR_VERSION`. Not reported separately |
 
 The public suite has its own `suite_version` (`1.0.0`) in

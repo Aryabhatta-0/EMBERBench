@@ -1,6 +1,6 @@
 # Command-line interface
 
-`CLI_VERSION = "1.0"`
+`CLI_VERSION = "1.1"` (1.1 adds `run`)
 
 The `emberbench` command exposes the library contracts as a deterministic,
 provider-free command line. Every command calls the existing library API
@@ -35,6 +35,7 @@ agent code is imported (see [Agent factories](#agent-factories)).
 ```
 emberbench
   version                     contract versions
+  run                         evaluate one model on a frozen environment pack, score it, write a run record
   scenario validate FILE      one scenario file
   suite validate DIR          a suite directory (manifest.json + scenario files)
   generated validate DIR      a frozen generated suite (generation.json + suite/)
@@ -391,6 +392,67 @@ emberbench episode run --scenario scenarios/public/v1/v1-pub-01-single-exit-spar
 
 Importing a module runs its code. Use `--agent` only with code that you trust.
 
+## `run`: evaluate one model on a frozen environment pack
+
+```bash
+emberbench run --suite PACK_DIR --model typesafe/jev-1.14 --expected-digest HEX --out RUN_DIR
+```
+
+```bash
+emberbench run --suite PACK_DIR --baseline congestion-aware-v1 --out RUN_DIR
+```
+
+`--suite` is an environment pack directory (`pack.json`, the suite and the
+evaluation manifest). The pack is verified before any episode runs; with
+`--expected-digest` its digest must match, and with `--commitment HEX
+--salt-env VAR` it must open the published suite commitment (the salt is read
+from the environment variable, never from the command line).
+
+Exactly one model source:
+
+- `--model NAME`: a remote model, run through the harness
+  ([harness-protocol.md](harness-protocol.md)). Defaults: the decision API
+  style and the OpenRouter decisions endpoint (`--api`, `--base-url`), the key
+  in `EMBERBENCH_API_KEY` (`--key-env`), the canonical full-joint protocol and
+  at most 2 re-asks. `--joint-mode fixed_chunk --chunk-size N` is the declared
+  variant for a provider with a request cap; its model ID ends in `-chunkN`.
+  `--budget-usd` stops the run (resumable) at a spend limit.
+- `--baseline ID`: a registered baseline.
+- `--agent MODULE:FACTORY --model-id ID`: a local agent (as in
+  `evaluation run`).
+
+`RUN_DIR` must be outside the source repository; a rerun with the same model
+resumes. It receives `results/<model_id>.json`, `scores/`, `accounting/` and
+`runs/<model_id>.json`, the run record (`RUN_RECORD_VERSION = "1.0"`): every
+`benchmark_versions()` entry, the pack digest, manifest hash, seeds (or only
+their SHA-256 with `--private`), the commitment check, the model and its
+settings, the harness protocol and the SHA-256 of the harness module, start
+and end time, calls, tokens, cost and runtime, the accounting summary, the
+result SHA-256 and the metrics. A remote model also gets `ledger/` and
+`cache.jsonl`; the cache holds the model-visible state text, so a private run
+directory stays with the evaluator.
+
+`--private` (hidden suites) needs `--expected-digest` or `--commitment`. The
+run record and the printed summary then hold no pack ID, scenario ID or seed,
+and harness errors hold no answer text. Deterministic baselines reproduce
+their result bytes exactly.
+
+### Docker
+
+The `Dockerfile` at the repository root builds the runner on a base image
+pinned by digest (`python:3.12.16-slim-bookworm`); the package has no runtime
+dependencies, and the build tools come from `tools/dev-constraints.txt`.
+
+```text
+docker build -t emberbench .
+docker run --rm -v PACK_DIR:/suite:ro -v RUN_DIR:/out -e EMBERBENCH_API_KEY emberbench run --suite /suite --model typesafe/jev-1.14 --expected-digest HEX --out /out
+docker build --target test -t emberbench-test .
+docker run --rm emberbench-test
+```
+
+The pack is mounted read-only; nothing of a private suite is part of the
+image. The `test` image runs the test suite in a clean environment.
+
 ## Configuration, determinism and network policy
 
 - There is no configuration file, no home-directory configuration, no
@@ -408,6 +470,11 @@ Importing a module runs its code. Use `--agent` only with code that you trust.
   every command under an audit hook that fails on any socket or URL event.
   An agent that the operator loads with `--agent` may use the network itself.
   That is outside the CLI core and is the operator's explicit choice.
+- `emberbench run --model` is the one command that contacts a model API and
+  reads an environment variable (the API key named by `--key-env`, and the
+  commitment salt named by `--salt-env`). Its code is in `emberbench.run`
+  and `emberbench.harness`; `run --baseline` and `run --agent` stay
+  provider-free.
 
 ## Examples (public development assets)
 

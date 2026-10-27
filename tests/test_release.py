@@ -120,7 +120,7 @@ def test_package_version_has_one_source() -> None:
 def test_version_output_keeps_package_version_and_benchmark_revision_apart() -> None:
     info = version_info()
     assert info["package_version"] == source_version == "0.1.0"  # no release-tag decision yet (docs/versioning.md, section 1)
-    assert info["benchmark_revision"] == BENCHMARK_REVISION == "2"
+    assert info["benchmark_revision"] == BENCHMARK_REVISION == "3"
     assert list(info)[0] == "package_version"
 
 
@@ -129,9 +129,9 @@ def test_version_output_contains_every_benchmark_version_by_construction() -> No
     info = version_info()
     for key, value in benchmark_versions().items():
         assert info[CHECK_RELEASE.BENCHMARK_VERSION_KEYS.get(key, f"{key}_version")] == value, key
-    assert len(benchmark_versions()) == 24
+    assert len(benchmark_versions()) == 28
     tooling = {k for k in info if k != "package_version"} - {CHECK_RELEASE.BENCHMARK_VERSION_KEYS.get(k, f"{k}_version") for k in benchmark_versions()}
-    assert tooling == {"cli_version", "baselines_version", "integrity_protocol_version", "replay_audit_version", "animation_format_version"}
+    assert tooling == {"cli_version", "baselines_version", "integrity_protocol_version", "replay_audit_version", "animation_format_version", "run_record_version"}
 
 
 def test_every_version_constant_has_an_owner_and_a_reported_key() -> None:
@@ -181,7 +181,7 @@ def test_version_contract_check_reports_each_kind_of_drift() -> None:
 
 def test_no_doc_states_a_stale_benchmark_revision(tmp_path: Path) -> None:
     assert CHECK_RELEASE.stale_revision_problems(BENCHMARK_REVISION) == []
-    assert CHECK_RELEASE.stale_revision_problems("3"), "the stale-revision scan finds nothing"
+    assert CHECK_RELEASE.stale_revision_problems("4"), "the stale-revision scan finds nothing"
 
 
 def test_changelog_records_the_v1_milestones() -> None:
@@ -189,7 +189,7 @@ def test_changelog_records_the_v1_milestones() -> None:
     assert f"package `{source_version}`, benchmark revision `{BENCHMARK_REVISION}`" in changelog
     for pr in (2, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34):
         assert f"PR #{pr})" in changelog or f"PR #{pr}," in changelog or f"PR #{pr}):" in changelog, pr
-    for milestone in ("EMBER Score", "EnvironmentPack", "unique-world", "Generator 1.1", "10-family", "Benchmark revision 2", "Coordination is not a score component"):
+    for milestone in ("EMBER Score", "EnvironmentPack", "unique-world", "Generator 1.1", "10-family", "Benchmark revision 2", "Benchmark revision 3", "Coordination is not a score component"):
         assert milestone in changelog, milestone
 
 

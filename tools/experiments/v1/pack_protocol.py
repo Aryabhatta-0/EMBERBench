@@ -22,10 +22,12 @@ PACK_VERSION = "2"
 RUN_LABEL = "PUBLIC DEVELOPMENT EVALUATION — NOT A HIDDEN-SUITE LEADERBOARD"
 
 # Provenance: every version that defines what a score means, as `benchmark_versions()` returns it on
-# the benchmark this pack was generated on (benchmark revision 2). The runner and the verifier fail
+# the benchmark this pack was generated on (benchmark revision 3). The runner and the verifier fail
 # closed when any key or value differs: a new benchmark revision needs a new pack run, never a mix.
-BENCHMARK_REVISION = "2"
+BENCHMARK_REVISION = "3"
 BENCHMARK_VERSIONS: dict[str, str] = {
+    "accounting": "1.0",
+    "adapter": "r1",
     "action_schema": "1.0",
     "admission_rules": "1.0",
     "benchmark_revision": BENCHMARK_REVISION,
@@ -41,6 +43,7 @@ BENCHMARK_VERSIONS: dict[str, str] = {
     "generation_manifest": "1.1",
     "generator": "1.1.0",
     "generator_config": "1.1",
+    "harness": "1.0",
     "metrics": "1.0",
     "observation": "1.0",
     "recipe_catalog": "1.0",
@@ -49,6 +52,7 @@ BENCHMARK_VERSIONS: dict[str, str] = {
     "selection_rules": "1.0",
     "simulator": "0.2.0",
     "statistics": "1.0",
+    "commitment": "1.0",
     "suite_freeze_record": "1.0",
 }
 

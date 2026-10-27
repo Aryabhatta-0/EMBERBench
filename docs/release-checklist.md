@@ -133,10 +133,13 @@ the first release).
       `FAMILY_RULES_VERSION`, `CALIBRATION_PANEL_VERSION`,
       `DIFFICULTY_RULES_VERSION`, `ADMISSION_RULES_VERSION`,
       `COMPOSITION_VERSION`, `SELECTION_RULES_VERSION`,
-      `RECIPE_CATALOG_VERSION`, `SUITE_FREEZE_RECORD_VERSION`.
+      `RECIPE_CATALOG_VERSION`, `SUITE_FREEZE_RECORD_VERSION`,
+      `HARNESS_VERSION`, `ADAPTER_VERSION`, `ACCOUNTING_VERSION`,
+      `COMMITMENT_VERSION`.
 - [ ] **Tooling versions.** A change needs at least a MINOR release:
       `CLI_VERSION`, `BASELINES_VERSION`, `INTEGRITY_PROTOCOL_VERSION`,
-      `REPLAY_AUDIT_VERSION`, `ANIMATION_FORMAT_VERSION`. Suite labels:
+      `REPLAY_AUDIT_VERSION`, `ANIMATION_FORMAT_VERSION`,
+      `RUN_RECORD_VERSION`. Suite labels:
       `GENERATED_SUITE_VERSION`.
 - [ ] Every changed version has a reason in the changelog, no version moved
       without an intended change, and no intended change is missing a bump:

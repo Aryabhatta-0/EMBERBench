@@ -11,7 +11,7 @@ A model controls the people in a 2D grid building. Fire spreads through the buil
 the model must decide each timestep how every person moves. The benchmark measures how
 well the model's decisions get people out through the exits before the fire reaches them.
 
-> **Status: V1 release candidate, benchmark revision 2, not yet released
+> **Status: V1 release candidate, benchmark revision 3, not yet released
 > (package `0.1.0`).** This repository contains the benchmark contract, the
 > deterministic simulation core, the frozen V1 fairness and semantics
 > specification, the matched stochastic hazard contract, auditable

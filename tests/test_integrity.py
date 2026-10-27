@@ -49,7 +49,10 @@ from emberbench import (
     run_evaluation,
     save_evaluation_manifest,
 )
+from emberbench.accounting import ACCOUNTING_VERSION
 from emberbench.canonical import canonical_bytes, canonical_json, sha256_hex
+from emberbench.commitment import COMMITMENT_VERSION
+from emberbench.harness import ADAPTER_VERSION, HARNESS_VERSION
 from emberbench.errors import GenerationError, IntegrityError
 from emberbench.generator import FrozenGeneratedSuite, GeneratorConfig, freeze_generated_suite, generate_suite, load_generated_suite
 from emberbench.integrity import (
@@ -177,7 +180,7 @@ def edited(run: Run, edit: Callable[[dict[str, Any]], None]) -> dict[str, Any]:
 
 def test_versions_are_pinned_and_unchanged() -> None:
     assert INTEGRITY_PROTOCOL_VERSION == "1.0"
-    assert BENCHMARK_REVISION == "2"
+    assert BENCHMARK_REVISION == "3"
     unchanged = {
         "simulator": (SIMULATOR_VERSION, "0.2.0"),
         "observation": (OBSERVATION_VERSION, "1.0"),
@@ -202,10 +205,15 @@ def test_versions_are_pinned_and_unchanged() -> None:
         "selection_rules": (SELECTION_RULES_VERSION, "1.0"),
         "recipe_catalog": (RECIPE_CATALOG_VERSION, "1.0"),
         "suite_freeze_record": (SUITE_FREEZE_RECORD_VERSION, "1.0"),
+        # Revision 3: the evaluator protocol for remote models.
+        "harness": (HARNESS_VERSION, "1.0"),
+        "adapter": (ADAPTER_VERSION, "r1"),
+        "accounting": (ACCOUNTING_VERSION, "1.0"),
+        "commitment": (COMMITMENT_VERSION, "1.0"),
     }
     for name, (actual, expected) in unchanged.items():
         assert actual == expected, name
-    assert benchmark_versions() == {"benchmark_revision": "2", **{k: v for k, (v, _) in unchanged.items()}}
+    assert benchmark_versions() == {"benchmark_revision": "3", **{k: v for k, (v, _) in unchanged.items()}}
 
 
 def test_benchmark_versions_reuse_the_owning_constants() -> None:
@@ -462,6 +470,10 @@ def test_version_mismatch_is_rejected(run: Run, edit: Callable[[dict[str, Any]],
         ("DIFFICULTY_RULES_VERSION", "difficulty_rules"),
         ("ENVIRONMENT_PACK_VERSION", "environment_pack"),
         ("SELECTION_RULES_VERSION", "selection_rules"),
+        ("HARNESS_VERSION", "harness"),
+        ("ADAPTER_VERSION", "adapter"),
+        ("ACCOUNTING_VERSION", "accounting"),
+        ("COMMITMENT_VERSION", "commitment"),
         ("BENCHMARK_REVISION", "benchmark_revision"),
     ],
 )

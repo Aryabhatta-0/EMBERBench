@@ -19,7 +19,7 @@ scoring version 1.0", never "72.4% evacuated".
 | Version | `SCORING_VERSION = "1.0"` |
 | Constants | `OFFICIAL_CONSTANTS` (section 4); `ScoringConstants.digest()` pins them |
 | Separate from | simulator, observation, action schema, scenario schema, metrics, crowd diagnostics, statistics, generator and evaluation versions. Scoring changes none of them. |
-| Provenance | `benchmark_versions()["scoring"]`; benchmark revision `2` and later pin it (see [integrity.md](integrity.md) section 12) |
+| Provenance | `benchmark_versions()["scoring"]`; benchmark revisions `2` and `3` pin it (see [integrity.md](integrity.md) section 12) |
 
 `SCORING_VERSION` changes when a definition, a constant, the arithmetic or
 the serialization changes. A score is comparable with another score only

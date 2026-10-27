@@ -112,7 +112,7 @@ Replay authentication and fire-world checks against the pack are unchanged.
 ## Version handling
 
 `pack_protocol.BENCHMARK_VERSIONS` pins all 24 keys of `benchmark_versions()`
-for benchmark revision 2. The runner and `--verify` fail closed when the
+for benchmark revision 3. The runner and `--verify` fail closed when the
 running code differs in any key or value. The index also pins the
 environment-pack versions (including the generator versions), the scoring
 version and constants digest, the suite and manifest hashes, every world

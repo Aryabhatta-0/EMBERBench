@@ -5,6 +5,12 @@ fail-closed input loading, no-overwrite atomic output and stable exit codes.
 It never generates seeds, reads ambient configuration, contacts a network or
 imports code that the operator did not name with ``--agent``.
 
+The one exception is ``emberbench run --model`` (CLI 1.1): it evaluates a
+remote model through the harness, so it reads the API key from the named
+environment variable and contacts the model API. Its code lives in
+:mod:`emberbench.run`; every other command, and ``run`` with ``--baseline`` or
+``--agent``, stays provider-free.
+
 ``emberbench ...`` (the console script) and ``python -m emberbench ...`` run
 the same :func:`main`. See ``docs/cli.md``.
 """
@@ -47,7 +53,7 @@ from .simulator import run_episode
 from .statistics import aggregate_result, check_resamples, compare_results
 from .suite import Suite, load_suite
 
-CLI_VERSION = "1.0"
+CLI_VERSION = "1.1"
 PROG = "emberbench"
 
 
@@ -130,6 +136,7 @@ def version_info() -> dict[str, str]:
     from .audit import REPLAY_AUDIT_VERSION
     from .baselines import BASELINES_VERSION
     from .integrity import INTEGRITY_PROTOCOL_VERSION, benchmark_versions
+    from .run import RUN_RECORD_VERSION
     from .visualization import ANIMATION_FORMAT_VERSION
 
     return {
@@ -140,6 +147,7 @@ def version_info() -> dict[str, str]:
         "integrity_protocol_version": INTEGRITY_PROTOCOL_VERSION,
         "replay_audit_version": REPLAY_AUDIT_VERSION,
         "animation_format_version": ANIMATION_FORMAT_VERSION,
+        "run_record_version": RUN_RECORD_VERSION,
     }
 
 
@@ -644,6 +652,19 @@ def _cmd_statistics_compare(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+_RUN_EXIT_CODES = {"usage": ExitCode.USAGE, "mismatch": ExitCode.MISMATCH, "output": ExitCode.OUTPUT, "agent": ExitCode.AGENT}
+
+
+def _cmd_run(args: argparse.Namespace) -> dict[str, Any]:
+    from . import run as run_command
+
+    try:
+        summary = run_command.execute(args, load_agent=_agent_from_args)
+    except run_command.RunError as exc:
+        raise CliError(_RUN_EXIT_CODES[exc.kind], exc.message) from None
+    return {"command": "run", **summary}
+
+
 # --------------------------------------------------------------------------- parser
 
 
@@ -698,6 +719,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     p: argparse.ArgumentParser = commands.add_parser("version", parents=[common], help="print contract versions", **_parser_options())
     p.set_defaults(handler=_cmd_version)
+
+    from . import run as run_command
+
+    help_text = "evaluate one model on one frozen environment pack, score it and write a run record"
+    p = commands.add_parser("run", parents=[common], help=help_text, description=help_text, **_parser_options())
+    p.set_defaults(handler=_cmd_run)
+    run_command.add_arguments(p)
 
     scenario = group("scenario", "scenario files")
     p = leaf(scenario, "validate", "validate one scenario file", _cmd_scenario_validate)

@@ -35,8 +35,12 @@ from emberbench import (
     verify_record,
 )
 from emberbench import cli
+from emberbench.accounting import ACCOUNTING_VERSION
 from emberbench.canonical import canonical_json, sha256_hex
 from emberbench.cli import CLI_VERSION, ExitCode, main
+from emberbench.commitment import COMMITMENT_VERSION
+from emberbench.harness import ADAPTER_VERSION, HARNESS_VERSION
+from emberbench.run import RUN_RECORD_VERSION
 from emberbench.statistics import DEFAULT_BOOTSTRAP_RESAMPLES
 
 from test_evaluation import PUBLIC_DEV_MANIFEST_HASH
@@ -183,7 +187,7 @@ def test_version_json_lists_every_contract_version() -> None:
     assert o.json() == {
         "command": "version",
         "package_version": emberbench.__version__,
-        "cli_version": "1.0",
+        "cli_version": "1.1",
         "simulator_version": emberbench.SIMULATOR_VERSION,
         "schema_version": emberbench.SCHEMA_VERSION,
         "observation_version": emberbench.OBSERVATION_VERSION,
@@ -211,12 +215,17 @@ def test_version_json_lists_every_contract_version() -> None:
         "selection_rules_version": emberbench.SELECTION_RULES_VERSION,
         "recipe_catalog_version": emberbench.RECIPE_CATALOG_VERSION,
         "suite_freeze_record_version": emberbench.SUITE_FREEZE_RECORD_VERSION,
+        "harness_version": HARNESS_VERSION,
+        "adapter_version": ADAPTER_VERSION,
+        "run_record_version": RUN_RECORD_VERSION,
+        "accounting_version": ACCOUNTING_VERSION,
+        "commitment_version": COMMITMENT_VERSION,
         "benchmark_revision": emberbench.BENCHMARK_REVISION,
     }
 
 
 def test_the_cli_changes_no_library_version() -> None:
-    assert CLI_VERSION == "1.0"
+    assert CLI_VERSION == "1.1"
     assert (
         emberbench.SIMULATOR_VERSION,
         emberbench.OBSERVATION_VERSION,
@@ -230,13 +239,13 @@ def test_the_cli_changes_no_library_version() -> None:
         emberbench.BASELINES_VERSION,
         emberbench.INTEGRITY_PROTOCOL_VERSION,
         emberbench.BENCHMARK_REVISION,
-    ) == ("0.2.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.1.0", "1.0", "1.0", "1.0", "1.0", "2")
+    ) == ("0.2.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.1.0", "1.0", "1.0", "1.0", "1.0", "3")
 
 
 def test_version_human_mode() -> None:
     o = invoke("version")
     assert o.code == 0
-    assert "cli_version: 1.0\n" in o.out and "{" not in o.out
+    assert "cli_version: 1.1\n" in o.out and "{" not in o.out
 
 
 def test_both_entry_points_run_the_same_main(tmp_path: Path) -> None:

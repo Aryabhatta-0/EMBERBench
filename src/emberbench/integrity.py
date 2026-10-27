@@ -45,7 +45,9 @@ from typing import Any
 from . import SIMULATOR_VERSION
 from .agent import ACTION_SCHEMA_VERSION
 from .calibration import ADMISSION_RULES_VERSION, CALIBRATION_PANEL_VERSION, DIFFICULTY_RULES_VERSION
+from .accounting import ACCOUNTING_VERSION
 from .canonical import canonical_bytes, canonical_json, sha256_hex
+from .commitment import COMMITMENT_VERSION
 from .composition import COMPOSITION_VERSION, RECIPE_CATALOG_VERSION, SELECTION_RULES_VERSION, SUITE_FREEZE_RECORD_VERSION
 from .crowd import CROWD_DIAGNOSTICS_VERSION
 from .environment_pack import ENVIRONMENT_PACK_VERSION
@@ -73,6 +75,7 @@ from .generator import (
     validate_generator_seed,
     verify_regeneration,
 )
+from .harness import ADAPTER_VERSION, HARNESS_VERSION
 from .metrics import METRICS_VERSION
 from .observation import OBSERVATION_VERSION
 from .scenario import ID_PATTERN, SCHEMA_VERSION
@@ -89,8 +92,11 @@ INTEGRITY_PROTOCOL_VERSION = "1.0"
 # rules is not a new revision. Revision 2 is the one pre-release step that
 # takes in the official scoring contract (scoring 1.0, environment packs) and
 # the generator 1.1 suite-definition contracts (families, calibration,
-# admission, composition).
-BENCHMARK_REVISION = "2"
+# admission, composition). Revision 3 adds the evaluator protocol for remote
+# models: the harness 1.0 joint protocol and the r1 prompt design
+# (docs/harness-protocol.md), the run accounting and the suite commitment. No simulator, scenario or scoring rule
+# changed, so revision-2 offline baseline results are identical under revision 3.
+BENCHMARK_REVISION = "3"
 
 IMAGE_DIGEST_PREFIX = "sha256:"
 MAX_KEY_ID_LENGTH = 256
@@ -139,6 +145,11 @@ def benchmark_versions() -> dict[str, str]:
         "selection_rules": SELECTION_RULES_VERSION,
         "recipe_catalog": RECIPE_CATALOG_VERSION,
         "suite_freeze_record": SUITE_FREEZE_RECORD_VERSION,
+        # The evaluator protocol for remote models (revision 3).
+        "harness": HARNESS_VERSION,
+        "adapter": ADAPTER_VERSION,
+        "accounting": ACCOUNTING_VERSION,
+        "commitment": COMMITMENT_VERSION,
     }
 
 

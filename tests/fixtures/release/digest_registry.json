@@ -19,7 +19,7 @@
       "what": "Record digests of every episode of the baseline development manifest (the baseline's actions)."
     },
     "benchmark.versions": {
-      "digest": "63593753c36f85a206fc439afc6e49fb961085daca8ffcbd3b30ccfab23dceb3",
+      "digest": "4f9919215409310d1aa9767813ae14b81cf50f767df7c66bb451086f0d3afab0",
       "owner": "BENCHMARK_REVISION; every version in benchmark_versions()",
       "mirrors": "this registry only",
       "what": "sha256_hex(benchmark_versions()): every version that provenance pins, with its value."
@@ -31,7 +31,7 @@
       "what": "SHA-256 of the file bytes of 'emberbench evaluation manifest --suite scenarios/public/v1 --seed 0 --seed 1 --seed 2'."
     },
     "cli.version-json.stdout_sha256": {
-      "digest": "2164530caffe212df037ac82170548d1e966a07b124cc1711e5ad8bfe2543901",
+      "digest": "4ea7555056af86bd3919a2918f48d2999197bfaf904a428b63d2634b54f24bd3",
       "owner": "package version; CLI_VERSION; every version that 'emberbench version' reports",
       "mirrors": "this registry only",
       "what": "SHA-256 of the stdout bytes of 'emberbench version --json'. The only entry that moves with the package version."
@@ -91,7 +91,7 @@
       "what": "sha256_hex of the recomputed list of stochastic golden fire traces."
     },
     "integrity.test-run.provenance_digest": {
-      "digest": "c83dd743884db3e7a5e39a4e988cfed4d25c86003ff75a3f7be5e53ddfe2f7a4",
+      "digest": "165787a4f16f18a6fd093457ddce7e7779d6bff7c9eba30625edf67756eccfff",
       "owner": "INTEGRITY_PROTOCOL_VERSION; BENCHMARK_REVISION; every version in benchmark_versions()",
       "mirrors": "this registry only",
       "what": "Provenance of the tests/test_integrity.py run fixture (test-only seeds and identity)."

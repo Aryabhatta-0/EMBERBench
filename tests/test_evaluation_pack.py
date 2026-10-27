@@ -200,11 +200,11 @@ def test_index_pins_every_version_and_digest(smoke_out: Path) -> None:
     assert all(p["digest"] for p in index["paired_comparisons"])
 
 
-def test_provenance_pins_benchmark_revision_2_and_every_current_version(smoke_out: Path) -> None:
+def test_provenance_pins_benchmark_revision_3_and_every_current_version(smoke_out: Path) -> None:
     pinned = protocol_mod.BENCHMARK_VERSIONS
-    assert protocol_mod.BENCHMARK_REVISION == BENCHMARK_REVISION == "2"
+    assert protocol_mod.BENCHMARK_REVISION == BENCHMARK_REVISION == "3"
     assert pinned == benchmark_versions()  # the pins match the benchmark on main, key for key
-    assert len(pinned) == 24 and pinned["benchmark_revision"] == "2"
+    assert len(pinned) == 28 and pinned["benchmark_revision"] == "3"
     for golden in ("smoke-index.json", "public-development-index.json"):
         bench = json.loads((GOLDEN_DIR / golden).read_text(encoding="ascii"))["benchmark"]
         assert bench["versions"] == pinned, golden

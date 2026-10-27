@@ -8,7 +8,7 @@ hash that changed.
 Entries reference the pull requests in `Aryabhatta-0/EMBERBench` that
 introduced each part. Dates are added only when a release is tagged.
 
-## Unreleased: V1 (package `0.1.0`, benchmark revision `2`)
+## Unreleased: V1 (package `0.1.0`, benchmark revision `3`)
 
 No version of EMBERBench has been released yet. This entry collects the V1
 milestones that are in `main`. Release them by following
@@ -32,9 +32,11 @@ Benchmark-defining versions (all pinned by evaluation provenance through
 `FAMILY_RULES_VERSION` `1.0`, `CALIBRATION_PANEL_VERSION` `1.0`,
 `DIFFICULTY_RULES_VERSION` `1.0`, `ADMISSION_RULES_VERSION` `1.0`,
 `COMPOSITION_VERSION` `1.0`, `SELECTION_RULES_VERSION` `1.0`,
-`RECIPE_CATALOG_VERSION` `1.0`, `SUITE_FREEZE_RECORD_VERSION` `1.0`.
+`RECIPE_CATALOG_VERSION` `1.0`, `SUITE_FREEZE_RECORD_VERSION` `1.0`,
+`HARNESS_VERSION` `1.0`, `ADAPTER_VERSION` `r1`, `ACCOUNTING_VERSION` `1.0`,
+`COMMITMENT_VERSION` `1.0`.
 
-Tooling versions: `CLI_VERSION` `1.0`, `BASELINES_VERSION` `1.0`,
+Tooling versions: `CLI_VERSION` `1.1` (was `1.0`; adds `emberbench run`), `RUN_RECORD_VERSION` `1.0`, `BASELINES_VERSION` `1.0`,
 `INTEGRITY_PROTOCOL_VERSION` `1.0`, `REPLAY_AUDIT_VERSION` `1.0`,
 `ANIMATION_FORMAT_VERSION` `1.0`. Suite labels:
 `GENERATED_SUITE_VERSION` `1.0.0`. Public
@@ -95,6 +97,24 @@ suite `suite_version` `1.0.0`.
 - **Benchmark revision 2** (PR #34): `BENCHMARK_REVISION` went from `1` to
   `2` before any release, and `benchmark_versions()` pins every
   benchmark-defining version above. Revision 1 was never released.
+- **Benchmark revision 3** (harness 1.0): `BENCHMARK_REVISION` went from `2`
+  to `3` before any release. `benchmark_versions()` now also pins the
+  evaluator protocol for remote models: `HARNESS_VERSION` `1.0` (canonical
+  full-joint protocol for every API style, fixed chunks only as a declared
+  `-chunkN` variant, re-ask of invalid slots only, at most 2 re-asks, then
+  fail-closed; the executed action is the model's `choice`;
+  [harness-protocol.md](harness-protocol.md)), `ADAPTER_VERSION` `r1` (the
+  prompt design, unchanged), `ACCOUNTING_VERSION` `1.0`
+  (calls, tokens, cost, time, re-asks and horizon hits per episode) and
+  `COMMITMENT_VERSION` `1.0` (salted hidden-suite commitment). No simulator,
+  scenario, metric or scoring rule changed; the golden pack indexes change
+  only in their `versions` block.
+- **`emberbench run`** (CLI `1.1`): one command evaluates a remote model
+  (`--model`), a registered baseline (`--baseline`) or a local agent
+  (`--agent`) on any frozen environment pack, verifies the pack digest or
+  suite commitment first, scores it and writes a run record
+  (`RUN_RECORD_VERSION` `1.0`; [cli.md](cli.md)). `--private` keeps scenario
+  IDs, seeds and answer text out of every output.
 - **Public development evaluation pack** (research lane, PR #31): the
   official EMBER Score of the fair reference agents on the 19 unique worlds
   of the public suite, one frozen environment pack, fail-closed resume and

@@ -184,7 +184,7 @@ def test_anthropic_style_headers_and_body(server: tuple[str, FakeModel], tmp_pat
     assert summary["resolved_models"] == ["fake-claude-1"]
     path, headers, body = model.requests[0]
     assert path == "/v1/messages"
-    assert headers["x-api-key"] == KEY and headers["anthropic-version"] == remote.ANTHROPIC_VERSION
+    assert headers["x-api-key"] == KEY and headers["anthropic-version"] == remote.ANTHROPIC_VERSION_HEADER
     assert "authorization" not in headers
     assert body["system"] == remote.SYSTEM_PROMPT and body["max_tokens"] == 2048
     assert [m["role"] for m in body["messages"]] == ["user"]
@@ -204,7 +204,8 @@ def test_decision_style_matches_the_jev_request(server: tuple[str, FakeModel], t
     question = next(iter(body["questions"].values()))
     assert question["type"] == "choice" and set(question["criteria"]) <= set(ALLOWED)
     rows = [json.loads(line) for line in (tmp_path / "run" / "cache.jsonl").read_text(encoding="utf-8").splitlines()]
-    assert all(sorted(row) == ["request_sha256", "response"] for row in rows)  # the Jev cache format
+    # The Jev cache format, plus the measured response time (an old row without it still loads).
+    assert all(sorted(row) == ["latency_s", "request_sha256", "response"] for row in rows)
 
 
 def test_invalid_answer_is_re_asked_then_accepted(server: tuple[str, FakeModel], tmp_path: Path) -> None:

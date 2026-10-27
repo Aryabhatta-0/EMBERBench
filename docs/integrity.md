@@ -10,7 +10,7 @@
 | --- | --- |
 | Modules | `emberbench.integrity`, `emberbench.leakguard` |
 | Integrity protocol version | `1.0` (`INTEGRITY_PROTOCOL_VERSION`) |
-| Benchmark revision | `2` (`BENCHMARK_REVISION`); section 12 |
+| Benchmark revision | `3` (`BENCHMARK_REVISION`); section 12 |
 | Pinned versions | every key of `benchmark_versions()`: revision, simulator, interface, metrics, statistics, scoring, environment, generator, suite-definition and evaluation contracts (section 12) |
 | Runtime dependencies | none (no cryptography library) |
 
@@ -129,7 +129,7 @@ model's evaluation. Its canonical form:
 {
   "integrity_protocol_version": "1.0",
   "versions": {
-    "benchmark_revision": "2", "simulator": "0.2.0", "observation": "1.0",
+    "benchmark_revision": "3", "simulator": "0.2.0", "observation": "1.0",
     "action_schema": "1.0", "scenario_schema": "1.0", "metrics": "1.0",
     "crowd_diagnostics": "1.0", "statistics": "1.0", "generator": "1.1.0",
     "generator_config": "1.1", "generation_manifest": "1.1",
@@ -138,7 +138,8 @@ model's evaluation. Its canonical form:
     "family_rules": "1.0", "calibration_panel": "1.0",
     "difficulty_rules": "1.0", "admission_rules": "1.0",
     "composition": "1.0", "selection_rules": "1.0", "recipe_catalog": "1.0",
-    "suite_freeze_record": "1.0"
+    "suite_freeze_record": "1.0", "harness": "1.0", "adapter": "r1", "accounting": "1.0",
+    "commitment": "1.0"
   },
   "protocol": {"mode": "shared_heldout_batch", "submission_roster_digest": null},
   "suite": {
@@ -367,6 +368,11 @@ Bump the revision, together with the component version, for:
   `RECIPE_CATALOG_VERSION`, `SUITE_FREEZE_RECORD_VERSION`),
 - an evaluation manifest or result format change
   (`EVALUATION_MANIFEST_VERSION`, `EVALUATION_RESULT_VERSION`),
+- an evaluator-protocol change for remote models: the harness joint protocol,
+  validation, re-ask or fail-closed rules (`HARNESS_VERSION`), the prompt
+  design (`ADAPTER_VERSION`,
+  [harness-protocol.md](harness-protocol.md)), the run accounting
+  (`ACCOUNTING_VERSION`) or the suite commitment (`COMMITMENT_VERSION`),
 - discovered held-out leakage that the current protocol permits,
 - an invalid evaluation protocol,
 - a material bug that affects ranking or comparison.
@@ -385,6 +391,8 @@ Examples:
 | Changed family, calibration-panel, difficulty, admission, composition or selection rules | New revision |
 | Changed scoring formula or scoring constants | New revision |
 | Changed generator semantics or config format | New revision |
+| Changed harness joint protocol, re-ask limit or executed-action rule | New revision |
+| A new hidden batch with a new suite commitment under unchanged rules | Same revision |
 
 Scores from different revisions are never compared. Provenance of another
 revision fails verification.
