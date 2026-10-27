@@ -75,6 +75,11 @@ def kendall_tau(a: Sequence[float], b: Sequence[float]) -> float | None:
     return None if denom == 0 else (conc - disc) / denom
 
 
+def canonical_id(agent: str) -> str:
+    """Runs before harness 1.0 labelled the canonical protocol with a ``-full-joint`` suffix; harness 1.0 IDs have none."""
+    return agent.removesuffix("-full-joint")
+
+
 def layout_of(pack: EnvironmentPack, episodes: set[int]) -> Layout:
     layout: Layout = {}
     for entry in pack.suite.manifest.entries:
@@ -252,9 +257,10 @@ def analyze(pack: EnvironmentPack, reports: Mapping[str, ScoreReport], args: arg
     tau = None
     if args.reference:
         ref = json.loads(Path(args.reference).read_text(encoding="utf-8"))
-        ref_scores = {r["agent"]: r["score"] for r in ref["agents"]}
-        both = [a for a in agents if a in ref_scores and a in point]
-        tau = {"reference": ref["pack_digest"], "agents": len(both), "kendall_tau_b": kendall_tau([point[a] for a in both], [ref_scores[a] for a in both]),
+        ref_scores = {canonical_id(r["agent"]): r["score"] for r in ref["agents"]}
+        both = [a for a in agents if canonical_id(a) in ref_scores and a in point]
+        tau = {"reference": ref["pack_digest"], "agents": len(both),
+               "kendall_tau_b": kendall_tau([point[a] for a in both], [ref_scores[canonical_id(a)] for a in both]),
                "note": "supporting evidence only"}  # fmt: skip
 
     return {
