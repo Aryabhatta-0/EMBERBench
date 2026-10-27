@@ -130,7 +130,6 @@ versions are tooling contracts: they never change what a score means.
 | `REPLAY_AUDIT_VERSION` | `1.0` | no | `src/emberbench/audit.py`, [replay-visualization.md](replay-visualization.md) | Replay audit digests |
 | `ANIMATION_FORMAT_VERSION` | `1.0` | no | `src/emberbench/visualization.py`, [replay-visualization.md](replay-visualization.md) | Animation JSON digests |
 | `GENERATED_SUITE_VERSION` | `1.0.0` | no | `src/emberbench/generator.py` | `suite_version` label of every generated suite manifest; content identity is the generated suite hash, owned by `GENERATOR_VERSION`. Not reported separately |
-| `COMPOSED_SUITE_VERSION` | `1.0.0` | no | `src/emberbench/composition.py` | `suite_version` label of every composed suite manifest; content identity is owned by the composition versions. Not reported separately |
 
 The public suite has its own `suite_version` (`1.0.0`) in
 `scenarios/public/v1/manifest.json`. A released suite is never edited; a

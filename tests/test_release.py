@@ -345,7 +345,7 @@ def test_registry_holds_no_host_private_or_hidden_material() -> None:
 def test_registry_mirrors_the_test_pins() -> None:
     """The registry and the pins in the component tests can only change together."""
     digest = {name: entry["digest"] for name, entry in REGISTRY.items()}
-    coverage = json.loads((REPO_ROOT / "tests" / "fixtures" / "generator-coverage-summary.json").read_text(encoding="utf-8"))
+    from emberbench.composition import rule_set_digest
     replay = GOLDEN_REPLAY_DIGESTS["public:route-invalidation:fire-aware:s1"]
     mirrored = {
         "suite.public-v1.suite_hash": SUITE_HASH,
@@ -358,7 +358,7 @@ def test_registry_mirrors_the_test_pins() -> None:
         "statistics.paired": GOLDEN_STATISTICS_DIGESTS["paired"],
         "replay.route-invalidation-fire-aware-s1.audit_digest": replay[1],
         "replay.route-invalidation-fire-aware-s1.animation_sha256": replay[2],
-        "rules.composition.rule_set_digest": coverage["rule_set_digest"],
+        "rules.composition.rule_set_digest": rule_set_digest(),
     }
     for name in digest:
         if name.startswith("scenario."):

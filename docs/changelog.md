@@ -37,7 +37,7 @@ Benchmark-defining versions (all pinned by evaluation provenance through
 Tooling versions: `CLI_VERSION` `1.0`, `BASELINES_VERSION` `1.0`,
 `INTEGRITY_PROTOCOL_VERSION` `1.0`, `REPLAY_AUDIT_VERSION` `1.0`,
 `ANIMATION_FORMAT_VERSION` `1.0`. Suite labels:
-`GENERATED_SUITE_VERSION` `1.0.0`, `COMPOSED_SUITE_VERSION` `1.0.0`. Public
+`GENERATED_SUITE_VERSION` `1.0.0`. Public
 suite `suite_version` `1.0.0`.
 
 ### Milestones

@@ -81,7 +81,6 @@ ZIP_EPOCH_FLOOR = 315532800
 # Version constants that are a `suite_version` label, not a separate line of `emberbench version`, with the reason.
 UNREPORTED_LABELS = {
     "GENERATED_SUITE_VERSION": "suite_version label of generated suites; content identity is the suite hash (GENERATOR_VERSION)",
-    "COMPOSED_SUITE_VERSION": "suite_version label of composed suites; content identity is owned by the composition versions",
 }
 # benchmark_versions() keys whose `emberbench version` key is not "<key>_version" (CLI 1.0 names).
 BENCHMARK_VERSION_KEYS = {"benchmark_revision": "benchmark_revision", "scenario_schema": "schema_version"}

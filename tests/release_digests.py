@@ -149,9 +149,9 @@ SPEC: dict[str, dict[str, str]] = {
         "sha256_hex(calibration_rules()): panel, difficulty bands and admission thresholds.",
     ),
     "rules.composition.rule_set_digest": _entry(
-        "COMPOSITION_VERSION; SELECTION_RULES_VERSION; RECIPE_CATALOG_VERSION; FAMILY_RULES_VERSION; calibration versions",
-        "tests/fixtures/generator-coverage-summary.json rule_set_digest",
-        "rule_set_digest(): the public V1 composition rule set (versions, family, calibration and selection rules, design, recipes).",
+        "retired public composition identity",
+        "src/emberbench/composition.py opaque archived digest",
+        "Compatibility digest for records created under the formerly public research composition; it does not identify a current or future evaluation policy.",
     ),
     "rules.family": _entry("FAMILY_RULES_VERSION", REGISTRY_ONLY, "sha256_hex(family_rules()): the ten V1 family rules and thresholds."),
     "scenario.v1-pub-01-single-exit-sparse.content_hash": _entry("SCHEMA_VERSION", "tests/test_suite.py PINNED_HASHES", "Canonical sparse single-exit scenario."),

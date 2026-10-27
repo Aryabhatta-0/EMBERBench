@@ -116,9 +116,9 @@
     },
     "rules.composition.rule_set_digest": {
       "digest": "61985f4711e28ebd68c7d58140f015e9569ed4eeda819420a1b7e7f8ced0f8e1",
-      "owner": "COMPOSITION_VERSION; SELECTION_RULES_VERSION; RECIPE_CATALOG_VERSION; FAMILY_RULES_VERSION; calibration versions",
-      "mirrors": "tests/fixtures/generator-coverage-summary.json rule_set_digest",
-      "what": "rule_set_digest(): the public V1 composition rule set (versions, family, calibration and selection rules, design, recipes)."
+      "owner": "retired public composition identity",
+      "mirrors": "src/emberbench/composition.py opaque archived digest",
+      "what": "Compatibility digest for records created under the formerly public research composition; it does not identify a current or future evaluation policy."
     },
     "rules.family": {
       "digest": "c8d3817455db4e19431d2899409f854e90b13621784a6f63425958e8a1a9b693",
