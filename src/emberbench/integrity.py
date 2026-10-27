@@ -1,7 +1,7 @@
 """Hidden-test integrity: asset classes, submission identity, provenance and fail-closed verification.
 
 The simulator, the public suite and the generator are open, so a score is
-only meaningful on a held-out suite that no evaluated model has seen. This
+generalization claim requires a separately maintained private distribution. Public development scores remain useful but are not contamination-resistant. This
 module defines the evaluator-side protocol around that suite. It does not
 change the simulator, the observation, the metrics, the statistics or the
 generator, and it never gives an agent anything other than an
@@ -130,7 +130,7 @@ def benchmark_versions() -> dict[str, str]:
         "scoring": SCORING_VERSION,
         "environment_pack": ENVIRONMENT_PACK_VERSION,
         "environment_world": ENVIRONMENT_WORLD_VERSION,
-        # Suite-definition contracts: they decide which worlds are admitted, selected and evaluated.
+        # Public development / archived research contract identities; not a future private policy.
         "family_rules": FAMILY_RULES_VERSION,
         "calibration_panel": CALIBRATION_PANEL_VERSION,
         "difficulty_rules": DIFFICULTY_RULES_VERSION,
@@ -439,7 +439,11 @@ def post_submission_generator_seed(private_seed: int, roster: SubmissionRoster) 
 
 
 def generate_post_submission_suite(config: GeneratorConfig, private_seed: int, roster: SubmissionRoster, *, batch_id: str) -> GeneratedSuite:
-    """Generate a held-out batch whose content is bound to ``roster``. Freeze it before any model runs."""
+    """Generate a roster-bound RESEARCH holdout from public development rules.
+
+    This utility is not the official evaluator. A private seed does not make the
+    public generator distribution secret. Freeze it before research evaluation.
+    """
     return generate_suite(config, post_submission_generator_seed(private_seed, roster), batch_id=batch_id)
 
 

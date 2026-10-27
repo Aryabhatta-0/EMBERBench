@@ -1,4 +1,6 @@
-"""Procedural unseen scenarios: a versioned generator config, a private-seeded generator and frozen suites.
+"""PUBLIC DEVELOPMENT ONLY. Not official hidden-membership rules.
+
+Procedural unseen scenarios: a versioned generator config, a private-seeded generator and frozen suites.
 
 The generator code and the :class:`GeneratorConfig` are public. The
 generator seed is evaluator-private until the evaluation is over. A

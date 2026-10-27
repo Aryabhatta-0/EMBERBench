@@ -1,15 +1,21 @@
 # Difficulty bands and calibration (research, V1)
 
+> **Scope:** These are public development or archived research rules. They do
+> not define the official hidden evaluation distribution. Previously disclosed
+> recipes and study seeds are exposed research, not secret evaluation assets.
+> See [Evaluation boundary](evaluation-boundary.md).
+
+
 | Field | Value |
 | --- | --- |
 | Status | **Research design. Not merged.** Uses the official EMBER Score (scoring version 1.0). |
-| Code | Library since Phase 11: `CALIBRATION_PANEL`, `measure_world`, `calibrate`, `difficulty_band`, `capacity_savable`, `capacity_ceiling`, `fire_evidence` in [`emberbench.calibration`](../src/emberbench/calibration.py) (calibration panel 1.0, difficulty rules 1.0, admission rules 1.0); `family_tags` in [`emberbench.families`](../src/emberbench/families.py); `select_suite` and the pool workflow in [`emberbench.composition`](../src/emberbench/composition.py). The research tool [`tools/analyze_suite_design.py`](../tools/analyze_suite_design.py) imports them. See [generator.md](generator.md). |
-| Evidence | [suite-design-results.md](suite-design-results.md) (development pool: 1,120 generated scenarios, 2,320 unique worlds) |
+| Code | Library since Phase 11: `CALIBRATION_PANEL`, `measure_world`, `calibrate`, `difficulty_band`, `capacity_savable`, `capacity_ceiling`, `fire_evidence` in [`emberbench.calibration`](../src/emberbench/calibration.py) (calibration panel 1.0, difficulty rules 1.0, admission rules 1.0); `family_tags` in [`emberbench.families`](../src/emberbench/families.py); the retired selector and the pool workflow in [`emberbench.composition`](../src/emberbench/composition.py). The research tool [`tools/analyze_suite_design.py`](../tools/analyze_suite_design.py) imports them. See [generator.md](generator.md). |
+| Evidence | [suite-design-results.md](evaluation-boundary.md) (development pool: 1,120 generated scenarios, 2,320 unique worlds) |
 | Score used | The official EMBER Score from `emberbench.scoring` (`score_episode`, `score_evidence`). The tool has no other score. |
 
 This document defines how a scenario gets an admission decision and a
 difficulty band, and how the evaluator uses the bands to compose the unseen
-suite. The parent design is [evaluation-suite-design.md](evaluation-suite-design.md).
+suite. The parent design is [evaluation-suite-design.md](evaluation-boundary.md).
 
 ## 1. Requirements
 
@@ -209,31 +215,9 @@ Public V1 suite, same rule (one world per deterministic scenario, 64 worlds
 for the stochastic one): pub-01 and pub-04 saturated; pub-03 and pub-08 Easy;
 pub-02 and pub-10 Moderate; pub-06, pub-07 and pub-09 Hard; pub-05 Stress.
 
-## 8. Composition rule
+## 8. Development-only composition scope
 
-1. Every candidate gets its `calibrate` result and its family tags
-   (`family_tags`, fixed thresholds on the structural profile and on the
-   evaluator-side fire profile).
-2. `select_suite(candidates, quotas, selection_key)` fills the
-   family x band quotas. Families are filled scarcest first; each candidate is
-   used once and its selected family becomes its primary family; inside a
-   cell the order is a keyed SHA-256 of the scenario content hash, so the
-   private key, not the candidate order or a model, decides which candidate is
-   taken.
-3. A cell that cannot be filled is reported as a **shortfall**. It is never
-   filled from another band in silence. The evaluator generates more candidates
-   for that cell (targeted recipe), or the freeze record states the shortfall.
-4. The fire-model quota (stochastic slots per family) is applied in the same
-   way, as part of the cell key.
-
-Phase 11 implements this rule as `emberbench.composition.select_suite`
-(selection rules 1.0). Inside a family the bands are filled Easy..Stress and
-the stochastic cell of a band before its deterministic cell. The stochastic
-slots follow the PR #33 even-spread rule: Moderate 1, Hard 2, Stress 1 per
-family. Calibration and fire tags of a stochastic candidate are measured on
-exactly the 3 unique worlds that `build_unique_world_manifest` schedules for
-it. The targeted top-up of step 3 is `compose_pool` with the `V1_TOP_UP`
-recipe table ([generator.md](generator.md), section 5).
+Public calibration does not select official hidden membership. Official policy, quotas and construction stay evaluator-private.
 
 ## 9. Known limits
 

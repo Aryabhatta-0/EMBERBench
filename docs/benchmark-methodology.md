@@ -1,5 +1,11 @@
 # EMBERBench scientific evaluation methodology
 
+> **Scope:** These are public development or archived research rules. They do
+> not define the official hidden evaluation distribution. Previously disclosed
+> recipes and study seeds are exposed research, not secret evaluation assets.
+> See [Evaluation boundary](evaluation-boundary.md).
+
+
 This document explains **why** the EMBER Score (scoring version 1.0) has its
 form. The normative definition is [scoring.md](scoring.md). The frozen
 environment protocol is [environment-pack.md](environment-pack.md). The full
@@ -38,7 +44,7 @@ takes from it.
 | Mattson et al., *MLPerf Training Benchmark*, MLSys 2020, arXiv:1910.01500 | A result counts only when the model reaches a fixed quality target; time-to-train is measured only after that gate; closed division rules fix the environment; multiple runs are required because of run-to-run variance. | Safety acts as a gate and a multiplier, not as one more additive term. Fixed environment (pack). Repeated trials for stochastic models. |
 | Reddi et al., *MLPerf Inference Benchmark*, ISCA 2020, arXiv:1911.02549 | Scenarios have fixed quality targets and latency bounds; results that miss the target are invalid, not "partially scored". | Invalid output and timeouts score 0 and are never dropped. Cost and latency are reported separately from quality. |
 | Liang et al., *Holistic Evaluation of Language Models* (HELM), TMLR 2023, arXiv:2211.09110 | A single number hides trade-offs; report many metrics side by side under standardized conditions; aggregate with explicit, documented rules. | The headline ships with every component, family score, tail statistic and coverage count. Operational metrics are separate. |
-| Cobbe et al., *Leveraging Procedural Generation to Benchmark RL* (Procgen), ICML 2020, arXiv:1912.01588 | Normalize each environment's return with per-environment constants so environments are comparable; evaluate generalization on held-out levels. | Each component is normalized per episode by a privileged reference. Held-out generated suites in packs. |
+| Cobbe et al., *Leveraging Procedural Generation to Benchmark RL* (Procgen), ICML 2020, arXiv:1912.01588 | Normalize each environment's return with per-environment constants so environments are comparable; evaluate generalization on archived levels. | Each component is normalized per episode by a privileged reference. Archived generated suites in packs. |
 | Bellemare et al., *The Arcade Learning Environment*, JAIR 2013; Mnih et al., *Human-level control through deep RL*, Nature 2015 | Human-normalized score `(agent - random) / (human - random)`; aggregate across games after normalization. | Baseline/oracle normalization was considered (section 5.6); the privileged optimum is used as the upper reference instead of a human. |
 | Machado et al., *Revisiting the Arcade Learning Environment*, JAIR 2018, arXiv:1709.06009 | Evaluation protocols must be fixed and reported (stochasticity, episode termination, number of runs); the median of normalized scores is more robust than the mean. | Fixed pack and stochasticity protocol. Median and lower-tail statistics reported next to the mean. |
 | Ray, Achiam and Amodei, *Benchmarking Safe Exploration in Deep RL* (Safety Gym), OpenAI 2019 | Report task return and constraint cost separately; a policy that violates constraints is not "better" because of a higher return. | Safety is separate from quality and multiplies it; a loss can never be bought back by speed beyond the documented bound. |
@@ -261,14 +267,14 @@ that would be blocked by a person (occupied, conflict, cycle) with `STAY`.
 | --- | ---: | ---: | ---: | ---: | ---: |
 | public | 30 | 30 | 30 | 4449 | 0 |
 | generated | 48 | 48 | 48 | 844 | 0 |
-| held-out | 48 | 48 | 48 | 1211 | 0 |
+| archived | 48 | 48 | 48 | 1211 | 0 |
 
 Every observation, state, fire set, evacuation, casualty, stranding,
 person-time, path and danger-zone count is identical; only the action labels,
 the movement outcomes, the block counts and the action-based crowd counts
 (contested cells, hotspots) differ. Under the 1.0 score the scrub gains
 +4.5 points on the public suite, +7.4 on the generated suite, +5.2 on both
-and +3.1 on the held-out suite, and up to 70.9 points in one episode (the
+and +3.1 on the archived suite, and up to 70.9 points in one episode (the
 block-rate gate). `test_block_scrub_keeps_trajectory_and_score` is the
 permanent regression test.
 
@@ -309,9 +315,9 @@ resolver's order, and the evacuation is optimal either way.
    but the remaining blocks still fail points 1 to 3.
 
 **Candidates.** Each candidate is scored on the same evidence (study suites
-and held-out suite). `G5-official` is the adopted form.
+and archived suite). `G5-official` is the adopted form.
 
-| Candidate | Definition | R16 (scrub delta) | Best adversary minus congestion-aware | Congestion-aware rank (study / held-out / generated only) | tau vs official (study / held-out) | Fails |
+| Candidate | Definition | R16 (scrub delta) | Best adversary minus congestion-aware | Congestion-aware rank (study / archived / generated only) | tau vs official (study / archived) | Fails |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1.0 (`ce5e322`) | `C = (1 - cbr)^2`, gate at `cbr > 1/4`, exit-capacity Time | FAIL (+5.2; max 70.9 per episode) | +5.2 (the scrub) | 2 / 2 / 5 | 0.966 / 0.966 | R16 |
 | G1 | 1.0 with cut-capacity Time | FAIL (+5.2) | +5.2 | 2 / 2 / 5 | 0.966 / 0.966 | R16 |
@@ -344,7 +350,7 @@ block rate without delay is not a failure of any outcome.
   reckless-fast (31.4) and static-shortest (28.1) above congestion-aware
   (26.0), through the block-rate gate. Under G5, congestion-aware is first
   on the generated suite (33.1), on the public suite (53.2) and on the
-  held-out suite (40.5). This was **not** the selection criterion: G7 also
+  archived suite (40.5). This was **not** the selection criterion: G7 also
   ranks congestion-aware second only behind its own scrub, and is rejected
   for R16.
 
@@ -383,7 +389,7 @@ on a trajectory property that is not a function of Time.
   24 people, stochastic fire and a horizon of 80, from a public config and a
   constant test-only generator seed (20261020), with seeds 0, 1, 2 (48
   episodes), and
-- a **held-out** generated suite from the same config and a fresh,
+- an **archived research-holdout** generated suite from the same config and a fresh,
   pre-registered generator seed (20261021), with seeds 0, 1, 2 (48
   episodes). It is used only for validation (section 6.10), never to choose
   a constant or a candidate.
@@ -493,7 +499,7 @@ about half of its episodes.
 
 ### 6.5 Official ranking
 
-| Rank | Policy | Study suites | Public only | Generated only | Held-out |
+| Rank | Policy | Study suites | Public only | Generated only | Archived |
 | ---: | --- | ---: | ---: | ---: | ---: |
 | 1 | congestion-aware | 48.6 | 53.2 | 33.1 | 40.5 |
 | 1 | adv-block-scrub | 48.6 | 53.2 | 33.1 | 40.5 |
@@ -512,7 +518,7 @@ about half of its episodes.
 | 15 | always-stay | 0.0 | 0.0 | 0.0 | 0.0 |
 | 15 | random-legal | 0.0 | 0.0 | 0.0 | 0.0 |
 
-On every suite, including the held-out suite, the baselines are in the
+On every suite, including the archived suite, the baselines are in the
 expected order: congestion-aware > fire-aware > static > greedy > random =
 stay. Block-scrub ties congestion-aware exactly (R16).
 
@@ -533,13 +539,13 @@ and congestion-aware score 44.2: the static policy fails to replan. Over the
 study suites, Replanning is severe in 19.2% of the static policy's episodes,
 against 9.0% for congestion-aware. Late-start is best on that family
 (68.0), because waiting lets the fire reveal the blocked route. It pays for
-that elsewhere: Time is severe in 51.3% of its episodes. On the held-out
+that elsewhere: Time is severe in 51.3% of its episodes. On the archived
 `split_flow_across_exits` family, fire-aware (46.3) and jostler (46.2) are
-above congestion-aware (45.2); on held-out `single_exit_low_density`,
+above congestion-aware (45.2); on archived `single_exit_low_density`,
 fire-hugger (72.6) is above congestion-aware (68.1).
 
 **Severe failures.** Share of applicable episodes with at least one severe
-gate (study suites / held-out): congestion-aware 15.4% / 12.5% (hazard
+gate (study suites / archived): congestion-aware 15.4% / 12.5% (hazard
 6.4% / 2.1%, replanning 9.0% / 10.4%, Time 0 / 0), fire-aware 15.4% /
 16.7%, static 25.6% / 12.5%, greedy 26.9% / 12.5%. Safe-slow and
 late-start have severe Time in 51.3% of the study episodes. No moving
@@ -623,23 +629,23 @@ additive 0.831, plain product 0.898. The multiplicative designs rank the
 policies almost alike. They differ in the requirements, which is why the
 requirements, not the ranking, select the design.
 
-### 6.10 Held-out validation
+### 6.10 Archived research-holdout validation
 
-The held-out suite (generator seed 20261021, 48 episodes per policy) was
+The archived research holdout (publicly disclosed generator seed 20261021, 48 episodes per policy) was
 generated after every decision and checked once.
 
 - Baseline order: congestion-aware 40.5 > fire-aware 37.1 > static 33.2 >
   greedy 9.3 > random 0.0 = stay 0.0, the same order as on the study suites.
-- Kendall tau of the 16-policy ranking, study suites against held-out:
+- Kendall tau of the 16-policy ranking, study suites against archived:
   0.814. The changes are among adversaries and greedy: greedy falls to
-  9.3 (it stalls in the held-out high-density layouts), reckless-fast falls
+  9.3 (it stalls in the archived high-density layouts), reckless-fast falls
   from 4th to 7th, and abandon-far rises from 12th to 9th.
 - Block-scrub: 48 of 48 identical state trajectories, 1211 blocks against
   0, score delta exactly 0 (R16). Under the 1.0 score the scrub would gain
   +3.1 points there.
 - Cut-capacity bound: `Q_cut <= person-time` in every one of the 1773
   episodes with evacuees (all suites, all policies); `Q_cut > Q_exit` in 104
-  generated and 60 held-out episodes, never on the public suite.
+  generated and 60 archived episodes, never on the public suite.
 - Severe gates (any): congestion-aware 12.5%, fire-aware 16.7%, static
   12.5%; Time is never severe for a moving baseline.
 
@@ -685,7 +691,7 @@ score by adding easy scenarios of one family.
   significance; publish both.
 - **Interpretation of the interval.** It describes this sample of scenarios
   and seeds. With one scenario per family it cannot see scenario variance.
-  Claims about unseen environments need held-out generated suites with
+  Claims about unseen environments need archived generated suites with
   several scenarios per family.
 
 Paired comparisons of adjacent baselines on the public suite (seeds 0, 1, 2):
@@ -709,7 +715,7 @@ and there two of the pairs score the same.
   and Path can stay below 1 even for an optimal crowd policy in a dense
   scenario. This makes the scale conservative, not biased between models.
   `Q_cut` is proved to be a lower bound (scoring.md, section 4.2) and is
-  never above the realized person-time in any study or held-out episode.
+  never above the realized person-time in any study or archived episode.
 - Hazard uses a fixed radius of 2 cells and ignores walls in the distance,
   like the metrics proxy.
 - With one scenario per family the interval reflects only seed and trial
@@ -735,7 +741,7 @@ and there two of the pairs score the same.
 python tools/scoring_sensitivity.py --cache .scoring-study
 ```
 
-The cache directory holds the generated study and held-out suites, the
+The cache directory holds the generated study and archived suites, the
 per-episode evidence and the block-scrub trajectory checks; it is ignored by
 git. Delete it after any change to the evidence
 definition.

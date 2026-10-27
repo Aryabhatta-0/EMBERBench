@@ -1,5 +1,11 @@
 # Procedural unseen scenario generation
 
+> **Scope:** These are public development or archived research rules. They do
+> not define the official hidden evaluation distribution. Previously disclosed
+> recipes and study seeds are exposed research, not secret evaluation assets.
+> See [Evaluation boundary](evaluation-boundary.md).
+
+
 | Field | Value |
 | --- | --- |
 | Module | `emberbench.generator` |

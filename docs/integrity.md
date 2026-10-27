@@ -1,5 +1,11 @@
 # Hidden-test integrity
 
+> **Scope:** These are public development or archived research rules. They do
+> not define the official hidden evaluation distribution. Previously disclosed
+> recipes and study seeds are exposed research, not secret evaluation assets.
+> See [Evaluation boundary](evaluation-boundary.md).
+
+
 | Field | Value |
 | --- | --- |
 | Modules | `emberbench.integrity`, `emberbench.leakguard` |
@@ -52,9 +58,7 @@ Two facts follow from the existing formats:
 - `AggregateStatistics` and `PairedStatistics` hold the manifest hash and the
   result digest, not the seeds. They are publishable after evaluation.
 
-No real hidden scenario, generator seed or scored evaluation seed is in the
-tests, fixtures, docs or package data. Tests use constants marked
-*test-only*.
+The repository contains public development/test assets and disclosed historical research. Published research-holdout seeds are exposed, not secret. No future official policy or live hidden suite belongs in the tests, fixtures, docs or package data. Tests use constants marked *test-only*.
 
 ## 3. Evaluation lifecycle
 

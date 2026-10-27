@@ -1,8 +1,7 @@
 """Structural leak guard for the repository and the built distributions.
 
 The repository and the package may contain public development assets only
-(see :data:`emberbench.integrity.ASSET_POLICIES`). This module checks file
-*paths*, not file contents: every path must sit under an allowlisted root,
+(see :data:`emberbench.integrity.ASSET_POLICIES`). This module checks paths and known construction-content markers: every path must sit under an allowlisted root,
 benchmark asset files (JSON) only under :data:`PUBLIC_ASSET_ROOTS`, and no
 path component may look like private evaluation material (``hidden/``,
 ``heldout/``, ``scored/``, ``private-seeds*``, ``secret-manifest*``,
@@ -12,6 +11,8 @@ The checks are deterministic and need no network. ``tools/check_public_assets.py
 runs them on the checkout and on built wheels and sdists.
 """
 
+import ast
+import re
 import subprocess
 import tarfile
 import zipfile
@@ -144,8 +145,54 @@ def repository_paths(root: str | Path, *, include_untracked: bool = False) -> li
     return [p for p in paths if (Path(root) / p).exists()]
 
 
+PRIVATE_DEFINITIONS = frozenset({
+    "INITIAL_POOL_SIZE", "TOP_UP_BATCH_SIZE", "POOL_CAP", "V1_DESIGN",
+    "V1_RECIPES", "V1_INITIAL_PLAN", "V1_TOP_UP", "_catalog", "_v1_top_up",
+    "top_up_recipe", "select_suite", "generate_batch",
+})
+PRIVATE_JSON_FIELDS = re.compile(
+    r'"(?:candidate_pool_size|pool_cap|top_up_batch_size|stochastic_per_family|private_mixture|official_family_thresholds)"\s*:'
+)
+
+
+def check_public_payload(path: str, payload: bytes) -> list[LeakViolation]:
+    """Reject known construction recipes under otherwise innocuous public paths.
+
+    This is a regression tripwire, not proof against arbitrary confidential text.
+    Human publication review and the private-workspace boundary remain required.
+    """
+    suffix = PurePosixPath(path).suffix.lower()
+    if suffix not in {".py", ".md", ".json", ".txt"}:
+        return []
+    try:
+        text = payload.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return [LeakViolation(path, "unreviewable non-UTF-8 public text")]
+    if suffix == ".py":
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            return [LeakViolation(path, "unreviewable Python source")]
+        names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)}
+        names.update(node.name for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)))
+        if names & PRIVATE_DEFINITIONS:
+            return [LeakViolation(path, "retired evaluation-construction definition in public source")]
+    elif suffix in {".md", ".json"}:
+        if any(re.search(r"(?<![\w])" + re.escape(name) + r"(?![\w])", text) for name in PRIVATE_DEFINITIONS) or PRIVATE_JSON_FIELDS.search(text):
+            return [LeakViolation(path, "evaluation-construction recipe in public content")]
+    return []
+
+
 def check_repository(root: str | Path, *, include_untracked: bool = False) -> list[LeakViolation]:
-    return check_repository_paths(repository_paths(root, include_untracked=include_untracked))
+    paths = repository_paths(root, include_untracked=include_untracked)
+    violations = check_repository_paths(paths)
+    for name in paths:
+        path = Path(root) / name
+        if path.is_symlink():
+            violations.append(LeakViolation(name, "symlink crosses the publication boundary"))
+        elif path.is_file():
+            violations.extend(check_public_payload(name, path.read_bytes()))
+    return violations
 
 
 def check_wheel_members(names: Iterable[str]) -> list[LeakViolation]:
@@ -192,13 +239,25 @@ def check_sdist_members(names: Iterable[str]) -> list[LeakViolation]:
 
 
 def check_distribution(path: str | Path) -> list[LeakViolation]:
-    """Check one built ``.whl`` or ``.tar.gz`` by its member paths."""
+    """Check a wheel or sdist by member paths and known construction payloads."""
     p = Path(path)
     if p.suffix == ".whl":
         with zipfile.ZipFile(p) as z:
-            return check_wheel_members(z.namelist())
+            violations = check_wheel_members(z.namelist())
+            for name in z.namelist():
+                if not name.endswith("/"):
+                    violations.extend(check_public_payload(name, z.read(name)))
+            return violations
     if p.name.endswith(".tar.gz"):
         with tarfile.open(p, "r:gz") as t:
-            names = [m.name for m in t.getmembers() if not m.isdir()]
-        return check_sdist_members(names)
+            members = [m for m in t.getmembers() if not m.isdir()]
+            violations = check_sdist_members(m.name for m in members)
+            for member in members:
+                if not member.isfile():
+                    violations.append(LeakViolation(member.name, "non-regular archive member"))
+                    continue
+                stream = t.extractfile(member)
+                if stream is not None:
+                    violations.extend(check_public_payload(member.name, stream.read()))
+            return violations
     return [LeakViolation(str(p), "not a wheel or sdist")]

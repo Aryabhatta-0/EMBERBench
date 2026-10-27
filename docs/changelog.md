@@ -86,7 +86,7 @@ suite `suite_version` `1.0.0`.
 - **Scientific suite design and unique-world identity** (PR #33):
   `environment_world_digest` and `build_unique_world_manifest`, so a
   deterministic scenario is evaluated once instead of once per seed
-  ([evaluation-suite-design.md](evaluation-suite-design.md)).
+  ([evaluation-suite-design.md](evaluation-boundary.md)).
 - **Generator 1.1 and 10-family coverage** (Phase 11, PR #34): generator
   `1.1.0` (config and generation manifest `1.1`), the ten V1 family rules,
   calibration panel, difficulty and admission rules, composition, selection,

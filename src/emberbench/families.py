@@ -1,4 +1,6 @@
-"""The V1 family rules (family-rule version 1.0): fixed thresholds on measured scenario and world properties.
+"""PUBLIC DEVELOPMENT ONLY. Not official hidden-membership rules.
+
+The V1 family rules (family-rule version 1.0): fixed thresholds on measured scenario and world properties.
 
 The rules and thresholds are the ones frozen by PR #33
 (docs/evaluation-suite-design.md section 4, ``family_tags`` in

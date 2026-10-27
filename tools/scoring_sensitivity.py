@@ -9,7 +9,7 @@ It plays the reference baselines and a set of adversarial policies on
 - the public V1 suite under the public development seeds 0, 1, 2,
 - a procedurally generated stochastic suite built from a public config and a
   constant, test-only generator seed (no evaluator secret is involved), and
-- a fresh held-out generated suite (same config, a second pre-registered
+- a fresh archived generated suite (same config, a second pre-registered
   seed) that is never used to choose anything, only to validate,
 
 then scores every episode under the official constants, under rejected
@@ -70,7 +70,7 @@ Policy = Callable[[Observation], Mapping[str, Action]]
 PUBLIC_SEEDS = (0, 1, 2)
 GENERATED_SEEDS = (0, 1, 2)
 STUDY_GENERATOR_SEED = 20261020  # test-only constant: this suite is public study material, never a scored suite
-HELD_OUT_GENERATOR_SEED = 20261021  # pre-registered held-out validation suite: never used to choose anything
+ARCHIVED_RESEARCH_GENERATOR_SEED = 20261021  # published archived research seed; validation only
 STUDY_CONFIG: dict[str, Any] = {
     "config_version": "1.0",
     "scenario_count": 16,
@@ -339,7 +339,7 @@ def study_suites(tmp: Path) -> dict[str, Suite]:
     from emberbench.generator import freeze_generated_suite
 
     suites = {"public": load_suite(ROOT / "scenarios" / "public" / "v1")}
-    for name, seed, batch in (("generated", STUDY_GENERATOR_SEED, "study-batch"), ("held-out", HELD_OUT_GENERATOR_SEED, "held-out-batch")):
+    for name, seed, batch in (("generated", STUDY_GENERATOR_SEED, "study-batch"), ("archived", ARCHIVED_RESEARCH_GENERATOR_SEED, "archived-batch")):
         frozen_dir = tmp / name
         if not frozen_dir.exists():
             freeze_generated_suite(generate_suite(GeneratorConfig.from_dict(STUDY_CONFIG), seed, batch_id=batch), frozen_dir)
@@ -877,8 +877,8 @@ def main() -> None:
     args = parser.parse_args()
     suites = study_suites(args.cache)
     data_all, scrub_checks = collect(suites, args.cache / "evidence")
-    data = {n: [r for r in rows if r[0] != "held-out"] for n, rows in data_all.items()}
-    held = {n: [r for r in rows if r[0] == "held-out"] for n, rows in data_all.items()}
+    data = {n: [r for r in rows if r[0] != "archived"] for n, rows in data_all.items()}
+    held = {n: [r for r in rows if r[0] == "archived"] for n, rows in data_all.items()}
     names = list(POLICIES)
     c = OFFICIAL_CONSTANTS
     print(f"quality exponent beta = {float(c.quality_exponent):.6f}; severe thresholds (component space) " + ", ".join(f"{k} {float(v):.4f}" for k, v in c.severe_thresholds().items()))
@@ -886,7 +886,7 @@ def main() -> None:
     print("\n## Block-scrub reproduction (trajectory invariance)\n")
     inner_rows, scrub_rows = data_all[SCRUB_INNER], data_all["adv-block-scrub"]
     scrub_out = []
-    for suite_name in ("public", "generated", "held-out"):
+    for suite_name in ("public", "generated", "archived"):
         pairs = [(a, b) for a, b in zip(inner_rows, scrub_rows, strict=True) if a[0] == suite_name]
         episodes, identical = scrub_checks.get(suite_name, [0, 0])
         same_ev = sum(1 for a, b in pairs if _trajectory_evidence(a[4]) == _trajectory_evidence(b[4]))
@@ -913,15 +913,15 @@ def main() -> None:
     gain_rows = []
     for cname, cf in COORD_CANDIDATES.items():
         gline: list[Any] = [cname]
-        for sk in ("public", "generated", None, "held-out"):
-            src = data_all if sk == "held-out" else data
+        for sk in ("public", "generated", None, "archived"):
+            src = data_all if sk == "archived" else data
             sc = _coord_scores(src, cf, [SCRUB_INNER, "adv-block-scrub"], sk)
             gline.append(f"{sc['adv-block-scrub'] - sc[SCRUB_INNER]:+.2f}")
         worst = max(abs(cf(b[4], b[5]) - cf(a[4], a[5])) for a, b in zip(inner_rows, scrub_rows, strict=True) if _applicable(a[4]))
         gline.append(f"{worst:.2f}")
         gline.append("pass" if worst == 0 else "FAIL")
         gain_rows.append(gline)
-    print(table(["candidate", "public", "generated", "both", "held-out", "max episode |delta|", "R16 invariance"], gain_rows))
+    print(table(["candidate", "public", "generated", "both", "archived", "max episode |delta|", "R16 invariance"], gain_rows))
 
     print("\n## Cut-capacity bound (Time reference) checks, every policy and suite\n")
     every_row = [r for rows in data_all.values() for r in rows if r[4].evacuated]
@@ -930,7 +930,7 @@ def main() -> None:
         f"cut bound > exit-capacity bound in {sum(1 for r in every_row if r[4].evacuee_time_cut_bound > r[4].evacuee_time_queue_bound)}; "
         f"person-time equal to the cut bound in {sum(1 for r in every_row if r[4].evacuee_time_cut_bound == r[4].evacuee_time)}"
     )
-    for suite_name in ("public", "generated", "held-out"):
+    for suite_name in ("public", "generated", "archived"):
         sub = [r for r in every_row if r[0] == suite_name]
         forced = sum(_forced(r[4]) for r in sub)
         print(f"- {suite_name}: {len(sub)} episodes; cut > exit bound in {sum(1 for r in sub if r[4].evacuee_time_cut_bound > r[4].evacuee_time_queue_bound)}; total capacity-forced delay {forced} person-steps of {sum(r[4].evacuee_time for r in sub)}")
@@ -952,7 +952,7 @@ def main() -> None:
         comp_rows.append(line)
     print(table(["policy", "evac", "casualty", "stranding", "Safety", *QUALITY_COMPONENTS, "EMBER"], comp_rows))
 
-    for label, src in (("study suites", data), ("held-out suite", held)):
+    for label, src in (("study suites", data), ("archived suite", held)):
         print(f"\n## Severe quality failures, {label} (share of applicable episodes, %; any = at least one gate)\n")
         sev_rows = []
         for name in names:
@@ -1039,7 +1039,7 @@ def main() -> None:
         print(f"\n### Coordination candidates, {suite_name} suite only\n")
         per = {k: _coord_scores(data, cf, names, suite_name) for k, cf in COORD_CANDIDATES.items()}
         print(table(["policy", *COORD_CANDIDATES], [[n, *(per[k][n] for k in COORD_CANDIDATES)] for n in names]))
-    print("\n### Coordination candidates, held-out suite\n")
+    print("\n### Coordination candidates, archived suite\n")
     print(table(["policy", *COORD_CANDIDATES], [[n, *(coord_held[k][n] for k in COORD_CANDIDATES)] for n in names]))
     print("\n### Coordination candidates: summary\n")
     official_both, official_held = coord["G5-official"], coord_held["G5-official"]
@@ -1059,7 +1059,7 @@ def main() -> None:
                 f"{adv_gain:+.1f}",
             ]
         )
-    print(table(["candidate", "tau vs official (study)", "tau vs official (held-out)", "tau study vs held-out", "top 3 (study)", "congestion-aware rank study / held-out", "best adversary - congestion-aware"], summary))
+    print(table(["candidate", "tau vs official (study)", "tau vs official (archived)", "tau study vs archived", "top 3 (study)", "congestion-aware rank study / archived", "best adversary - congestion-aware"], summary))
     print("\n### Coordination candidates: requirement checks (synthetic profiles; every block belongs to an evacuee)\n")
     req_rows = [[label, *("pass" if check(_on_synthetic(cf)) else "FAIL" for cf in COORD_CANDIDATES.values())] for label, check in [*REQUIREMENTS, *WITHDRAWN]]
     req_rows.append(["R16 trajectory invariance (scrub delta exactly 0 in every episode)", *(row[-1] for row in gain_rows)])
@@ -1233,12 +1233,12 @@ def main() -> None:
     print("\n## Rank agreement between candidate designs (Kendall tau vs F-official)\n")
     print(table(["candidate", "Kendall tau"], [[k, f"{kendall_tau(base, results[k]):.3f}"] for k in CANDIDATES]))
 
-    print("\n## Official ranking (F-official, both study suites) and held-out validation\n")
+    print("\n## Official ranking (F-official, both study suites) and archived validation\n")
     rk = ranks(base)
     held_scores = _scores(held, official(), names)
     rk_held = ranks(held_scores)
-    print(table(["rank", "policy", "EMBER (study)", "EMBER (held-out)", "rank (held-out)"], [[rk[n], n, base[n], held_scores[n], rk_held[n]] for n in sorted(names, key=lambda n: rk[n])]))
-    print(f"\nKendall tau, study vs held-out ranking: {kendall_tau(base, held_scores):.3f}")
+    print(table(["rank", "policy", "EMBER (study)", "EMBER (archived)", "rank (archived)"], [[rk[n], n, base[n], held_scores[n], rk_held[n]] for n in sorted(names, key=lambda n: rk[n])]))
+    print(f"\nKendall tau, study vs archived ranking: {kendall_tau(base, held_scores):.3f}")
 
 
 if __name__ == "__main__":

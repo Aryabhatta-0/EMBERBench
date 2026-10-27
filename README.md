@@ -1,5 +1,11 @@
 # EMBERBench
 
+> **Scope:** These are public development or archived research rules. They do
+> not define the official hidden evaluation distribution. Previously disclosed
+> recipes and study seeds are exposed research, not secret evaluation assets.
+> See [Evaluation boundary](docs/evaluation-boundary.md).
+
+
 EMBERBench is a benchmark for **decision-making models on dynamic fire-evacuation tasks**.
 A model controls the people in a 2D grid building. Fire spreads through the building, and
 the model must decide each timestep how every person moves. The benchmark measures how
@@ -12,11 +18,11 @@ well the model's decisions get people out through the exits before the fire reac
 > per-episode metrics, crowd coordination diagnostics, the canonical V1
 > public scenario suite, paired evaluation on exact scenario + seed
 > schedules, deterministic statistics, reference baselines, the procedural
-> generator (1.1, ten V1 scenario families) and the suite-composition rules,
-> the hidden-test integrity protocol, the `emberbench` CLI, replay audit and
+> generator (1.1, ten V1 scenario families) and its public development rules,
+> the integrity and provenance protocol, the `emberbench` CLI, replay audit and
 > visualization, the official EMBER Score and frozen environment packs. The
-> public suite is for development and diagnostics; scored V1 evaluation uses
-> a held-out generated suite. Wind, delayed ignitions, burn-out, smoke and
+> public suite is for development and diagnostics. Official hidden evaluation
+> requires a separate private distribution. Wind, delayed ignitions, burn-out, smoke and
 > material flammability are deferred to a future benchmark version. LLM
 > provider integrations, a UI and human-behaviour models are out of scope.
 
@@ -134,11 +140,7 @@ model runs, and `load_generated_suite()` verifies it and returns a normal
 `Suite` for `build_evaluation_manifest()` and `run_evaluation()`. The seed is
 never stored. See [docs/procedural-generation.md](docs/procedural-generation.md).
 
-`emberbench.composition` composes the V1 evaluation suite from a generated
-candidate pool on the evaluator side: unique worlds, the frozen calibration
-panel, admission, difficulty band, the ten V1 family rules, deterministic
-family x band x fire-model quotas with targeted top-up, and a private freeze
-record. See [docs/generator.md](docs/generator.md).
+Official test construction is maintained outside the public package. Legacy composition entry points fail closed. The public generator, descriptive family rules and calibration tools remain development tools; fresh seeds alone do not make their distribution secret. See [evaluation boundary](docs/evaluation-boundary.md).
 
 ### Hidden-test integrity
 

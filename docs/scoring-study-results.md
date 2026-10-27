@@ -1,12 +1,18 @@
 # Scoring sensitivity study: full output (scoring version 1.0)
 
+> **Scope:** These are public development or archived research rules. They do
+> not define the official hidden evaluation distribution. Previously disclosed
+> recipes and study seeds are exposed research, not secret evaluation assets.
+> See [Evaluation boundary](evaluation-boundary.md).
+
+
 This file is the unedited output of `python tools/scoring_sensitivity.py` for
 scoring version 1.0 (progress lines removed; headings demoted by one level).
 The analysis is in [benchmark-methodology.md](benchmark-methodology.md),
 sections 5.12 and 6. Unless a table says otherwise, scores are
 family-balanced means over the two **study suites**: the public suite (seeds
 0, 1, 2) and a generated stochastic study suite (16 scenarios, seeds 0, 1,
-2). The **held-out suite** is a second generated suite from the same config
+2). The **archived suite** is a second generated suite from the same config
 and a fresh pre-registered generator seed (20261021, seeds 0, 1, 2); it was
 not used to choose anything. The adversarial policies, including
 `adv-block-scrub`, are study instruments, not baselines. `F-official` (and
@@ -23,11 +29,11 @@ quality exponent beta = 0.736966; severe thresholds (component space) time 0.500
 |---|---|---|---|---|---|---|---|
 | public | 30 | 30 | 30 | 30 | 4449 | 0 | 4165 |
 | generated | 48 | 48 | 48 | 48 | 844 | 0 | 246 |
-| held-out | 48 | 48 | 48 | 48 | 1211 | 0 | 507 |
+| archived | 48 | 48 | 48 | 48 | 1211 | 0 | 507 |
 
 Scrub gain (adv-block-scrub minus congestion-aware), per candidate and suite:
 
-| candidate | public | generated | both | held-out | max episode |delta| | R16 invariance |
+| candidate | public | generated | both | archived | max episode |delta| | R16 invariance |
 |---|---|---|---|---|---|---|
 | 1.0 | +4.52 | +7.35 | +5.17 | +3.07 | 70.85 | FAIL |
 | G1 | +4.52 | +7.35 | +5.17 | +3.07 | 70.85 | FAIL |
@@ -42,7 +48,7 @@ Scrub gain (adv-block-scrub minus congestion-aware), per candidate and suite:
 episodes with evacuees: 1773; cut bound <= person-time in all: True; cut bound > exit-capacity bound in 164; person-time equal to the cut bound in 789
 - public: 411 episodes; cut > exit bound in 0; total capacity-forced delay 38484 person-steps of 138973
 - generated: 676 episodes; cut > exit bound in 104; total capacity-forced delay 2044 person-steps of 52020
-- held-out: 686 episodes; cut > exit bound in 60; total capacity-forced delay 3761 person-steps of 56947
+- archived: 686 episodes; cut > exit bound in 60; total capacity-forced delay 3761 person-steps of 56947
 
 ### Raw components (hierarchical means over both suites; Safety parts and quality parts in [0, 1])
 
@@ -86,7 +92,7 @@ episodes with evacuees: 1773; cut bound <= person-time in all: True; cut bound >
 | adv-fire-hugger | 0.0 | 7.7 | 0.0 | 10.3 | 17.9 |
 | adv-block-scrub | 0.0 | 6.4 | 0.0 | 9.0 | 15.4 |
 
-### Severe quality failures, held-out suite (share of applicable episodes, %; any = at least one gate)
+### Severe quality failures, archived suite (share of applicable episodes, %; any = at least one gate)
 
 | policy | time | hazard | path | replanning | any |
 |---|---|---|---|---|---|
@@ -314,7 +320,7 @@ F-official values: zero-loss, Time 0.6 82.8 vs perfect quality + 1 casualty 56.5
 | adv-fire-hugger | 27.9 | 27.9 | 31.8 | 31.6 | 31.4 | 31.8 | 31.8 |
 | adv-block-scrub | 33.4 | 33.4 | 33.3 | 33.1 | 33.4 | 33.4 | 33.3 |
 
-#### Coordination candidates, held-out suite
+#### Coordination candidates, archived suite
 
 | policy | 1.0 | G1 | G4 | G5-official | G6 | G7 | T-wait |
 |---|---|---|---|---|---|---|---|
@@ -337,7 +343,7 @@ F-official values: zero-loss, Time 0.6 82.8 vs perfect quality + 1 casualty 56.5
 
 #### Coordination candidates: summary
 
-| candidate | tau vs official (study) | tau vs official (held-out) | tau study vs held-out | top 3 (study) | congestion-aware rank study / held-out | best adversary - congestion-aware |
+| candidate | tau vs official (study) | tau vs official (archived) | tau study vs archived | top 3 (study) | congestion-aware rank study / archived | best adversary - congestion-aware |
 |---|---|---|---|---|---|---|
 | 1.0 | 0.966 | 0.966 | 0.782 | adv-block-scrub, congestion-aware, adv-fire-hugger | 2 / 2 | +5.2 |
 | G1 | 0.966 | 0.966 | 0.782 | adv-block-scrub, congestion-aware, adv-fire-hugger | 2 / 2 | +5.2 |
@@ -463,7 +469,7 @@ E-soft-min: range 37.2
 
 ### Per-family ranking (F-official; family means over seeds)
 
-| policy | generated:single_exit_high_density | generated:single_exit_low_density | generated:split_flow_across_exits | held-out:single_exit_high_density | held-out:single_exit_low_density | held-out:split_flow_across_exits | public:central_ignition | public:crowd_100 | public:maze_obstacle_routing | public:multiple_exits_unequal_distance | public:multiple_ignitions | public:narrow_corridor_bottleneck | public:route_invalidation_replanning | public:single_exit_high_density | public:single_exit_low_density | public:threatened_nearest_exit |
+| policy | generated:single_exit_high_density | generated:single_exit_low_density | generated:split_flow_across_exits | archived:single_exit_high_density | archived:single_exit_low_density | archived:split_flow_across_exits | public:central_ignition | public:crowd_100 | public:maze_obstacle_routing | public:multiple_exits_unequal_distance | public:multiple_ignitions | public:narrow_corridor_bottleneck | public:route_invalidation_replanning | public:single_exit_high_density | public:single_exit_low_density | public:threatened_nearest_exit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | always-stay | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
 | random-legal | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 |
@@ -484,9 +490,9 @@ E-soft-min: range 37.2
 - generated:single_exit_high_density: congestion-aware 23.0, adv-fire-hugger 23.0, adv-block-scrub 23.0
 - generated:single_exit_low_density: congestion-aware 44.4, adv-reckless-fast 44.4, adv-block-scrub 44.4
 - generated:split_flow_across_exits: congestion-aware 31.9, adv-block-scrub 31.9, adv-fire-hugger 30.9
-- held-out:single_exit_high_density: congestion-aware 8.3, adv-block-scrub 8.3, nearest-greedy 8.3
-- held-out:single_exit_low_density: adv-fire-hugger 72.6, congestion-aware 68.1, adv-block-scrub 68.1
-- held-out:split_flow_across_exits: fire-aware 46.3, adv-jostler 46.2, congestion-aware 45.2
+- archived:single_exit_high_density: congestion-aware 8.3, adv-block-scrub 8.3, nearest-greedy 8.3
+- archived:single_exit_low_density: adv-fire-hugger 72.6, congestion-aware 68.1, adv-block-scrub 68.1
+- archived:split_flow_across_exits: fire-aware 46.3, adv-jostler 46.2, congestion-aware 45.2
 - public:central_ignition: congestion-aware 7.4, adv-reckless-fast 7.4, adv-abandon-far 7.4
 - public:crowd_100: congestion-aware 17.0, adv-block-scrub 17.0, adv-fire-hugger 16.2
 - public:maze_obstacle_routing: static-shortest 99.0, fire-aware 99.0, adv-jostler 99.0
@@ -547,9 +553,9 @@ Kendall tau vs official over feasible: min 0.983, mean 0.999; max |delta score| 
 | additive | 0.831 |
 | plain-product | 0.898 |
 
-### Official ranking (F-official, both study suites) and held-out validation
+### Official ranking (F-official, both study suites) and archived validation
 
-| rank | policy | EMBER (study) | EMBER (held-out) | rank (held-out) |
+| rank | policy | EMBER (study) | EMBER (archived) | rank (archived) |
 |---|---|---|---|---|
 | 1 | congestion-aware | 48.6 | 40.5 | 1 |
 | 2 | adv-block-scrub | 48.6 | 40.5 | 2 |
@@ -568,4 +574,4 @@ Kendall tau vs official over feasible: min 0.983, mean 0.999; max |delta score| 
 | 15 | always-stay | 0.0 | 0.0 | 15 |
 | 16 | random-legal | 0.0 | 0.0 | 16 |
 
-Kendall tau, study vs held-out ranking: 0.814
+Kendall tau, study vs archived ranking: 0.814

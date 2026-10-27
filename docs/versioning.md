@@ -115,7 +115,7 @@ versions are tooling contracts: they never change what a score means.
 | `EVALUATION_RESULT_VERSION` | `1.0` | yes | `src/emberbench/evaluation.py`, [evaluation.md](evaluation.md) | Evaluation result files |
 | `SCORING_VERSION` | `1.0` | yes | `src/emberbench/scoring.py`, [scoring.md](scoring.md) | Scoring constants digest, episode scores, score report digests |
 | `ENVIRONMENT_PACK_VERSION` | `1.0` | yes | `src/emberbench/environment_pack.py`, [environment-pack.md](environment-pack.md) | `pack.json` and the pack digest |
-| `ENVIRONMENT_WORLD_VERSION` | `1.0` | yes | `src/emberbench/worlds.py`, [evaluation-suite-design.md](evaluation-suite-design.md) | Environment world digests (unique-world identity) |
+| `ENVIRONMENT_WORLD_VERSION` | `1.0` | yes | `src/emberbench/worlds.py`, [evaluation-suite-design.md](evaluation-boundary.md) | Environment world digests (unique-world identity) |
 | `FAMILY_RULES_VERSION` | `1.0` | yes | `src/emberbench/families.py`, [generator.md](generator.md) | Family rule record, family tags |
 | `CALIBRATION_PANEL_VERSION` | `1.0` | yes | `src/emberbench/calibration.py`, [difficulty-calibration.md](difficulty-calibration.md) | Calibration rule record (panel) |
 | `DIFFICULTY_RULES_VERSION` | `1.0` | yes | `src/emberbench/calibration.py`, [difficulty-calibration.md](difficulty-calibration.md) | Calibration rule record (bands) |

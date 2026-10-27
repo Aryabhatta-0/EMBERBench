@@ -1,4 +1,6 @@
-"""Evaluator-side calibration: the frozen panel, admission, difficulty bands, capacity filter and fire evidence.
+"""PUBLIC DEVELOPMENT ONLY. Not official hidden-membership rules.
+
+Evaluator-side calibration: the frozen panel, admission, difficulty bands, capacity filter and fire evidence.
 
 This module is the library form of the PR #33 calibration rules
 (docs/difficulty-calibration.md; ``tools/analyze_suite_design.py`` imports
