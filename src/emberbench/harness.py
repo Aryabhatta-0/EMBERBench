@@ -573,6 +573,8 @@ class RemoteClient:
         )
 
     def _decision_response(self, body: Mapping[str, Any], attempt: int) -> tuple[dict[str, Any], float | None, bool]:
+        if self.extra_body:  # routing fields (OpenRouter ``provider``); none keeps the r1 cache keys
+            body = {**body, **self.extra_body}
         digest, text = self._digest(body)
         if attempt > 0:
             # A re-ask is a new model request even when its body equals the first one (every question

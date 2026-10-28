@@ -419,8 +419,10 @@ Exactly one model source:
   `--budget-usd` stops the run (resumable) at a spend limit.
   `--exposure-log FILE` (required with `--private`) appends one line per
   run segment that sends episodes, before its first request; `--retention`
-  records the endpoint's stated retention ([integrity.md](integrity.md),
-  section 12, "Exposure budget").
+  records the endpoint's stated retention. `--zdr` (required with
+  `--private`; OpenRouter only) sends `provider.zdr: true`, so only
+  zero-data-retention endpoints receive the requests
+  ([integrity.md](integrity.md), section 12, "Exposure budget").
 - `--baseline ID`: a registered baseline.
 - `--agent MODULE:FACTORY --model-id ID`: a local agent (as in
   `evaluation run`).

@@ -222,6 +222,10 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     remote.add_argument("--output-price", type=float, metavar="USD", help="USD per million output tokens, when the API reports no cost")
     remote.add_argument("--exposure-log", metavar="FILE", help="append one JSON line per run segment that sends episodes (required with --private)")
     remote.add_argument("--retention", choices=RETENTION, default="unknown", help="the endpoint's data retention, as recorded in the exposure log")
+    remote.add_argument(
+        "--zdr", action="store_true",
+        help="send OpenRouter's provider.zdr=true, so the router uses zero-data-retention endpoints only (required with --private)",
+    )  # fmt: skip
 
 
 # --------------------------------------------------------------------------- checks
@@ -369,8 +373,16 @@ def _run_remote(args: argparse.Namespace, pack: EnvironmentPack, out: Path) -> t
         raise RunError("usage", "--chunk-size needs --joint-mode fixed_chunk")
     key = os.environ.get(args.key_env, "")
     host = url.split("/")[2].split(":")[0]
-    if not key and host not in ("localhost", "127.0.0.1", "[::1]"):
+    local = host in ("localhost", "127.0.0.1", "[::1]")
+    if not key and not local:
         raise RunError("usage", f"set the API key in the environment variable {args.key_env}")
+    if args.private and not args.zdr:
+        raise RunError("usage", "--private with --model needs --zdr: a hidden suite goes to zero-data-retention endpoints only")
+    if args.zdr and (args.api == "anthropic" or not (local or host == "openrouter.ai")):
+        raise RunError("usage", "--zdr is enforced by the OpenRouter router only (openrouter.ai, decision or openai API)")
+    if args.zdr and args.retention == "provider_default":
+        raise RunError("usage", "--zdr contradicts --retention provider_default")
+    retention = "zero" if args.zdr else args.retention
     client = harness.RemoteClient(
         api=args.api,
         base_url=args.base_url,
@@ -382,6 +394,7 @@ def _run_remote(args: argparse.Namespace, pack: EnvironmentPack, out: Path) -> t
         timeout=args.timeout,
         budget_usd=args.budget_usd,
         redact=args.private,
+        extra_body={"provider": {"zdr": True}} if args.zdr else None,
     )
     provider = harness.label(args.provider or harness.provider_label(args.base_url))
     model_id = check_model_id(args.model_id or harness.remote_model_id(provider, args.model, args.api, protocol))
@@ -402,7 +415,8 @@ def _run_remote(args: argparse.Namespace, pack: EnvironmentPack, out: Path) -> t
                 "router": provider,
                 "upstream": args.model.split("/")[0] if "/" in args.model else provider,
                 "endpoint_host": host,
-                "retention": args.retention,
+                "retention": retention,
+                "zdr": args.zdr,
                 "episodes_sent": len(pending),
             })  # fmt: skip
     prices = (args.input_price or 0.0, args.output_price or 0.0) if args.input_price is not None or args.output_price is not None else None
@@ -430,6 +444,7 @@ def _run_remote(args: argparse.Namespace, pack: EnvironmentPack, out: Path) -> t
             "temperature": 0.0 if args.temperature is None else args.temperature,
             "timeout_s": args.timeout,
             "budget_usd": args.budget_usd,
+            "zdr": args.zdr,
             "input_price": args.input_price,
             "output_price": args.output_price,
         },

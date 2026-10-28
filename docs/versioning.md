@@ -31,16 +31,16 @@ source, not from installed metadata.
   that moves with it is `cli.version-json`, the bytes of
   `emberbench version --json` itself.
 - **Not the benchmark revision.** The two are independent numbers. Package
-  `0.1.0` implements benchmark revision `3`. A benchmark revision never
+  `1.0.0rc1` implements benchmark revision `3`. A benchmark revision never
   sets the package version, and a package release never sets the revision.
 
-**Current decision.** The package version stays `0.1.0`. No version of
-EMBERBench has been tagged or published, so `0.1.0` is still the first
-release. Benchmark revisions 2 and 3 are pre-release revisions: revision 2
-replaced revision 1 and revision 3 replaced revision 2 before anything was
-released, and no published package or score used revision 1 or 2. Choosing a different first version (for example `1.0.0`
-for the V1 benchmark) is a maintainer decision at tag time; until one is
-recorded, the version stays `0.1.0`. Changing it is a release step (see
+**Current decision.** The first release version is `1.0.0`, for the V1
+benchmark (revision `3`). The package is `1.0.0rc1`, tagged `v1.0.0-rc.1`;
+`1.0.0` is tagged when the statistics of the official hidden batch hold. The
+git tag `v0.1.0` (2026-10-21) marks a pre-release snapshot of revision 2; no
+package or score was published from it. Benchmark revisions 1 and 2 are
+pre-release revisions: each was replaced before a release. Changing the
+package version is a release step (see
 [release-checklist.md](release-checklist.md)), not part of feature work.
 
 ### Release rules

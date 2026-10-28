@@ -12,7 +12,7 @@ the model must decide each timestep how every person moves. The benchmark measur
 well the model's decisions get people out through the exits before the fire reaches them.
 
 > **Status: V1 release candidate, benchmark revision 3, not yet released
-> (package `0.1.0`).** This repository contains the benchmark contract, the
+> (package `1.0.0rc1`).** This repository contains the benchmark contract, the
 > deterministic simulation core, the frozen V1 fairness and semantics
 > specification, the matched stochastic hazard contract, auditable
 > per-episode metrics, crowd coordination diagnostics, the canonical V1

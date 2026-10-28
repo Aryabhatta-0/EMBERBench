@@ -90,6 +90,25 @@ changed or extra file stops it with exit status 1. The expected files of
 `source-suite/` are the suite manifest and exactly the scenario files it
 lists.
 
+### One-command demo: results and a cost sheet
+
+```bash
+python tools/experiments/v1/demo.py --out ../emberbench-demo
+```
+
+`demo.py` runs the public pack with the reference baselines (`pack/REPORT.md`),
+runs `emberbench run` on that frozen pack for `nearest-exit-greedy-v1` and
+writes the cost sheet of the run records (`COST.md`, `cost.csv`,
+`cost.json`). `--protocol smoke` takes about a minute. `--model SLUG` also
+runs one remote model on the OpenRouter decisions API (key in
+`OPENROUTER_API_KEY`, spend capped by `--budget-usd`, default 1). The demo is
+offline without `--model`.
+
+`cost_table.py --runs DIR [--runs DIR ...] --out OUT` builds the same sheet
+from any `emberbench run` directories: USD per suite and per episode, calls
+and tokens per episode, re-ask, refusal and horizon-hit rates, and model
+response time.
+
 ## Performance
 
 Measured on one Windows 11 laptop core (Python 3.12), full public protocol,

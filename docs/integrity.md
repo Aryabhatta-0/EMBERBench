@@ -421,18 +421,31 @@ scenarios to the router and to the model's provider, which can log them.
 
 - Develop, debug and compare protocols on the public development pack and
   the public validation set. Run a hidden batch only for a reportable result.
-- `emberbench run --private --model` refuses to start without
-  `--exposure-log FILE`. Before its first request, every run segment that
-  sends episodes appends one line: time, suite commitment, model ID, router,
-  upstream provider, endpoint host, recorded retention (`--retention`:
-  `unknown`, `zero` or `provider_default`) and the number of episodes sent.
+- `emberbench run --private --model` refuses to start without `--zdr`.
+  With `--zdr` every request carries OpenRouter's `provider.zdr: true`, so
+  the router sends it only to a zero-data-retention endpoint; a model with
+  no such endpoint fails before any upstream provider sees the request.
+  `--zdr` is refused for any other router. Also turn on zero data retention
+  for the whole account in the router's privacy settings, so a request
+  without the field is still routed to ZDR endpoints only.
+- It also refuses to start without `--exposure-log FILE`. Before its first
+  request, every run segment that sends episodes appends one line: time,
+  suite commitment, model ID, router, upstream provider, endpoint host,
+  retention (`zero` under `--zdr`), `zdr` and the number of episodes sent.
   The log stays with the evaluator, outside the repository.
-- Prefer zero-retention endpoints, and record the retention that the
-  provider states. `unknown` counts as retained.
-- Rotate the batch (a regenerated batch, as above) when it has been sent to
-  **8 distinct upstream providers**, or at once after a send to an endpoint
-  that keeps or trains on inputs. Publish the exposure count (runs and
-  distinct providers) with every hidden-batch result.
+- Rotate the batch (a regenerated batch from fresh seeds, as above) at the
+  first of:
+  1. it has been sent to **8 distinct upstream providers**;
+  2. **one retention strike**: a send to an endpoint that keeps or trains on
+     inputs, or a send without enforced ZDR;
+  3. **2 calendar quarters** after its first exposure;
+  4. **any leak**: scenario content, seeds, the salt or the private recipe
+     is seen outside the evaluator.
+- Publish the exposure count (runs and distinct providers) with every
+  hidden-batch result.
+- A batch that was exposed before these rules (without enforced ZDR) is a
+  **pilot**: its results show that the protocol works, and they never enter
+  a leaderboard.
 
 ## 13. What EMBERBench cannot prove
 

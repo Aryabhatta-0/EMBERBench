@@ -272,6 +272,16 @@ def test_suite_commitment_opens_only_with_the_salt(pack: EnvironmentPack) -> Non
 # --------------------------------------------------------------------------- emberbench run
 
 
+def test_run_prints_a_human_summary(pack: EnvironmentPack, tmp_path: Path) -> None:
+    stdout = io.StringIO()
+    with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(io.StringIO()):
+        code = cli_main(["run", "--suite", str(pack.root), "--out", str(tmp_path / "h"), "--resamples", "100", "--baseline", "nearest-exit-greedy-v1"])
+    assert code == 0 and "\nscore: " in stdout.getvalue()
+    from emberbench.cli import _human
+
+    assert _human({"ci95": [1.5, 2.5], "rows": [{"a": 1}]}) == "ci95: [1.5, 2.5]\nrows:\n  - a=1\n"  # a list of values: one line
+
+
 def test_run_baseline_reproduces_the_library_result_and_resumes(pack: EnvironmentPack, tmp_path: Path) -> None:
     out = tmp_path / "run"
     code, summary = _run(pack, out, "--baseline", "congestion-aware-v1", "--expected-digest", pack.digest)
@@ -428,22 +438,34 @@ def test_run_scores_a_refused_episode_0_and_keeps_the_others(
 def test_private_remote_runs_log_every_exposure(
     pack: EnvironmentPack, server: tuple[str, FakeDecisionModel], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    base_url, _ = server
+    base_url, fake = server
     monkeypatch.setenv(KEY_ENV, "test-key")
     monkeypatch.setenv("EMBERBENCH_TEST_SALT", SALT)
     commitment = suite_commitment(pack.digest, SALT)
     out, log = tmp_path / "hidden", tmp_path / "exposure.jsonl"
     remote = ("--model", "lab/fake", "--base-url", base_url, "--provider", "t", "--key-env", KEY_ENV,
               "--private", "--commitment", commitment, "--salt-env", "EMBERBENCH_TEST_SALT")  # fmt: skip
-    assert _run(pack, out, *remote)[0] == 2  # a private remote run must log its exposure
-    assert not log.exists() and not (out / "results").exists()
-    assert _run(pack, out, *remote, "--exposure-log", REPO_ROOT / "exposure.jsonl")[0] == 6
-    assert _run(pack, out, *remote, "--exposure-log", log, "--retention", "zero")[0] == 0
+    assert _run(pack, out, *remote, "--exposure-log", log)[0] == 2  # a hidden suite goes to ZDR endpoints only
+    assert _run(pack, out, *remote, "--zdr")[0] == 2  # a private remote run must log its exposure
+    assert _run(pack, out, *remote, "--zdr", "--exposure-log", log, "--retention", "provider_default")[0] == 2
+    assert not log.exists() and not (out / "results").exists() and not fake.requests
+    assert _run(pack, out, *remote, "--zdr", "--exposure-log", REPO_ROOT / "exposure.jsonl")[0] == 6
+    assert _run(pack, out, *remote, "--zdr", "--exposure-log", log)[0] == 0
+    assert fake.requests and all(body["provider"] == {"zdr": True} for body in fake.requests)
     text = log.read_text(encoding="ascii")
     line = json.loads(text)
     assert line["suite"] == {"commitment": commitment} and line["episodes_sent"] == len(pack.manifest.episodes)
-    assert (line["router"], line["upstream"], line["retention"], line["endpoint_host"]) == ("t", "lab", "zero", "127.0.0.1")
+    assert (line["router"], line["upstream"], line["retention"], line["zdr"], line["endpoint_host"]) == ("t", "lab", "zero", True, "127.0.0.1")
     for secret in (*SMALL_IDS, pack.pack_id, SALT):
         assert secret not in text
-    assert _run(pack, out, *remote, "--exposure-log", log)[0] == 0  # nothing pending: nothing sent, nothing logged
+    assert _run(pack, out, *remote, "--zdr", "--exposure-log", log)[0] == 0  # nothing pending: nothing sent, nothing logged
     assert log.read_text(encoding="ascii") == text
+    record = json.loads(next((out / "runs").glob("*.json")).read_text(encoding="utf-8"))
+    assert record["model"]["settings"]["zdr"] is True
+
+
+def test_zdr_needs_the_openrouter_router(pack: EnvironmentPack, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(KEY_ENV, "test-key")
+    remote = ("--model", "lab/fake", "--key-env", KEY_ENV, "--zdr")
+    assert _run(pack, tmp_path / "o", *remote, "--base-url", "https://api.example.com/v1")[0] == 2
+    assert _run(pack, tmp_path / "a", *remote, "--base-url", "https://openrouter.ai/api/v1", "--api", "anthropic")[0] == 2

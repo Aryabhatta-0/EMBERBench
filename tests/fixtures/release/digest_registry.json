@@ -31,7 +31,7 @@
       "what": "SHA-256 of the file bytes of 'emberbench evaluation manifest --suite scenarios/public/v1 --seed 0 --seed 1 --seed 2'."
     },
     "cli.version-json.stdout_sha256": {
-      "digest": "03f4e0e1bbabb2e99cbf68bff0b143abd5044ab09124299d1aa26c2f24456e49",
+      "digest": "c008fae822e9218e91db1106073f35dbc88feeddcefd96ac242afb9be5078b66",
       "owner": "package version; CLI_VERSION; every version that 'emberbench version' reports",
       "mirrors": "this registry only",
       "what": "SHA-256 of the stdout bytes of 'emberbench version --json'. The only entry that moves with the package version."

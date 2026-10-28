@@ -119,7 +119,7 @@ def test_package_version_has_one_source() -> None:
 
 def test_version_output_keeps_package_version_and_benchmark_revision_apart() -> None:
     info = version_info()
-    assert info["package_version"] == source_version == "0.1.0"  # no release-tag decision yet (docs/versioning.md, section 1)
+    assert info["package_version"] == source_version == "1.0.0rc1"  # the V1 release candidate (docs/versioning.md, section 1)
     assert info["benchmark_revision"] == BENCHMARK_REVISION == "3"
     assert list(info)[0] == "package_version"
 

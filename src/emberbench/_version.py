@@ -6,4 +6,4 @@ version of the Python distribution only. It is not ``BENCHMARK_REVISION`` and
 not a component contract version.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0rc1"

@@ -26,8 +26,8 @@ Each of these must be resolved before a tag:
       or pull request makes it.
 - [ ] **Pending V1 pull requests.** Every pull request accepted for V1 is
       merged, `main` contains it, and this checklist runs on that `main`.
-- [ ] **Package version decision.** The package version stays `0.1.0`
-      unless the maintainers record another first release version
+- [ ] **Package version decision.** The first release is `1.0.0`; its
+      candidate is `1.0.0rc1` (tag `v1.0.0-rc.1`)
       ([versioning.md](versioning.md), section 1).
 
 ## 2. Clean checkout and pinned tools

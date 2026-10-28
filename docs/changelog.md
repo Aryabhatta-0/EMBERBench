@@ -8,12 +8,13 @@ hash that changed.
 Entries reference the pull requests in `Aryabhatta-0/EMBERBench` that
 introduced each part. Dates are added only when a release is tagged.
 
-## Unreleased: V1 (package `0.1.0`, benchmark revision `3`)
+## Unreleased: V1 (package `1.0.0rc1`, benchmark revision `3`)
 
 No version of EMBERBench has been released yet. This entry collects the V1
 milestones that are in `main`. Release them by following
-[release-checklist.md](release-checklist.md). The package version stays
-`0.1.0` until the maintainers record a different first release version
+[release-checklist.md](release-checklist.md). The maintainers chose `1.0.0`
+as the first release version; the candidate is `1.0.0rc1` (tag
+`v1.0.0-rc.1`), and `1.0.0` follows when the hidden-batch statistics hold
 ([versioning.md](versioning.md), section 1). License: Apache License 2.0
 (`Apache-2.0`), selected by the maintainers: `LICENSE` at the repository
 root, and `license = "Apache-2.0"` with `license-files = ["LICENSE"]` in
@@ -124,7 +125,10 @@ suite `suite_version` `1.0.0`.
 - **Hidden exposure log** (run record 1.1): `emberbench run --private
   --model` needs `--exposure-log`; each run segment that sends episodes logs
   the router, upstream provider, endpoint, recorded retention and episode
-  count first. Rotation rule: [integrity.md](integrity.md), section 12.
+  count first. `--private --model` also needs `--zdr`: every request
+  carries OpenRouter's `provider.zdr: true`. Rotation rule (8 providers, one
+  retention strike, 2 quarters or any leak) and pilot batches:
+  [integrity.md](integrity.md), section 12.
 - **`emberbench run`** (CLI `1.1`): one command evaluates a remote model
   (`--model`), a registered baseline (`--baseline`) or a local agent
   (`--agent`) on any frozen environment pack, verifies the pack digest or
@@ -144,6 +148,15 @@ suite `suite_version` `1.0.0`.
   pairs with the paired interval and bootstrap P(higher > lower), P(the whole
   model order), the models-only tau and the size of one adjacent swap) and
   the zero-score episode share of every agent. It changes no score.
+  `zero_inflation.py` splits zero scores by cause (catastrophic gate,
+  declared failure) and reports the score histogram, the bimodality
+  coefficient and the scores just below the gate.
+- **Cost sheet and demo** (research lane): `tools/experiments/v1/cost_table.py`
+  (USD per suite and episode, calls, tokens, re-ask and refusal rates, model
+  time, from the run records) and `demo.py` (public pack -> `REPORT.md` and
+  `COST.md` in one command).
+- **Fix:** `emberbench run` without `--json` no longer fails when the
+  summary holds a list of values (`ci95`).
 - **Remote-model runner** (research lane): any model behind a base URL and
   an API key (OpenAI-compatible chat, Anthropic Messages or the Jev/SubQ
   decision API) on the same environment pack, with the same official scoring

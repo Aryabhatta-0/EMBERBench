@@ -798,7 +798,9 @@ def _write(stream: TextIO, text: str) -> None:
 def _human(payload: dict[str, Any]) -> str:
     lines = []
     for key, value in payload.items():
-        if isinstance(value, list):
+        if isinstance(value, list) and not all(isinstance(item, dict) for item in value):
+            lines.append(f"{key}: {json.dumps(value)}")  # a list of values, such as a confidence interval
+        elif isinstance(value, list):
             lines.append(f"{key}:")
             lines.extend("  - " + " ".join(f"{k}={v}" for k, v in item.items()) for item in value)
         elif isinstance(value, bool) or value is None:
