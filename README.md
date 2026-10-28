@@ -366,6 +366,25 @@ runs and golden diagnostic digests).
 Any change to simulator output fails the golden test until you bump
 `SIMULATOR_VERSION` on purpose.
 
+## Docker runtime
+
+The public Linux/amd64 runtime can be pulled without signing in. Its source is
+commit [`9d9999b913bc304001e6cf41f6b34a970109f296`](https://github.com/Aryabhatta-0/EMBERBench/commit/9d9999b913bc304001e6cf41f6b34a970109f296)
+(package `1.0.0rc1`, benchmark revision `3`). Pin the verified GHCR digest:
+
+```bash
+IMAGE=ghcr.io/aryabhatta-0/emberbench@sha256:1142df88f0d68b5a3d34323481168c6d3253ef6cef4e7879e5de25f9b2b712d8
+docker pull "$IMAGE"
+docker run --rm --network none "$IMAGE" version --json
+```
+
+The [publication record](docs/container-publication.md) includes source CI,
+registry identity checks, the anonymous pull and public-only baseline smoke,
+plus reproducible commands. [CLI Docker instructions](docs/cli.md#docker)
+cover mounting a frozen pack read-only and writing results separately.
+The image contains the runtime code; scenario packs are mounted at run time.
+This container publication does not create a final benchmark release tag.
+
 ## Versions and releases
 
 The package version (`emberbench.__version__`), the benchmark revision

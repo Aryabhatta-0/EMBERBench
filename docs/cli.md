@@ -453,9 +453,44 @@ The `Dockerfile` at the repository root builds the runner on a base image
 pinned by digest (`python:3.12.16-slim-bookworm`); the package has no runtime
 dependencies, and the build tools come from `tools/dev-constraints.txt`.
 
-```text
-docker build -t emberbench .
-docker run --rm -v PACK_DIR:/suite:ro -v RUN_DIR:/out -e EMBERBENCH_API_KEY emberbench run --suite /suite --model typesafe/jev-1.14 --expected-digest HEX --out /out
+The public Linux/amd64 image below was built from source commit
+`9d9999b913bc304001e6cf41f6b34a970109f296`. Its immutable registry digest and
+anonymous access were independently verified. POSIX shell commands:
+
+```bash
+IMAGE=ghcr.io/aryabhatta-0/emberbench@sha256:1142df88f0d68b5a3d34323481168c6d3253ef6cef4e7879e5de25f9b2b712d8
+docker pull "$IMAGE"
+docker run --rm --network none "$IMAGE" version --json
+```
+
+From the source checkout, validate the public scenario suite:
+
+```bash
+docker run --rm --network none \
+  --mount "type=bind,source=$(pwd)/scenarios/public/v1,target=/public,readonly" \
+  "$IMAGE" suite validate /public --json
+```
+
+For a baseline run, set `PACK_DIR` and `RUN_DIR` to absolute paths of an
+existing frozen environment pack and a writable output directory. Set
+`PACK_DIGEST` to that pack's verified SHA-256 digest:
+
+```bash
+docker run --rm --network none --user "$(id -u):$(id -g)" \
+  --mount "type=bind,source=$PACK_DIR,target=/suite,readonly" \
+  --mount "type=bind,source=$RUN_DIR,target=/out" \
+  "$IMAGE" run --suite /suite --baseline congestion-aware-v1 \
+  --expected-digest "$PACK_DIGEST" --out /out
+```
+
+The user mapping makes the output writable by the current POSIX host user;
+Docker Desktop on Windows can omit it. The
+[publication record](container-publication.md) provides a complete public
+smoke example. Scenarios and seeds are supplied by the mounted pack; the
+runtime image contains no evaluation assets. To build from a checkout:
+
+```bash
+docker build --target runtime -t emberbench .
 docker build --target test -t emberbench-test .
 docker run --rm emberbench-test
 ```
