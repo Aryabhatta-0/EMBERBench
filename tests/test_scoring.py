@@ -802,23 +802,48 @@ def test_leaderboard_safety_dominates_ties(small: Suite, greedy: EvaluationResul
     assert [r.model_id for r in leaderboard_order([tie_d, tie_g])] == ["z-safer", "a-less-safe"]
 
 
-def test_leaderboard_tiers_group_overlapping_intervals(small: Suite, greedy: EvaluationResult, delayed: EvaluationResult) -> None:
+def test_leaderboard_tiers_use_paired_differences(small: Suite, greedy: EvaluationResult) -> None:
     g = score_result(greedy, small, resamples=RESAMPLES)
-    d = score_result(delayed, small, resamples=RESAMPLES)
     base = g.ci
     assert base is not None
+    a = dataclasses.replace(g, model_id="a", score=F(60), ci=dataclasses.replace(base, lower=F(20), upper=F(90)))
+    b = dataclasses.replace(a, model_id="b", score=F(59), episode_scores=tuple((i, v - 1) for i, v in a.episode_scores))
+    # Identical difficulty variation cancels in the pair: every delta is +1.
+    assert [[r.model_id for r in t] for t in leaderboard_tiers([b, a])] == [["a"], ["b"]]
+    # Marginal intervals must have no effect, including when absent.
+    assert leaderboard_tiers([dataclasses.replace(b, ci=None), a]) == [[a], [dataclasses.replace(b, ci=None)]]
 
-    def at(report: ScoreReport, model: str, low: int, high: int) -> ScoreReport:
-        ci = dataclasses.replace(base, lower=F(low), upper=F(high))
-        return dataclasses.replace(report, model_id=model, score=F(low + high, 2), safety=F(1, 2), ci=ci)
 
-    # b overlaps the leader a; c overlaps b but not a, so c starts tier 2 (no chaining).
-    a, b, c, e = at(g, "a", 60, 70), at(d, "b", 55, 62), at(g, "c", 50, 58), at(d, "e", 10, 20)
-    tiers = leaderboard_tiers([e, c, b, a])
-    assert [[r.model_id for r in tier] for tier in tiers] == [["a", "b"], ["c"], ["e"]]
-    assert [r.model_id for tier in tiers for r in tier] == [r.model_id for r in leaderboard_order([a, b, c, e])]
-    point = dataclasses.replace(at(d, "p", 40, 40), ci=None)  # no interval: the point score
-    assert [[r.model_id for r in tier] for tier in leaderboard_tiers([a, point])] == [["a"], ["p"]]
+def test_leaderboard_tiers_holm_and_leader_walk(small: Suite, greedy: EvaluationResult, monkeypatch: pytest.MonkeyPatch) -> None:
+    g = score_result(greedy, small, resamples=RESAMPLES)
+    reports = [dataclasses.replace(g, model_id=m, score=F(90 - i), ci=None) for i, m in enumerate("abcde")]
+    p = {("a", "b"): F(3, 100), ("a", "c"): F(4, 100), ("a", "d"): F(1, 1000), ("a", "e"): F(1, 1000), ("d", "e"): F(1)}
+    calls: list[tuple[str, str]] = []
+
+    def paired(a: ScoreReport, b: ScoreReport, *, resamples: int) -> Fraction | None:
+        calls.append((a.model_id, b.model_id))
+        return p[a.model_id, b.model_id]
+
+    monkeypatch.setattr("emberbench.scoring._paired_score_pvalue", paired)
+    # Holm rejects .001 and .001, then stops at .03 > .05/2; b and c tie a.
+    tiers = leaderboard_tiers(reversed(reports), resamples=RESAMPLES)
+    assert [[r.model_id for r in t] for t in tiers] == [["a", "b", "c"], ["d", "e"]]
+    assert calls == [("a", m) for m in "bcde"] + [("d", "e")]
+
+
+def test_leaderboard_tiers_exact_ties_small_samples_and_comparability(small: Suite, greedy: EvaluationResult) -> None:
+    g = score_result(greedy, small, resamples=RESAMPLES)
+    twin = dataclasses.replace(g, model_id="twin")
+    assert len(leaderboard_tiers([twin, g], resamples=RESAMPLES)) == 1
+    few = dataclasses.replace(g, layout=(("f", (("s", (0,)),)),), episode_scores=((0, F(1)),), ci=None)
+    other = dataclasses.replace(few, model_id="other", episode_scores=((0, F(0)),))
+    assert len(leaderboard_tiers([few, other], resamples=RESAMPLES)) == 1
+    with pytest.raises(ScoringInputError):
+        leaderboard_tiers([g, dataclasses.replace(twin, layout=())])
+    with pytest.raises(ScoringInputError):
+        leaderboard_tiers([g, dataclasses.replace(twin, episode_scores=())])
+    assert leaderboard_tiers([]) == []
+    assert leaderboard_tiers([g]) == [[g]]
 
 
 def test_outcome_profile_reports_zero_share_and_survival(small: Suite, greedy: EvaluationResult, stay: EvaluationResult) -> None:

@@ -498,12 +498,26 @@ entries can still be `inconclusive`; publish the comparison next to the
 order.
 
 **Tied tiers.** A published leaderboard shows tiers, not strict ranks.
-`leaderboard_tiers` walks `leaderboard_order`. A report joins the current
-tier when its 95% interval overlaps the interval of the tier's first report.
-Otherwise it starts a new tier. Overlap is checked against the tier leader
-only, so a tier never chains across reports whose intervals are disjoint. A
-report without an interval uses its point score. All reports in a tier share
-one rank; the order inside a tier is display order only.
+`leaderboard_tiers` walks `leaderboard_order`. At each tier leader it tests
+the paired episode-score differences against every remaining model, using
+the same family-stratified, two-stage bootstrap as `compare_scores`. For B
+bootstrap draws, the two-sided tail probability is
+`min(1, 2 * (1 + min(count(delta* <= 0), count(delta* >= 0))) / (B + 1))`.
+Zero is included in both tails; the plus-one correction avoids zero Monte
+Carlo p-values. Apply Holm's step-down correction at 5% across this leader's
+remaining comparisons: sort the m p-values, reject while
+`p_(j) <= 0.05 / (m - j + 1)`, and stop rejecting at the first failure.
+An untestable pair (fewer than five episodes) contributes p=1.
+
+In display order, a model joins the leader's tier if its corrected test is
+not significant. The first significant comparison starts a new tier and
+the correction is recomputed against that new leader's remaining models.
+This correction applies within each step of the tier walk, not globally
+over all possible leader choices. Marginal score CIs and the one-point
+practical margin do not decide tier membership. All reports must have the
+same layout and paired episode indices. All reports in a tier share one
+rank; the order inside a tier is display order only. A shared tier indicates
+insufficient evidence of a difference, not demonstrated equivalence.
 
 **Outcome profile.** The episode score is bimodal by design: the catastrophic
 gate sets an episode to 0. A mean alone hides this, so publish

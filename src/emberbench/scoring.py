@@ -1054,10 +1054,22 @@ def _stratified_ci(layout: Layout, value: Mapping[int, Fraction], seed: bytes, r
     family-balanced mean. ``None`` below :data:`MIN_BOOTSTRAP_SAMPLE_SIZE`
     episodes. The interval describes this evaluation sample only.
     """
+    stats = _stratified_samples(layout, value, seed, resamples)
+    if not stats:
+        return None
+    stats.sort()
+    alpha = 1 - CONFIDENCE_LEVEL
+    lower, upper = quantile(stats, alpha / 2), quantile(stats, 1 - alpha / 2)
+    assert lower is not None and upper is not None
+    return ConfidenceInterval(statistic, CONFIDENCE_LEVEL, resamples, seed.hex(), lower, upper)
+
+
+def _stratified_samples(layout: Layout, value: Mapping[int, Fraction], seed: bytes, resamples: int) -> list[Fraction]:
+    """The existing family/scenario/episode bootstrap draws, shared by intervals and tier tests."""
     check_resamples(resamples)
     indices = [i for _, scenarios in layout for _, idx in scenarios for i in idx]
     if len(indices) < MIN_BOOTSTRAP_SAMPLE_SIZE:
-        return None
+        return []
     denominator = math.lcm(*(value[i].denominator for i in indices))
     nums = {i: value[i].numerator * (denominator // value[i].denominator) for i in indices}
     strata = [[[nums[i] for i in idx] for _, idx in scenarios] for _, scenarios in layout]
@@ -1074,11 +1086,7 @@ def _stratified_ci(layout: Layout, value: Mapping[int, Fraction], seed: bytes, r
                 family_sum += Fraction(sum(episodes[stream.below(n)] for _ in range(n)), n)
             total += family_sum / k
         stats.append(total / (len(strata) * denominator))
-    stats.sort()
-    alpha = 1 - CONFIDENCE_LEVEL
-    lower, upper = quantile(stats, alpha / 2), quantile(stats, 1 - alpha / 2)
-    assert lower is not None and upper is not None
-    return ConfidenceInterval(statistic, CONFIDENCE_LEVEL, resamples, seed.hex(), lower, upper)
+    return stats
 
 
 # --------------------------------------------------------------------------- report
@@ -1639,28 +1647,54 @@ def leaderboard_order(reports: Iterable[ScoreReport]) -> list[ScoreReport]:
     return sorted(items, key=leaderboard_key)
 
 
-def leaderboard_tiers(reports: Iterable[ScoreReport]) -> list[list[ScoreReport]]:
+def _paired_score_pvalue(a: ScoreReport, b: ScoreReport, *, resamples: int) -> Fraction | None:
+    """Two-sided tail probability from the existing stratified paired bootstrap.
+
+    Count draws on either side of zero (including zero in both tails), with
+    a plus-one correction so Monte Carlo sampling never reports a zero p.
+    This statistical test does not apply the separate one-point practical margin.
+    """
+    comparison = compare_scores(a, b, resamples=resamples)
+    if comparison.ci is None:
+        return None
+    va, vb = dict(a.episode_scores), dict(b.episode_scores)
+    draws = _stratified_samples(a.layout, {i: va[i] - vb[i] for i in va}, bytes.fromhex(comparison.ci.seed), resamples)
+    tail = min(sum(d <= 0 for d in draws), sum(d >= 0 for d in draws))
+    return min(Fraction(1), Fraction(2 * (tail + 1), len(draws) + 1))
+
+
+def leaderboard_tiers(reports: Iterable[ScoreReport], *, resamples: int = DEFAULT_BOOTSTRAP_RESAMPLES) -> list[list[ScoreReport]]:
     """Reports in leaderboard order, grouped into tied tiers. A presentation rule; no score changes.
 
-    Walk :func:`leaderboard_order`. A report joins the current tier when its
-    95% interval overlaps the interval of the tier's first report; else it
-    starts a new tier. A report without an interval uses its point score.
-    Show a tier as tied (one shared rank), not as strict ranks.
+    At each leader compare every remaining report with that leader using the
+    paired family-stratified test. Apply Holm step-down at 5% to that set of
+    comparisons, counting untestable pairs as p=1. Walk until the first
+    significant difference, which starts the next tier and comparison set.
+    A shared tier means insufficient evidence of a difference, not equivalence.
     """
+    resamples = check_resamples(resamples)
+    ordered = leaderboard_order(reports)
+    for report in ordered[1:]:
+        if not _comparable(ordered[0], report) or set(dict(ordered[0].episode_scores)) != set(dict(report.episode_scores)):
+            raise _fail("tier reports must have matching layouts and paired episode indices")
     tiers: list[list[ScoreReport]] = []
-    for report in leaderboard_order(reports):
-        if tiers and _interval(report)[1] >= _interval(tiers[-1][0])[0]:
-            tiers[-1].append(report)
-        else:
-            tiers.append([report])
+    start = 0
+    while start < len(ordered):
+        leader = ordered[start]
+        candidates = ordered[start + 1:]
+        probabilities = []
+        for i, report in enumerate(candidates):
+            p = _paired_score_pvalue(leader, report, resamples=resamples)
+            probabilities.append((Fraction(1) if p is None else p, i))
+        rejected: set[int] = set()
+        for rank, (p, i) in enumerate(sorted(probabilities)):
+            if p > Fraction(1, 20 * (len(candidates) - rank)):
+                break
+            rejected.add(i)
+        stop = start + 1 + min(rejected, default=len(candidates))
+        tiers.append(ordered[start:stop])
+        start = stop
     return tiers
-
-
-def _interval(report: ScoreReport) -> tuple[Fraction, Fraction]:
-    if report.ci is not None:
-        return report.ci.lower, report.ci.upper
-    point = Fraction(-1) if report.score is None else report.score  # no score: below every interval
-    return point, point
 
 
 @dataclass(frozen=True)

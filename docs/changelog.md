@@ -159,10 +159,19 @@ suite `suite_version` `1.0.0`.
   summary holds a list of values (`ci95`).
 - **Leaderboard tiers and outcome profile** (presentation; scoring version
   unchanged): `leaderboard_tiers` groups `leaderboard_order` into tied tiers
-  by 95%-interval overlap with the tier leader, and `outcome_profile` gives
+    by paired, family-stratified bootstrap tests against the tier leader,
+    with Holm correction at 5% within each step of the tier walk. Marginal
+    CI overlap does not decide a tier. `outcome_profile` gives
   the zero-score share and the survival rate to publish next to each score
   ([scoring.md](scoring.md), section 8). No score, rank key or pinned hash
   changes.
+  - **V1 coverage limitation:** retain the existing cells; document the four
+    deviating families and the 140/83/77 stratum totals in
+    [benchmark-methodology.md](benchmark-methodology.md). `crowd_100` must
+    not be compared across strata.
+  - **Container provenance:** add the OCI source label linking the image to
+    `Aryabhatta-0/EMBERBench`. GHCR publication and the immutable registry
+    digest are pending; no registry digest has been certified for this fix.
 - **Remote-model runner** (research lane): any model behind a base URL and
   an API key (OpenAI-compatible chat, Anthropic Messages or the Jev/SubQ
   decision API) on the same environment pack, with the same official scoring

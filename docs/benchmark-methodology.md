@@ -15,6 +15,24 @@ output of the sensitivity study is
 Nothing here changes the simulator, the observation, the schemas or the
 metrics. The score is computed only from authenticated, replayed run records.
 
+## V1 known limitation: family coverage across strata
+
+The existing V1 cells are retained. Four primary families deviate from the
+intended common stratum allocation: `central_ignition`, `crowd_100`,
+`maze_obstacle_routing`, and `single_exit_high_density`. The resulting totals
+are 140 in-distribution, 83 distribution-shift, and 77 adversarial scenarios.
+These are coverage counts, not evidence of comparable difficulty across
+strata. No additional cells are introduced for V1.
+
+Stratum-level results must show coverage and identify missing family cells.
+`crowd_100` occurs only in the in-distribution stratum: its shift and
+adversarial results are unavailable. Do not compare `crowd_100` across
+strata, fill missing cells with zero, or infer robustness to shift from its
+in-distribution score. Other differences in family composition also limit
+interpretation of aggregate differences between strata. Compare models on
+the same frozen worlds within each reported stratum; the family-balanced
+headline remains governed by the scoring contract.
+
 ## 1. Summary of decisions
 
 | Question | Decision |
