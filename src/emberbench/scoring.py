@@ -1639,6 +1639,61 @@ def leaderboard_order(reports: Iterable[ScoreReport]) -> list[ScoreReport]:
     return sorted(items, key=leaderboard_key)
 
 
+def leaderboard_tiers(reports: Iterable[ScoreReport]) -> list[list[ScoreReport]]:
+    """Reports in leaderboard order, grouped into tied tiers. A presentation rule; no score changes.
+
+    Walk :func:`leaderboard_order`. A report joins the current tier when its
+    95% interval overlaps the interval of the tier's first report; else it
+    starts a new tier. A report without an interval uses its point score.
+    Show a tier as tied (one shared rank), not as strict ranks.
+    """
+    tiers: list[list[ScoreReport]] = []
+    for report in leaderboard_order(reports):
+        if tiers and _interval(report)[1] >= _interval(tiers[-1][0])[0]:
+            tiers[-1].append(report)
+        else:
+            tiers.append([report])
+    return tiers
+
+
+def _interval(report: ScoreReport) -> tuple[Fraction, Fraction]:
+    if report.ci is not None:
+        return report.ci.lower, report.ci.upper
+    point = Fraction(-1) if report.score is None else report.score  # no score: below every interval
+    return point, point
+
+
+@dataclass(frozen=True)
+class OutcomeProfile:
+    """What a bimodal score hides, reported next to it. Descriptive; never a score input.
+
+    ``zero_score_share``: the share of applicable episode-trials that score 0
+    (catastrophic gate or a declared failure). ``survival_rate``: the mean over
+    the same episode-trials of the share of savable people who reached an
+    exit (dead and stranded people did not survive; a failed trial counts 0).
+    """
+
+    episode_trials: int
+    zero_score_share: Fraction
+    survival_rate: Fraction
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"episode_trials": self.episode_trials, "zero_score_share": _out(self.zero_score_share), "survival_rate": _out(self.survival_rate)}
+
+
+def outcome_profile(report: ScoreReport) -> OutcomeProfile:
+    """The zero-score share and the survival rate of ``report`` (see :class:`OutcomeProfile`)."""
+    episodes = report.episodes
+    if not episodes:
+        raise _fail("an outcome profile needs at least one applicable episode")
+    zero = sum(1 for e in episodes if e.score == 0)
+    survived = sum(
+        (Fraction(e.evidence.evacuated, e.evidence.max_evacuated) for e in episodes if e.evidence is not None and e.evidence.max_evacuated),
+        Fraction(0),
+    )
+    return OutcomeProfile(len(episodes), Fraction(zero, len(episodes)), survived / len(episodes))
+
+
 # --------------------------------------------------------------------------- operational view
 
 

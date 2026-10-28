@@ -497,6 +497,26 @@ So safety decides every tie of the displayed score. Adjacent leaderboard
 entries can still be `inconclusive`; publish the comparison next to the
 order.
 
+**Tied tiers.** A published leaderboard shows tiers, not strict ranks.
+`leaderboard_tiers` walks `leaderboard_order`. A report joins the current
+tier when its 95% interval overlaps the interval of the tier's first report.
+Otherwise it starts a new tier. Overlap is checked against the tier leader
+only, so a tier never chains across reports whose intervals are disjoint. A
+report without an interval uses its point score. All reports in a tier share
+one rank; the order inside a tier is display order only.
+
+**Outcome profile.** The episode score is bimodal by design: the catastrophic
+gate sets an episode to 0. A mean alone hides this, so publish
+`outcome_profile(report)` next to each score:
+
+| Field | Meaning |
+| --- | --- |
+| `zero_score_share` | share of applicable episode-trials with score 0 (gate or declared failure) |
+| `survival_rate` | mean over the same episode-trials of evacuated / savable people; a failed trial counts 0 |
+
+Both values are descriptive. They are not score inputs and they change no
+rank or tier.
+
 ## 9. Metric classification
 
 Every existing metric of [metrics.md](metrics.md) has one role:

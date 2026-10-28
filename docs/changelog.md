@@ -157,6 +157,12 @@ suite `suite_version` `1.0.0`.
   `COST.md` in one command).
 - **Fix:** `emberbench run` without `--json` no longer fails when the
   summary holds a list of values (`ci95`).
+- **Leaderboard tiers and outcome profile** (presentation; scoring version
+  unchanged): `leaderboard_tiers` groups `leaderboard_order` into tied tiers
+  by 95%-interval overlap with the tier leader, and `outcome_profile` gives
+  the zero-score share and the survival rate to publish next to each score
+  ([scoring.md](scoring.md), section 8). No score, rank key or pinned hash
+  changes.
 - **Remote-model runner** (research lane): any model behind a base URL and
   an API key (OpenAI-compatible chat, Anthropic Messages or the Jev/SubQ
   decision API) on the same environment pack, with the same official scoring

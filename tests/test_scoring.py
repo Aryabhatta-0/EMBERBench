@@ -27,6 +27,7 @@ from emberbench import (
     Observation,
     OperationalRecord,
     Scenario,
+    ScoreReport,
     ScoringInputError,
     Suite,
     TerminationConfig,
@@ -40,6 +41,8 @@ from emberbench import (
     format_summary,
     inference_config_digest,
     leaderboard_order,
+    leaderboard_tiers,
+    outcome_profile,
     load_suite,
     run_episode,
     score_episode,
@@ -797,6 +800,36 @@ def test_leaderboard_safety_dominates_ties(small: Suite, greedy: EvaluationResul
     tie_g = dataclasses.replace(g, model_id="z-safer", score=F(500, 10), safety=F(9, 10))
     tie_d = dataclasses.replace(d, model_id="a-less-safe", score=F(5004, 100), safety=F(8, 10))
     assert [r.model_id for r in leaderboard_order([tie_d, tie_g])] == ["z-safer", "a-less-safe"]
+
+
+def test_leaderboard_tiers_group_overlapping_intervals(small: Suite, greedy: EvaluationResult, delayed: EvaluationResult) -> None:
+    g = score_result(greedy, small, resamples=RESAMPLES)
+    d = score_result(delayed, small, resamples=RESAMPLES)
+    base = g.ci
+    assert base is not None
+
+    def at(report: ScoreReport, model: str, low: int, high: int) -> ScoreReport:
+        ci = dataclasses.replace(base, lower=F(low), upper=F(high))
+        return dataclasses.replace(report, model_id=model, score=F(low + high, 2), safety=F(1, 2), ci=ci)
+
+    # b overlaps the leader a; c overlaps b but not a, so c starts tier 2 (no chaining).
+    a, b, c, e = at(g, "a", 60, 70), at(d, "b", 55, 62), at(g, "c", 50, 58), at(d, "e", 10, 20)
+    tiers = leaderboard_tiers([e, c, b, a])
+    assert [[r.model_id for r in tier] for tier in tiers] == [["a", "b"], ["c"], ["e"]]
+    assert [r.model_id for tier in tiers for r in tier] == [r.model_id for r in leaderboard_order([a, b, c, e])]
+    point = dataclasses.replace(at(d, "p", 40, 40), ci=None)  # no interval: the point score
+    assert [[r.model_id for r in tier] for tier in leaderboard_tiers([a, point])] == [["a"], ["p"]]
+
+
+def test_outcome_profile_reports_zero_share_and_survival(small: Suite, greedy: EvaluationResult, stay: EvaluationResult) -> None:
+    for result in (greedy, stay):
+        report = score_result(result, small, resamples=RESAMPLES)
+        profile = outcome_profile(report)
+        episodes = report.episodes
+        assert profile.episode_trials == len(episodes)
+        assert profile.zero_score_share == F(sum(e.score == 0 for e in episodes), len(episodes))
+        assert 0 <= profile.survival_rate <= 1 and set(profile.to_dict()) == {"episode_trials", "zero_score_share", "survival_rate"}
+    assert outcome_profile(score_result(stay, small, resamples=RESAMPLES)).survival_rate == 0  # nobody moves, nobody escapes
 
 
 def test_congestion_diagnostics_are_reported_not_scored(small: Suite, greedy: EvaluationResult) -> None:
