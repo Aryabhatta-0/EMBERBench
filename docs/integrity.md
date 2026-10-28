@@ -282,8 +282,8 @@ retains them, treat the batch as exposed after evaluation.
 `emberbench.leakguard` checks file paths, not file contents:
 
 - **Allowlist.** Top-level entries: `.github/`, `docs/`, `scenarios/`, `src/`,
-  `tests/`, `tools/`, `.gitattributes`, `.gitignore`, `LICENSE`, `README.md`,
-  `pyproject.toml`. Under `scenarios/` only `scenarios/public/`. Benchmark
+  `tests/`, `tools/`, `.dockerignore`, `.gitattributes`, `.gitignore`,
+  `Dockerfile`, `LICENSE`, `README.md`, `pyproject.toml`. Under `scenarios/` only `scenarios/public/`. Benchmark
   asset files (`*.json`) only under `PUBLIC_ASSET_ROOTS`:
   `scenarios/public/` and `tests/fixtures/`.
 - **Forbidden components** (case-insensitive, `_` read as `-`): `hidden`,

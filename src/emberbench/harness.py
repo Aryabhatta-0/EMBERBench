@@ -54,10 +54,11 @@ from pathlib import Path
 from typing import Any
 
 from .agent import ExecutionMetadata
+from .errors import EpisodeRefused
 from .grid import Action, Pos
 from .observation import Observation
 
-HARNESS_VERSION = "1.0"  # the joint protocol, validation, re-ask and fail-closed rules of this module
+HARNESS_VERSION = "1.1"  # the joint protocol, validation, re-ask, refusal and fail-closed rules of this module
 ADAPTER_VERSION = "r1"  # the prompt design: state text, questions, chat prompt and system prompt
 API_STYLES = ("openai", "anthropic", "decision")
 ENDPOINTS = {"openai": "/chat/completions", "anthropic": "/messages", "decision": "/systemone"}
@@ -65,7 +66,10 @@ ANTHROPIC_VERSION_HEADER = "2023-06-01"
 DEFAULT_KEY_ENV = "EMBERBENCH_API_KEY"
 DEFAULT_CHUNK_SIZE = 32  # the historical decision-style cap: questions per request
 TIMEOUT_SECONDS = 120
-RETRIES = 5  # 429, 5xx and network errors only
+RETRIES = 5  # 429, 5xx and network errors only; never a refusal
+# The OpenRouter decisions API reports a refusal of one question (by the model or its provider's policy)
+# as an error whose message reads '... refused to answer question "qN"'.
+_REFUSAL = re.compile(r"\brefused to answer question\W+(q\d+)\b")
 FORBIDDEN_WAITS = (15, 30, 60, 120)  # seconds; only with retry_403
 FORBIDDEN_RETRIES = 15  # per request; about 25 minutes in total
 MAX_REASKS = 2  # corrective re-asks after an invalid answer
@@ -82,6 +86,16 @@ SYSTEM_PROMPT = (
     "person. Answer with one JSON object only: each key is a person ID and each value is one of the allowed "
     "moves, written exactly as given (lowercase). Do not add other keys."
 )
+
+
+def refused_question(body: str) -> str | None:
+    """The question that an HTTP error ``body`` reports as refused (see ``_REFUSAL``), or ``None``."""
+    try:
+        message = json.loads(body)["error"]["message"]
+    except (ValueError, KeyError, TypeError):
+        return None
+    match = _REFUSAL.search(message) if isinstance(message, str) else None
+    return match.group(1) if match else None
 
 
 class AdapterError(RuntimeError):
@@ -684,7 +698,12 @@ class RemoteClient:
                     self.response_seconds.append(elapsed)
                     return body, elapsed
             except urllib.error.HTTPError as error:
-                detail = "" if self.redact else ": " + error.read().decode("utf-8", "replace")[:500]
+                raw = error.read().decode("utf-8", "replace")
+                question = refused_question(raw)
+                if question is not None:
+                    # A refusal is the model's answer, not a transient failure: no retry, no re-prompt.
+                    raise EpisodeRefused(f"{self.url}: the model refused question {question} (HTTP {error.code})", question=question) from None
+                detail = "" if self.redact else ": " + raw[:500]
                 if error.code == 403 and self.retry_403 and forbidden < FORBIDDEN_RETRIES:
                     # A provider that throttles with 403 (SubQ preview capacity): wait longer, then retry.
                     wait = FORBIDDEN_WAITS[min(forbidden, len(FORBIDDEN_WAITS) - 1)]
@@ -769,16 +788,20 @@ class RemoteAgent:
         requests: list[dict[str, Any]] = []
         probs: list[dict[str, Any]] = []
         for chunk in self.protocol.chunks(people):
-            if self._client.api == "decision":
-                names = {f"q{i}": p.id for i, p in enumerate(chunk)}
-                body = {
-                    "model": self._client.model,
-                    "state": state,
-                    "questions": {f"q{i}": person_question(observation, p.id, p.position, occupied) for i, p in enumerate(chunk)},
-                }
-                exchange = self._client.ask_decision(body, names, allowed)
-            else:
-                exchange = self._client.ask_chat(chat_prompt(observation, chunk, occupied), [p.id for p in chunk], allowed)
+            try:
+                if self._client.api == "decision":
+                    names = {f"q{i}": p.id for i, p in enumerate(chunk)}
+                    body = {
+                        "model": self._client.model,
+                        "state": state,
+                        "questions": {f"q{i}": person_question(observation, p.id, p.position, occupied) for i, p in enumerate(chunk)},
+                    }
+                    exchange = self._client.ask_decision(body, names, allowed)
+                else:
+                    exchange = self._client.ask_chat(chat_prompt(observation, chunk, occupied), [p.id for p in chunk], allowed)
+            except EpisodeRefused as refusal:
+                refusal.step = observation.step
+                raise
             actions.update(exchange.moves)
             tokens_in += exchange.input_tokens
             tokens_out += exchange.output_tokens

@@ -12,7 +12,7 @@ def test_public_task_and_scoring_remain_open() -> None:
     assert callable(emberbench.generate_suite)
     assert callable(emberbench.score_result)
     assert callable(emberbench.verify_evaluation_provenance)
-    assert emberbench.SCORING_VERSION == "1.0"
+    assert emberbench.SCORING_VERSION == "1.1"
 
 
 @pytest.mark.parametrize("name", ["compose_suite", "compose_pool", "freeze_composed_suite", "load_composed_suite", "schedule_composed_worlds"])

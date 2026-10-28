@@ -11,7 +11,7 @@ SubQ Snap runs:
 - the same unique-world manifest (19 worlds: the nine deterministic scenarios once, 10 fire worlds of
   `v1-pub-10-route-invalidation`),
 - `run_evaluation` with replay authentication of every episode,
-- the official `score_result` (EMBER Score, scoring version 1.0) and the paired `compare_scores`
+- the official `score_result` (EMBER Score, scoring version 1.1) and the paired `compare_scores`
   against the reference runs.
 
 It is not a registered baseline and not part of the release. It needs network access, so it does not

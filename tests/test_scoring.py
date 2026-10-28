@@ -207,7 +207,7 @@ def stay(small: Suite, manifest: EvaluationManifest) -> EvaluationResult:
 
 
 def test_version_and_official_constants() -> None:
-    assert SCORING_VERSION == "1.0"
+    assert SCORING_VERSION == "1.1"
     c = OFFICIAL_CONSTANTS
     assert c.weights() == {"time": F(3, 8), "hazard": F(1, 4), "path": F(1, 8), "replanning": F(1, 4)}
     assert QUALITY_COMPONENTS == ("time", "hazard", "path", "replanning")  # no action-log component
@@ -706,7 +706,7 @@ def test_missing_and_declared_failures_score_zero(small: Suite, greedy: Evaluati
     by_index = dict(report.episode_scores)
     assert by_index[0] == 0 and by_index[last] == 0
     failed = dict(report.robustness.failed_episode_trials)
-    assert failed == {"missing": 1, "invalid_output": 0, "model_error": 0, "timeout": 1}
+    assert failed == {"missing": 1, "invalid_output": 0, "model_error": 0, "timeout": 1, "refusal": 0}
     full = score_result(greedy, small, resamples=RESAMPLES)
     assert report.score is not None and full.score is not None and report.score < full.score
     statuses = {e.index: e.status for e in report.episodes}
@@ -811,7 +811,7 @@ def test_congestion_diagnostics_are_reported_not_scored(small: Suite, greedy: Ev
 
 def test_summary_is_points_not_percent(small: Suite, greedy: EvaluationResult) -> None:
     text = format_summary(score_result(greedy, small, resamples=RESAMPLES))
-    assert "benchmark-performance points under EMBER scoring version 1.0" in text
+    assert "benchmark-performance points under EMBER scoring version 1.1" in text
     assert "not a percentage of people evacuated" in text
     assert "UNOFFICIAL" in text
 

@@ -14,8 +14,10 @@ run through the harness (docs/harness-protocol.md); this module imports it only
 for ``--model``, so a local run loads no network code.
 
 ``RUN_DIR`` gets ``results/``, ``scores/``, ``accounting/`` and ``runs/`` (the
-run record), plus ``ledger/`` and ``cache.jsonl`` for a remote model. A rerun
-with the same model resumes. With ``--private`` the record and the printed
+run record), plus ``ledger/`` and ``cache.jsonl`` for a remote model, and
+``refusals/`` when the model refused a question. A refused episode scores 0
+(failure kind ``refusal``) and the run continues; a rerun with the same model
+resumes and does not run a refused episode again. With ``--private`` the record and the printed
 summary hold no scenario ID, seed or answer text; errors are redacted.
 """
 
@@ -37,13 +39,13 @@ from .agent import AgentFactory, StepExecution, agent_policy_factory
 from .baselines import BASELINE_IDS, baseline_factory
 from .commitment import suite_commitment
 from .environment_pack import EnvironmentPack, load_environment_pack
-from .errors import EmberBenchError
-from .evaluation import EvaluationResult, check_model_id, load_evaluation_result, run_evaluation
+from .errors import EmberBenchError, EpisodeRefused
+from .evaluation import EpisodeSpec, EvaluationResult, check_model_id, load_evaluation_result, run_evaluation
 from .integrity import benchmark_versions
-from .scoring import ScoreReport, score_result
+from .scoring import FailureKind, ScoreReport, score_result
 from .statistics import check_resamples
 
-RUN_RECORD_VERSION = "1.0"
+RUN_RECORD_VERSION = "1.1"  # 1.1: refusals
 DEFAULT_DECISIONS_URL = "https://openrouter.ai/api/alpha/decisions"
 DEFAULT_RESAMPLES = 2000
 _SOURCE_ROOT = Path(__file__).resolve().parents[2]
@@ -66,6 +68,7 @@ class Evaluation:
     steps: list[StepExecution]
     elapsed_s: float
     result_path: Path
+    refused: tuple[int, ...] = ()
 
 
 def _write_json(path: Path, data: Any) -> None:
@@ -97,28 +100,68 @@ def evaluate_pack(
     ``make_factory(ledger)`` returns the agent factory; ``ledger`` is ``None``
     unless ``ledger_factory(path, pending_episode_indexes)`` is given (remote
     models). Writes ``results/``, ``scores/`` and ``accounting/`` under ``out``.
+
+    An episode whose policy raises :class:`EpisodeRefused` is recorded in
+    ``refusals/<model_id>.json`` (episode index, step, question; no text), is
+    not run again on resume and is scored as the declared failure ``refusal``
+    (score 0). It never changes another episode's result.
     """
     path = out / "results" / f"{model_id}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
+    refusal_path = out / "refusals" / f"{model_id}.json"
+    refusals = load_refusals(refusal_path, pack, model_id)
     ledger_path = out / "ledger" / f"{model_id}.jsonl"
     ledger = None
     if ledger_factory is not None:
         ledger_path.parent.mkdir(exist_ok=True)
-        ledger = ledger_factory(ledger_path, pending_episodes(path, pack.suite, pack.manifest))
+        ledger = ledger_factory(ledger_path, pending_episodes(path, pack.suite, pack.manifest, skip=refusals))
+
+    def on_refusal(spec: EpisodeSpec, refusal: EpisodeRefused) -> None:
+        refusals[spec.index] = {"index": spec.index, "step": refusal.step, "question": refusal.question}
+        log = {"model_id": model_id, "manifest_hash": pack.manifest.manifest_hash(), "refused": [refusals[i] for i in sorted(refusals)]}
+        _write_json(refusal_path, log)
+
     steps: list[StepExecution] = []
     started = time.perf_counter()
-    run_evaluation(pack.suite, pack.manifest, model_id, agent_policy_factory(make_factory(ledger), on_step=steps.append), path, resume=True)
+    policy = agent_policy_factory(make_factory(ledger), on_step=steps.append)
+    run_evaluation(pack.suite, pack.manifest, model_id, policy, path, resume=True, on_refusal=on_refusal, skip=frozenset(refusals))
     elapsed = time.perf_counter() - started
     result = load_evaluation_result(path, pack.suite)  # authenticates every episode by replay
-    if not result.is_complete:
-        raise RunError("output", f"{model_id}: {len(result.episodes)} of {len(pack.manifest.episodes)} episodes completed")
+    done = {e.episode.index for e in result.episodes}
+    if len(done) + len(refusals) != len(pack.manifest.episodes) or done & set(refusals):
+        raise RunError("output", f"{model_id}: {len(done)} of {len(pack.manifest.episodes)} episodes completed, {len(refusals)} refused")
+    refused = tuple(sorted(refusals))
     rows = read_ledger(ledger_path) if ledger_factory is not None else []
-    accounting = accounting_summary(rows, result, prices=prices)
+    accounting = accounting_summary(rows, result, prices=prices, refused=refused)
     _write_json(out / "accounting" / f"{model_id}.json", accounting)
-    report = score_result(result, pack, resamples=resamples)
+    report = score_result(result, pack, failures={i: FailureKind.REFUSAL for i in refused}, resamples=resamples)
     (out / "scores").mkdir(exist_ok=True)
     (out / "scores" / f"{model_id}.json").write_text(report.to_json() + "\n", encoding="ascii", newline="\n")
-    return Evaluation(result, report, accounting, steps, elapsed, path)
+    return Evaluation(result, report, accounting, steps, elapsed, path, refused)
+
+
+def load_refusals(path: Path, pack: EnvironmentPack, model_id: str) -> dict[int, dict[str, Any]]:
+    """The refusal log of ``model_id`` on ``pack`` (empty when there is none); it must belong to both."""
+    if not path.exists():
+        return {}
+    log = json.loads(path.read_text(encoding="ascii"))
+    if log.get("model_id") != model_id or log.get("manifest_hash") != pack.manifest.manifest_hash():
+        raise RunError("output", f"{path}: refusal log of another model or manifest")
+    entries = {int(e["index"]): e for e in log["refused"]}
+    if not set(entries) <= {e.index for e in pack.manifest.episodes}:
+        raise RunError("output", f"{path}: refusal log names unscheduled episodes")
+    return entries
+
+
+def refusal_summary(evaluation: Evaluation) -> dict[str, Any]:
+    """Refused episodes, reported apart from the score: count, rate over the scheduled episodes, indices."""
+    scheduled = len(evaluation.result.manifest.episodes)
+    return {
+        "count": len(evaluation.refused),
+        "rate": round(len(evaluation.refused) / scheduled, 6) if scheduled else None,
+        "episodes": list(evaluation.refused),
+        "failure_kind": FailureKind.REFUSAL.value,
+    }
 
 
 def score_summary(report: ScoreReport) -> dict[str, Any]:
@@ -161,7 +204,7 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     remote.add_argument("--provider", metavar="LABEL", help="provider label in the model ID (default: from the base URL host)")
     remote.add_argument("--joint-mode", choices=("full_joint", "fixed_chunk"), default="full_joint", help="harness joint protocol (canonical: full_joint)")
     remote.add_argument("--chunk-size", type=int, metavar="N", help="people per request with --joint-mode fixed_chunk (a declared variant)")
-    remote.add_argument("--max-reasks", type=int, default=2, metavar="N", help="re-asks after an invalid answer (harness 1.0: 2)")
+    remote.add_argument("--max-reasks", type=int, default=2, metavar="N", help="re-asks after an invalid answer (harness 1.1: 2)")
     remote.add_argument("--temperature", type=float, metavar="T", help="chat temperature (default 0)")
     remote.add_argument("--timeout", type=float, default=120.0, metavar="S", help="seconds per HTTP request")
     remote.add_argument("--budget-usd", type=float, metavar="USD", help="stop (resumable) once the reported cost of this invocation reaches this")
@@ -259,6 +302,7 @@ def execute(args: argparse.Namespace, *, load_agent: Callable[[argparse.Namespac
         "runtime_s": round(evaluation.elapsed_s, 3),
         "accounting": {k: v for k, v in evaluation.accounting.items() if k != "per_episode"},
         "result_sha256": result_digest,
+        "refusals": refusal_summary(evaluation),
         "metrics": score_summary(evaluation.report),
     }
     if not args.private:
@@ -276,6 +320,7 @@ def execute(args: argparse.Namespace, *, load_agent: Callable[[argparse.Namespac
         "quality": metrics["quality"],
         "cost_usd": evaluation.accounting.get("total_cost"),
         "horizon_hits": evaluation.accounting.get("horizon_hits"),
+        "refusals": len(evaluation.refused),
         "run_record": str(out / "runs" / f"{model_id}.json"),
     }
 

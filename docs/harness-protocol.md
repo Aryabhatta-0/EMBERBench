@@ -1,4 +1,4 @@
-# Harness protocol (harness 1.0)
+# Harness protocol (harness 1.1)
 
 This document freezes how a remote model (a decision model or a chat LLM) plays
 an EMBERBench episode. The code is `src/emberbench/harness.py`
@@ -77,7 +77,20 @@ unique worlds) with four decision models through the OpenRouter decisions API.
 - **Fail-closed.** After the last re-ask the harness raises `AdapterError`. The
   episode is not committed, no action is guessed, and the run can be resumed.
 - **Transport errors.** HTTP 429, 5xx and network errors are retried up to 5
-  times with back-off. They are not re-asks and are not invalid slots.
+  times with back-off, under the same fixed policy for every model. They are
+  not re-asks and are not invalid slots.
+- **Refusals** (harness 1.1). A refusal is a model or provider-policy refusal
+  of a valid benchmark question: an HTTP error whose body names the refused
+  question (`refused to answer question "qN"`). It is not a transport error.
+  The harness raises `EpisodeRefused` at once: no retry, no re-prompt, no
+  changed question and no guessed action. `emberbench run` records the
+  episode index, step and question name (no text) in
+  `refusals/<model_id>.json`, declares the episode as the failure `refusal`
+  (score 0, [scoring.md](scoring.md), section 4) and continues with the next
+  episode. A refusal never changes another episode's result, and a resume
+  does not run a refused episode again. The run record (`refusals`) and the
+  accounting summary report the refusal count and rate apart from the
+  score.
 - **Budget.** An optional spend limit (`--budget-usd`) stops the run before the
   next request; this also fails closed.
 
@@ -128,10 +141,12 @@ publishes a new commitment; the scoring contract does not change.
 
 Every request (live or from the cache) is recorded in a ledger: attempt,
 questions, invalid slots, tokens, cost, latency, cache flag. The accounting
-summary (`src/emberbench/accounting.py`, `ACCOUNTING_VERSION = "1.0"`) gives
+summary (`src/emberbench/accounting.py`, `ACCOUNTING_VERSION = "1.1"`) gives
 median and p95 per episode of calls, steps, tokens, cost and response time;
 the re-ask rate, the invalid-slot rate and the re-ask cost multiplier
-(total cost / first-attempt cost); and horizon hits.
+(total cost / first-attempt cost); horizon hits; and (1.1) the refused
+episodes, their rate over the scheduled episodes and the cost of their
+requests, which is not part of the total cost.
 
 ## 8. Provenance
 

@@ -19,7 +19,7 @@
       "what": "Record digests of every episode of the baseline development manifest (the baseline's actions)."
     },
     "benchmark.versions": {
-      "digest": "4f9919215409310d1aa9767813ae14b81cf50f767df7c66bb451086f0d3afab0",
+      "digest": "bf608580b539ef863ba4506ee6f756788461179cc234bf7fbdedf2ee93021a75",
       "owner": "BENCHMARK_REVISION; every version in benchmark_versions()",
       "mirrors": "this registry only",
       "what": "sha256_hex(benchmark_versions()): every version that provenance pins, with its value."
@@ -31,7 +31,7 @@
       "what": "SHA-256 of the file bytes of 'emberbench evaluation manifest --suite scenarios/public/v1 --seed 0 --seed 1 --seed 2'."
     },
     "cli.version-json.stdout_sha256": {
-      "digest": "4ea7555056af86bd3919a2918f48d2999197bfaf904a428b63d2634b54f24bd3",
+      "digest": "03f4e0e1bbabb2e99cbf68bff0b143abd5044ab09124299d1aa26c2f24456e49",
       "owner": "package version; CLI_VERSION; every version that 'emberbench version' reports",
       "mirrors": "this registry only",
       "what": "SHA-256 of the stdout bytes of 'emberbench version --json'. The only entry that moves with the package version."
@@ -91,7 +91,7 @@
       "what": "sha256_hex of the recomputed list of stochastic golden fire traces."
     },
     "integrity.test-run.provenance_digest": {
-      "digest": "165787a4f16f18a6fd093457ddce7e7779d6bff7c9eba30625edf67756eccfff",
+      "digest": "4c6a7a7d232997b2a077a3ace3791d482d2b931552fabffb7ddbc7e5f1e5e8ab",
       "owner": "INTEGRITY_PROTOCOL_VERSION; BENCHMARK_REVISION; every version in benchmark_versions()",
       "mirrors": "this registry only",
       "what": "Provenance of the tests/test_integrity.py run fixture (test-only seeds and identity)."
@@ -157,7 +157,7 @@
       "what": "sha256_hex(score_episode(...).to_dict()) of the fire-aware baseline on the stochastic public scenario, seed 1."
     },
     "scoring.score-report.registry-public-v1": {
-      "digest": "c39c2eba1c210a1a7f515c9e61936ea49e704bee74edaf5b3e142cb0c1907b5a",
+      "digest": "4286e8e0dabee15070efaac4ee2027584f16ecdf7f62ea790863ebf7405f95f9",
       "owner": "SCORING_VERSION; STATISTICS_VERSION; ENVIRONMENT_PACK_VERSION; BASELINES_VERSION",
       "mirrors": "this registry only",
       "what": "Official ScoreReport digest of the fire-aware baseline on the registry pack (200 bootstrap resamples)."

@@ -61,6 +61,20 @@ class ModelOutputError(InvalidActionError):
     """A decision model returned an action set that the model interface rejects."""
 
 
+class EpisodeRefused(EmberBenchError):
+    """The model (or its provider's policy) refused to answer a valid benchmark question.
+
+    A policy raises it; no action is guessed and the question is not re-prompted.
+    ``run_evaluation`` with an ``on_refusal`` handler records the episode as refused
+    (a declared ``refusal`` failure that scores 0) and continues with the next one.
+    """
+
+    def __init__(self, message: str, *, question: str | None = None, step: int | None = None) -> None:
+        super().__init__(message)
+        self.question = question
+        self.step = step
+
+
 class ObservationFormatError(EmberBenchError):
     """A serialized observation is malformed, not canonical or of another observation version."""
 

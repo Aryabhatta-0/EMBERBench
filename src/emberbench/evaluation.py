@@ -20,14 +20,14 @@ import contextlib
 import json
 import os
 import tempfile
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Collection, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from . import SIMULATOR_VERSION
 from .canonical import canonical_json, sha256_hex
-from .errors import EmberBenchError, EvaluationError
+from .errors import EmberBenchError, EpisodeRefused, EvaluationError
 from .events import RunRecord
 from .metrics import METRICS_VERSION, EpisodeMetrics, compute_episode_metrics
 from .observation import OBSERVATION_VERSION
@@ -567,6 +567,8 @@ def run_evaluation(
     output_path: str | Path,
     *,
     resume: bool = True,
+    on_refusal: Callable[[EpisodeSpec, EpisodeRefused], None] | None = None,
+    skip: Collection[int] = (),
 ) -> EvaluationResult:
     """Run every episode of ``manifest`` in order and save the artifact after each one.
 
@@ -579,6 +581,12 @@ def run_evaluation(
     the artifact must load and authenticate completely and carry the same
     manifest hash and model ID. Completed episodes are not run again. With
     ``resume=False`` an existing file is an error, never overwritten.
+
+    A policy that raises :class:`EpisodeRefused` stops its episode. With
+    ``on_refusal`` the handler gets the episode and the error, the episode is
+    left without a result, and the run continues; without it the error
+    propagates. ``skip`` lists episode indices that are not run (episodes an
+    earlier segment recorded as refused). Neither changes a committed result.
     """
     verify_manifest(manifest, suite)
     check_model_id(model_id)
@@ -599,14 +607,20 @@ def run_evaluation(
 
     completed = {e.episode.index: e for e in result.episodes}
     for spec in manifest.episodes:
-        if spec.index in completed:
+        if spec.index in completed or spec.index in skip:
             continue
         scenario = resolve_scenario(suite, spec)
         policy = policy_factory()
         if not callable(policy):
             raise EvaluationError(f"episode {spec.index}: policy_factory did not return a callable policy")
         # The policy sees only Observation values. The seed stays inside the simulator.
-        record = run_episode(scenario, policy, seed=spec.seed)
+        try:
+            record = run_episode(scenario, policy, seed=spec.seed)
+        except EpisodeRefused as refusal:
+            if on_refusal is None:
+                raise
+            on_refusal(spec, refusal)
+            continue
         metrics = compute_episode_metrics(scenario, record)
         completed[spec.index] = EpisodeResult(spec, record, metrics)
         result = EvaluationResult(

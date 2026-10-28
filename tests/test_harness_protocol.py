@@ -1,4 +1,4 @@
-"""Harness 1.0 (docs/harness-protocol.md), accounting, suite commitments and ``emberbench run``.
+"""Harness 1.1 (docs/harness-protocol.md), accounting, suite commitments and ``emberbench run``.
 
 A local HTTP server plays a decision model, so no test opens an external
 network connection. The small environment pack is built from two public
@@ -22,6 +22,7 @@ import pytest
 from emberbench import (
     Action,
     EnvironmentPack,
+    EpisodeRefused,
     Observation,
     agent_policy_factory,
     build_unique_world_manifest,
@@ -40,9 +41,11 @@ from emberbench.harness import (
     RemoteAgent,
     RemoteClient,
     probability_diagnostics,
+    refused_question,
     remote_model_id,
 )
 from emberbench.integrity import benchmark_versions
+from emberbench.scoring import FailureKind
 from emberbench.scenario import load_scenario
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -63,11 +66,15 @@ class FakeDecisionModel:
     def __init__(self) -> None:
         self.requests: list[dict[str, Any]] = []
         self.invalid_rounds = 0
+        self.refuse_requests: set[int] = set()  # 0-based request numbers the "provider policy" refuses
         self.lock = threading.Lock()
 
-    def answer(self, body: dict[str, Any]) -> dict[str, Any]:
+    def answer(self, body: dict[str, Any]) -> dict[str, Any] | None:
+        """The answer, or ``None`` for a refusal (HTTP 502 with the provider's refusal message)."""
         with self.lock:
             self.requests.append(body)
+            if len(self.requests) - 1 in self.refuse_requests:
+                return None
             invalid = self.invalid_rounds > 0
             self.invalid_rounds -= 1 if invalid else 0
         answers = {}
@@ -86,8 +93,10 @@ def server() -> Iterator[tuple[str, FakeDecisionModel]]:
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self) -> None:  # noqa: N802
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-            reply = json.dumps(model.answer(body)).encode()
-            self.send_response(200)
+            answer = model.answer(body)
+            refusal = {"error": {"message": f'OpenAI refused to answer question "{min(body["questions"])}"', "code": 502}}
+            reply = json.dumps(refusal if answer is None else answer).encode()
+            self.send_response(502 if answer is None else 200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(reply)))
             self.end_headers()
@@ -169,7 +178,7 @@ def test_protocol_rules_and_chunking() -> None:
         with pytest.raises(ValueError):
             HarnessProtocol(**bad)
     assert HarnessProtocol().to_dict() == {
-        "harness_version": "1.0",
+        "harness_version": "1.1",
         "adapter_version": "r1",
         "joint_mode": "full_joint",
         "chunk_size": None,
@@ -273,7 +282,7 @@ def test_run_baseline_reproduces_the_library_result_and_resumes(pack: Environmen
     assert _run(pack, out, "--baseline", "congestion-aware-v1")[0] == 0
     assert result.read_bytes() == first
     record = _record(out, "congestion-aware-v1")
-    assert record["run_record_version"] == "1.0" and record["benchmark_versions"] == benchmark_versions()
+    assert record["run_record_version"] == "1.1" and record["benchmark_versions"] == benchmark_versions()
     assert record["suite"]["pack_digest"] == pack.digest and record["suite"]["seeds"] == [e.seed for e in pack.manifest.episodes]
     assert record["model"] == {"kind": "baseline", "model_id": "congestion-aware-v1", "baseline_id": "congestion-aware-v1"}
     assert record["metrics"]["official"] is True and record["usage"] is None
@@ -338,3 +347,70 @@ def test_run_remote_decision_model_accounts_for_reasks(
     assert code == 0 and summary is not None and summary["model_id"] == "t-fake-choice-r1-chunk1"
     assert (out / "results" / "t-fake-choice-r1.json").exists()
     assert _run(pack, out, "--model", "fake", "--base-url", base_url, "--key-env", KEY_ENV, "--chunk-size", "4")[0] == 2
+
+
+# --------------------------------------------------------------------------- refusals
+
+
+def test_refused_question_parses_only_the_provider_refusal_message() -> None:
+    assert refused_question('{"error": {"message": "OpenAI refused to answer question \\"q29\\"", "code": 502}}') == "q29"
+    for body in ("not json", "[]", '{"error": "x"}', '{"error": {"message": 7}}', '{"error": {"message": "Bad gateway", "code": 502}}'):
+        assert refused_question(body) is None
+
+
+def test_a_refusal_is_not_retried_or_reprompted(server: tuple[str, FakeDecisionModel], tmp_path: Path) -> None:
+    base_url, model = server
+    model.refuse_requests = {0}
+    client = RemoteClient(api="decision", base_url=base_url, model="m", key="", cache_path=tmp_path / "c.jsonl")
+    body = {"model": "m", "state": "S", "questions": {"q0": _question()}}
+    with pytest.raises(EpisodeRefused) as caught:
+        client.ask_decision(body, {"q0": "p1"}, ALLOWED)
+    assert caught.value.question == "q0" and len(model.requests) == 1 and client.retries == 0
+
+
+def test_run_evaluation_without_a_refusal_handler_propagates(pack: EnvironmentPack, tmp_path: Path) -> None:
+    def policy(observation: Observation) -> dict[str, Action]:
+        raise EpisodeRefused("refused", question="q0")
+
+    path = tmp_path / "result.json"
+    with pytest.raises(EpisodeRefused):
+        run_evaluation(pack.suite, pack.manifest, "refuser", lambda: policy, path)
+    refused: list[int] = []
+    result = run_evaluation(pack.suite, pack.manifest, "refuser", lambda: policy, tmp_path / "handled.json",
+                            on_refusal=lambda spec, _: refused.append(spec.index))  # fmt: skip
+    assert refused == [e.index for e in pack.manifest.episodes] and result.episodes == ()
+
+
+def test_run_scores_a_refused_episode_0_and_keeps_the_others(
+    pack: EnvironmentPack, server: tuple[str, FakeDecisionModel], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    base_url, model = server
+    monkeypatch.setenv(KEY_ENV, "test-key")
+    model_id = "t-fake-choice-r1"
+    first = pack.manifest.episodes[0].index
+    scheduled = len(pack.manifest.episodes)
+    reference = tmp_path / "reference"
+    assert _run(pack, reference, "--model", "fake", "--base-url", base_url, "--provider", "t", "--key-env", KEY_ENV)[0] == 0
+    model.requests.clear()
+    model.refuse_requests = {0}  # the first request of the first episode
+    out = tmp_path / "refused"
+    code, summary = _run(pack, out, "--model", "fake", "--base-url", base_url, "--provider", "t", "--key-env", KEY_ENV)
+    assert code == 0 and summary is not None and summary["refusals"] == 1
+    log = json.loads((out / "refusals" / f"{model_id}.json").read_text(encoding="ascii"))
+    assert log["refused"] == [{"index": first, "step": 0, "question": "q0"}]
+    record = _record(out, model_id)
+    assert record["refusals"] == {"count": 1, "rate": round(1 / scheduled, 6), "episodes": [first], "failure_kind": "refusal"}
+    assert record["accounting"]["refusals"]["episodes"] == 1
+    assert record["accounting"]["refusals"]["rate"] == pytest.approx(1 / scheduled)
+    report = json.loads((out / "scores" / f"{model_id}.json").read_text(encoding="ascii"))
+    assert report["robustness"]["failed_episode_trials"]["refusal"] == 1
+    refused_score = next(e for e in report["episodes"] if e["index"] == first)
+    assert refused_score["status"] == "failed" and refused_score["failure"] == "refusal" and refused_score["score"] == 0
+    # The other episodes keep exactly the results of a run without the refusal.
+    kept = json.loads((out / "results" / f"{model_id}.json").read_text(encoding="ascii"))["episodes"]
+    full = json.loads((reference / "results" / f"{model_id}.json").read_text(encoding="ascii"))["episodes"]
+    assert len(kept) == scheduled - 1 and kept == full[1:]
+    # A resume never asks the refused question again.
+    model.requests.clear()
+    assert _run(pack, out, "--model", "fake", "--base-url", base_url, "--provider", "t", "--key-env", KEY_ENV)[0] == 0
+    assert model.requests == []

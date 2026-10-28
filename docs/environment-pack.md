@@ -143,7 +143,10 @@ adapter of [model-interface.md](model-interface.md):
    `timeout` and scores 0. Provider retries are an adapter policy, recorded
    in the run's configuration, not hidden.
 6. A model error (the provider or the adapter raised) is declared
-   `model_error` and scores 0. A failure can never disappear: an episode
+   `model_error` and scores 0. A model or provider-policy refusal of a valid
+   question is declared `refusal`, scores 0, is not re-prompted and is
+   reported apart ([harness-protocol.md](harness-protocol.md), section 3).
+   A failure can never disappear: an episode
    without a result and without a declaration is `missing` and scores 0.
 7. Operational data is recorded separately in an `OperationalRecord`
    ([scoring.md](scoring.md), section 11): model ID, provider ID, the

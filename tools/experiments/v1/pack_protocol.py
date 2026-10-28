@@ -26,7 +26,7 @@ RUN_LABEL = "PUBLIC DEVELOPMENT EVALUATION — NOT A HIDDEN-SUITE LEADERBOARD"
 # closed when any key or value differs: a new benchmark revision needs a new pack run, never a mix.
 BENCHMARK_REVISION = "3"
 BENCHMARK_VERSIONS: dict[str, str] = {
-    "accounting": "1.0",
+    "accounting": "1.1",
     "adapter": "r1",
     "action_schema": "1.0",
     "admission_rules": "1.0",
@@ -43,12 +43,12 @@ BENCHMARK_VERSIONS: dict[str, str] = {
     "generation_manifest": "1.1",
     "generator": "1.1.0",
     "generator_config": "1.1",
-    "harness": "1.0",
+    "harness": "1.1",
     "metrics": "1.0",
     "observation": "1.0",
     "recipe_catalog": "1.0",
     "scenario_schema": "1.0",
-    "scoring": "1.0",
+    "scoring": "1.1",
     "selection_rules": "1.0",
     "simulator": "0.2.0",
     "statistics": "1.0",

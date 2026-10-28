@@ -100,7 +100,7 @@ def test_panel_scores_equal_the_official_score_episode(name: str) -> None:
         record = run_episode(scenario, agent_policy(baseline_factory(agent)()), seed=5)
         assert m.score(agent) == float(score_episode(scenario, record).score)
     assert m.savable >= m.capacity_savable >= 0
-    assert SCORING_VERSION == "1.0"
+    assert SCORING_VERSION == "1.1"
 
 
 def test_no_model_is_an_input_to_calibration() -> None:

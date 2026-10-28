@@ -311,7 +311,7 @@ Per person: `blocked_moves` and `max_consecutive_blocks`.
 
 The metrics deliberately have no single score. Any ranking or composite
 score built on them MUST meet the rules below. The EMBER Score
-([scoring.md](scoring.md), scoring version 1.0) states how it meets each
+([scoring.md](scoring.md), scoring version 1.1) states how it meets each
 rule in its section 13.
 
 Any ranking or composite score MUST:

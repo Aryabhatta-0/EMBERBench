@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 # Top-level repository entries. Anything else in a checkout is a violation.
-REPOSITORY_TOP_LEVEL_FILES = frozenset({".gitattributes", ".gitignore", "LICENSE", "README.md", "pyproject.toml"})
+REPOSITORY_TOP_LEVEL_FILES = frozenset({".dockerignore", ".gitattributes", ".gitignore", "Dockerfile", "LICENSE", "README.md", "pyproject.toml"})
 REPOSITORY_TOP_LEVEL_DIRS = frozenset({".github", "docs", "scenarios", "src", "tests", "tools"})
 
 # The only directories that may hold benchmark asset files.

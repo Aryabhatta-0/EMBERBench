@@ -6,7 +6,7 @@
 > See [Evaluation boundary](evaluation-boundary.md).
 
 
-This document explains **why** the EMBER Score (scoring version 1.0) has its
+This document explains **why** the EMBER Score (scoring version 1.1) has its
 form. The normative definition is [scoring.md](scoring.md). The frozen
 environment protocol is [environment-pack.md](environment-pack.md). The full
 output of the sensitivity study is

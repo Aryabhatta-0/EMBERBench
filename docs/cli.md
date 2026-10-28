@@ -423,12 +423,16 @@ Exactly one model source:
 
 `RUN_DIR` must be outside the source repository; a rerun with the same model
 resumes. It receives `results/<model_id>.json`, `scores/`, `accounting/` and
-`runs/<model_id>.json`, the run record (`RUN_RECORD_VERSION = "1.0"`): every
+`runs/<model_id>.json`, the run record (`RUN_RECORD_VERSION = "1.1"`): every
 `benchmark_versions()` entry, the pack digest, manifest hash, seeds (or only
 their SHA-256 with `--private`), the commitment check, the model and its
 settings, the harness protocol and the SHA-256 of the harness module, start
 and end time, calls, tokens, cost and runtime, the accounting summary, the
-result SHA-256 and the metrics. A remote model also gets `ledger/` and
+result SHA-256, the metrics and (1.1) `refusals`: the count, rate and
+indexes of refused episodes. A refused episode
+([harness-protocol.md](harness-protocol.md), section 3) is listed in
+`refusals/<model_id>.json`, scores 0 as the failure `refusal` and is not run
+again on resume. A remote model also gets `ledger/` and
 `cache.jsonl`; the cache holds the model-visible state text, so a private run
 directory stays with the evaluator.
 

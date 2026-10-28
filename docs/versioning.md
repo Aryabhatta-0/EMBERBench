@@ -73,12 +73,16 @@ record). Revision 1 was never released.
 
 Revision 3 is one pre-release step from revision 2. It adds the evaluator
 protocol for remote models: the harness joint protocol, validation, re-ask
-and fail-closed rules (`HARNESS_VERSION` `1.0`,
+and fail-closed rules (`HARNESS_VERSION` `1.1`,
 [harness-protocol.md](harness-protocol.md)), the `r1` prompt design
 (`ADAPTER_VERSION`, unchanged), the run accounting
-(`ACCOUNTING_VERSION` `1.0`) and the hidden-suite commitment
-(`COMMITMENT_VERSION` `1.0`). No simulator, scenario, metric or scoring rule
-changed: offline baseline results are byte-identical under revision 3.
+(`ACCOUNTING_VERSION` `1.1`) and the hidden-suite commitment
+(`COMMITMENT_VERSION` `1.0`). It also adds the declared failure kind
+`refusal` (`SCORING_VERSION` `1.1`): a model or provider-policy refusal of a
+valid question scores that episode 0 and is reported apart. No simulator,
+scenario, metric or scoring rule changed: offline baseline results are
+byte-identical under revision 3, and every score of scoring version `1.0` is
+unchanged.
 
 A new benchmark revision is **mandatory** for:
 
@@ -122,7 +126,7 @@ versions are tooling contracts: they never change what a score means.
 | `GENERATION_MANIFEST_VERSION` | `1.1` | yes | `src/emberbench/generator.py` | `generation.json` format and generation hash |
 | `EVALUATION_MANIFEST_VERSION` | `1.0` | yes | `src/emberbench/evaluation.py`, [evaluation.md](evaluation.md) | Evaluation manifest hash and file bytes |
 | `EVALUATION_RESULT_VERSION` | `1.0` | yes | `src/emberbench/evaluation.py`, [evaluation.md](evaluation.md) | Evaluation result files |
-| `SCORING_VERSION` | `1.0` | yes | `src/emberbench/scoring.py`, [scoring.md](scoring.md) | Scoring constants digest, episode scores, score report digests |
+| `SCORING_VERSION` | `1.1` | yes | `src/emberbench/scoring.py`, [scoring.md](scoring.md) | Scoring constants digest, episode scores, score report digests |
 | `ENVIRONMENT_PACK_VERSION` | `1.0` | yes | `src/emberbench/environment_pack.py`, [environment-pack.md](environment-pack.md) | `pack.json` and the pack digest |
 | `ENVIRONMENT_WORLD_VERSION` | `1.0` | yes | `src/emberbench/worlds.py`, [evaluation-suite-design.md](evaluation-boundary.md) | Environment world digests (unique-world identity) |
 | `FAMILY_RULES_VERSION` | `1.0` | yes | `src/emberbench/families.py`, [generator.md](generator.md) | Family rule record, family tags |
@@ -133,16 +137,16 @@ versions are tooling contracts: they never change what a score means.
 | `SELECTION_RULES_VERSION` | `1.0` | yes | `src/emberbench/composition.py`, [generator.md](generator.md) | Composition rule set digest (selection) |
 | `RECIPE_CATALOG_VERSION` | `1.0` | yes | `src/emberbench/composition.py`, [generator.md](generator.md) | Composition rule set digest (recipes) |
 | `SUITE_FREEZE_RECORD_VERSION` | `1.0` | yes | `src/emberbench/composition.py`, [generator.md](generator.md) | Suite freeze record format |
-| `HARNESS_VERSION` | `1.0` | yes | `src/emberbench/harness.py`, [harness-protocol.md](harness-protocol.md) | Remote-model joint protocol, validation, re-ask and fail-closed rules; run provenance `harness_protocol` |
+| `HARNESS_VERSION` | `1.1` | yes | `src/emberbench/harness.py`, [harness-protocol.md](harness-protocol.md) | Remote-model joint protocol, validation, re-ask, refusal and fail-closed rules; run provenance `harness_protocol` |
 | `ADAPTER_VERSION` | `r1` | yes | `src/emberbench/harness.py`, [harness-protocol.md](harness-protocol.md) | Remote-model prompt design: state text, questions, chat and system prompts; request body bytes |
-| `ACCOUNTING_VERSION` | `1.0` | yes | `src/emberbench/accounting.py`, [harness-protocol.md](harness-protocol.md) | Run accounting record (calls, tokens, cost, time, re-asks, horizon hits) |
+| `ACCOUNTING_VERSION` | `1.1` | yes | `src/emberbench/accounting.py`, [harness-protocol.md](harness-protocol.md) | Run accounting record (calls, tokens, cost, time, re-asks, horizon hits, refusals) |
 | `COMMITMENT_VERSION` | `1.0` | yes | `src/emberbench/commitment.py`, [harness-protocol.md](harness-protocol.md) | Hidden-suite commitment digests |
 | `CLI_VERSION` | `1.1` | no | `src/emberbench/cli.py`, [cli.md](cli.md) | Command tree, exit codes, JSON output keys, CLI artifact bytes |
 | `BASELINES_VERSION` | `1.0` | no | `src/emberbench/baselines.py`, [baselines.md](baselines.md) | Baseline config and result digests |
 | `INTEGRITY_PROTOCOL_VERSION` | `1.0` | no | `src/emberbench/integrity.py`, [integrity.md](integrity.md) | Provenance record format and digests |
 | `REPLAY_AUDIT_VERSION` | `1.0` | no | `src/emberbench/audit.py`, [replay-visualization.md](replay-visualization.md) | Replay audit digests |
 | `ANIMATION_FORMAT_VERSION` | `1.0` | no | `src/emberbench/visualization.py`, [replay-visualization.md](replay-visualization.md) | Animation JSON digests |
-| `RUN_RECORD_VERSION` | `1.0` | no | `src/emberbench/run.py`, [cli.md](cli.md) | `emberbench run` run record format |
+| `RUN_RECORD_VERSION` | `1.1` | no | `src/emberbench/run.py`, [cli.md](cli.md) | `emberbench run` run record format |
 | `GENERATED_SUITE_VERSION` | `1.0.0` | no | `src/emberbench/generator.py` | `suite_version` label of every generated suite manifest; content identity is the generated suite hash, owned by `GENERATOR_VERSION`. Not reported separately |
 
 The public suite has its own `suite_version` (`1.0.0`) in

@@ -3,7 +3,7 @@
 **PUBLIC DEVELOPMENT EVALUATION — NOT A HIDDEN-SUITE LEADERBOARD**
 
 This pack shows how EMBERBench compares decision-making methods with the
-official EMBER Score (`emberbench.scoring`, scoring version 1.0) on the public
+official EMBER Score (`emberbench.scoring`, scoring version 1.1) on the public
 V1 suite. It is not a core benchmark phase. It changes no simulator,
 scenario, metric, statistic, scoring, generator, integrity, baseline,
 observation or artifact format, and it adds no runtime dependency. It uses

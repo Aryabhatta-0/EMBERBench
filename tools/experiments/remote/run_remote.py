@@ -176,7 +176,7 @@ def render_report(summary: Mapping[str, Any], report: ScoreReport, refs: Sequenc
         "",
         f"**{pack_protocol.RUN_LABEL}**",
         "",
-        "Official EMBER Score procedure (scoring version 1.0) on the frozen environment pack of the **public**",
+        "Official EMBER Score procedure (scoring version 1.1) on the frozen environment pack of the **public**",
         "V1 suite: the same pack, manifest and scoring as the Jev and SubQ Snap runs. The suite is public, so",
         "these are development results only.",
         "",

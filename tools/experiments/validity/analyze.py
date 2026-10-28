@@ -48,7 +48,8 @@ from typing import Any
 
 from emberbench import load_environment_pack, load_evaluation_result, score_result
 from emberbench.environment_pack import EnvironmentPack
-from emberbench.scoring import ScoreReport
+from emberbench.run import load_refusals
+from emberbench.scoring import FailureKind, ScoreReport
 from emberbench.statistics import check_resamples
 
 # family -> scenario -> episode indices (the official layout, in suite order)
@@ -147,7 +148,10 @@ def load_reports(pack: EnvironmentPack, dirs: Sequence[Path], resamples: int) ->
     reports: dict[str, ScoreReport] = {}
     for d in dirs:
         for path in sorted((d / "results").glob("*.json")):
-            report = score_result(load_evaluation_result(path, pack.suite), pack, resamples=resamples)
+            result = load_evaluation_result(path, pack.suite)
+            # Refused episodes (emberbench run's refusals/ log) are declared failures of kind refusal, not missing.
+            refused = load_refusals(d / "refusals" / path.name, pack, result.model_id)
+            report = score_result(result, pack, failures={i: FailureKind.REFUSAL for i in refused}, resamples=resamples)
             if report.model_id in reports:
                 raise SystemExit(f"two results for {report.model_id}")
             reports[report.model_id] = report

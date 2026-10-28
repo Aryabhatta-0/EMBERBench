@@ -27,16 +27,16 @@ Benchmark-defining versions (all pinned by evaluation provenance through
 `CROWD_DIAGNOSTICS_VERSION` `1.0`, `STATISTICS_VERSION` `1.0`,
 `GENERATOR_VERSION` `1.1.0`, `GENERATOR_CONFIG_VERSION` `1.1`,
 `GENERATION_MANIFEST_VERSION` `1.1`, `EVALUATION_MANIFEST_VERSION` `1.0`,
-`EVALUATION_RESULT_VERSION` `1.0`, `SCORING_VERSION` `1.0`,
+`EVALUATION_RESULT_VERSION` `1.0`, `SCORING_VERSION` `1.1`,
 `ENVIRONMENT_PACK_VERSION` `1.0`, `ENVIRONMENT_WORLD_VERSION` `1.0`,
 `FAMILY_RULES_VERSION` `1.0`, `CALIBRATION_PANEL_VERSION` `1.0`,
 `DIFFICULTY_RULES_VERSION` `1.0`, `ADMISSION_RULES_VERSION` `1.0`,
 `COMPOSITION_VERSION` `1.0`, `SELECTION_RULES_VERSION` `1.0`,
 `RECIPE_CATALOG_VERSION` `1.0`, `SUITE_FREEZE_RECORD_VERSION` `1.0`,
-`HARNESS_VERSION` `1.0`, `ADAPTER_VERSION` `r1`, `ACCOUNTING_VERSION` `1.0`,
+`HARNESS_VERSION` `1.1`, `ADAPTER_VERSION` `r1`, `ACCOUNTING_VERSION` `1.1`,
 `COMMITMENT_VERSION` `1.0`.
 
-Tooling versions: `CLI_VERSION` `1.1` (was `1.0`; adds `emberbench run`), `RUN_RECORD_VERSION` `1.0`, `BASELINES_VERSION` `1.0`,
+Tooling versions: `CLI_VERSION` `1.1` (was `1.0`; adds `emberbench run`), `RUN_RECORD_VERSION` `1.1`, `BASELINES_VERSION` `1.0`,
 `INTEGRITY_PROTOCOL_VERSION` `1.0`, `REPLAY_AUDIT_VERSION` `1.0`,
 `ANIMATION_FORMAT_VERSION` `1.0`. Suite labels:
 `GENERATED_SUITE_VERSION` `1.0.0`. Public
@@ -109,11 +109,21 @@ suite `suite_version` `1.0.0`.
   `COMMITMENT_VERSION` `1.0` (salted hidden-suite commitment). No simulator,
   scenario, metric or scoring rule changed; the golden pack indexes change
   only in their `versions` block.
+- **Refusals** (harness 1.1, scoring 1.1, accounting 1.1, run record 1.1;
+  still revision 3, which is unreleased): a model or provider-policy refusal
+  of a valid question raises `EpisodeRefused`. The harness does not retry or
+  re-prompt it. `emberbench run` records the episode in
+  `refusals/<model_id>.json`, scores it as the declared failure `refusal`
+  (score 0), keeps every other episode and does not run it again on resume.
+  The run record and the accounting report the refusal count and rate.
+  Transient provider failures keep the same fixed retry policy. Every score
+  of scoring version `1.0` is unchanged; score reports gain the count
+  `failed_episode_trials.refusal`.
 - **`emberbench run`** (CLI `1.1`): one command evaluates a remote model
   (`--model`), a registered baseline (`--baseline`) or a local agent
   (`--agent`) on any frozen environment pack, verifies the pack digest or
   suite commitment first, scores it and writes a run record
-  (`RUN_RECORD_VERSION` `1.0`; [cli.md](cli.md)). `--private` keeps scenario
+  (`RUN_RECORD_VERSION` `1.1`; [cli.md](cli.md)). `--private` keeps scenario
   IDs, seeds and answer text out of every output.
 - **Public development evaluation pack** (research lane, PR #31): the
   official EMBER Score of the fair reference agents on the 19 unique worlds

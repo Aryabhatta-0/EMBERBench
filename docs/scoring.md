@@ -1,4 +1,4 @@
-# The EMBER Score (scoring version 1.0)
+# The EMBER Score (scoring version 1.1)
 
 This document is the normative definition of the EMBER Score. The code is
 `src/emberbench/scoring.py`. The tests are `tests/test_scoring.py`. The
@@ -8,15 +8,15 @@ environment that every model is scored on is in
 [environment-pack.md](environment-pack.md).
 
 The EMBER Score is one number in `[0, 100]`. Its unit is
-**benchmark-performance points under EMBER scoring version 1.0**. It is not a
+**benchmark-performance points under EMBER scoring version 1.1**. It is not a
 percentage of people evacuated. A report says "72.4 points under EMBER
-scoring version 1.0", never "72.4% evacuated".
+scoring version 1.1", never "72.4% evacuated".
 
 ## 1. Status and versioning
 
 | Item | Value |
 | --- | --- |
-| Version | `SCORING_VERSION = "1.0"` |
+| Version | `SCORING_VERSION = "1.1"` (1.1 adds the failure kind `refusal`; every 1.0 score is unchanged) |
 | Constants | `OFFICIAL_CONSTANTS` (section 4); `ScoringConstants.digest()` pins them |
 | Separate from | simulator, observation, action schema, scenario schema, metrics, crowd diagnostics, statistics, generator and evaluation versions. Scoring changes none of them. |
 | Provenance | `benchmark_versions()["scoring"]`; benchmark revisions `2` and `3` pin it (see [integrity.md](integrity.md) section 12) |
@@ -335,8 +335,11 @@ gate.
 
 A failed episode has a `FailureKind`: `missing` (no declared reason),
 `invalid_output` (`ModelOutputError` or another rejected action set),
-`model_error` (the model or its adapter raised) or `timeout` (the adapter's
-deadline expired). All four score 0 and are counted in the report. A failure
+`model_error` (the model or its adapter raised), `timeout` (the adapter's
+deadline expired) or `refusal` (the model or its provider's policy refused a
+valid benchmark question; added in scoring version 1.1,
+[harness-protocol.md](harness-protocol.md), section 3). All five score 0 and
+are counted in the report. A failure
 can never disappear: a gap without a declaration is `missing`. A declaration
 for an unscheduled episode, or for an episode that has a committed result, is
 rejected.
@@ -536,7 +539,7 @@ Reasons for each role are in
 A report has this shape (`format_summary(report)`, family list shortened):
 
 ```text
-EMBER Score 53.2 / 100 benchmark-performance points under EMBER scoring version 1.0
+EMBER Score 53.2 / 100 benchmark-performance points under EMBER scoring version 1.1
 95% CI [50.6, 58.5] (stratified two-stage bootstrap, 2000 resamples; this sample only)
 Model congestion-aware-v1; trials 1; official; environment pack <id> sha256:<digest>
 Safety factor 0.556; quality factor 0.929

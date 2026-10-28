@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import math
 import statistics
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -21,14 +21,14 @@ from .evaluation import EvaluationManifest, EvaluationResult, load_evaluation_re
 from .state import TerminationReason
 from .suite import Suite
 
-ACCOUNTING_VERSION = "1.0"
+ACCOUNTING_VERSION = "1.1"  # 1.1: the refusals block
 
 
-def pending_episodes(path: Path, suite: Suite, manifest: EvaluationManifest) -> list[int]:
-    """Manifest episode indices that a ``run_evaluation`` call with ``resume=True`` will run, in order."""
-    done: set[int] = set()
+def pending_episodes(path: Path, suite: Suite, manifest: EvaluationManifest, skip: Collection[int] = ()) -> list[int]:
+    """Manifest episode indices that a ``run_evaluation`` call with ``resume=True`` and ``skip`` will run, in order."""
+    done: set[int] = set(skip)
     if path.exists():
-        done = {e.episode.index for e in load_evaluation_result(path, suite).episodes}
+        done |= {e.episode.index for e in load_evaluation_result(path, suite).episodes}
     return [e.index for e in manifest.episodes if e.index not in done]
 
 
@@ -85,8 +85,14 @@ def accounting_summary(
     result: EvaluationResult,
     *,
     prices: tuple[float, float] | None = None,
+    refused: Collection[int] = (),
 ) -> dict[str, Any]:
     """Per-episode and run-level accounting of ``result`` from its ledger ``rows``.
+
+    Every distribution and rate is over the completed episodes. ``refused``
+    (episode indices recorded as refused) is reported apart in ``refusals``:
+    their count, their rate over the scheduled episodes and the cost of their
+    requests before the refusal (not part of ``total_cost``).
 
     ``prices`` (USD per million input and output tokens) replaces the reported
     cost when given (list-price accounting). Without it, an episode's cost is
@@ -141,6 +147,8 @@ def accounting_summary(
     accounted = [e for e in episodes if e["accounted"]]
     valid_probs = [p for p in probs if p.get("valid")]
     horizon = [e for e in episodes if e["hit_horizon"]]
+    refused_costs = [_request_cost(req, prices) for i in sorted(refused) for row in per_episode.get(i, []) for req in row["requests"]]
+    scheduled = len(result.manifest.episodes)
     return {
         "accounting_version": ACCOUNTING_VERSION,
         "cost_basis": "list price" if prices is not None else "reported",
@@ -165,6 +173,11 @@ def accounting_summary(
         "horizon_hits": len(horizon),
         "horizon_hit_rate": round(len(horizon) / len(episodes), 6) if episodes else None,
         "horizon_hits_with_stranded": sum(1 for e in horizon if e["stranded"] > 0),
+        "refusals": {
+            "episodes": len(refused),
+            "rate": round(len(refused) / scheduled, 6) if scheduled else None,
+            "cost": round(sum(c for c in refused_costs if c is not None), 6) if all(c is not None for c in refused_costs) else None,
+        },
         "probabilities": None
         if not probs
         else {

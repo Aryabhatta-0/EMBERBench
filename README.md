@@ -159,7 +159,7 @@ the wheel and the sdist. Hashes prove content identity, not authorship. See
 ## The EMBER Score
 
 `score_results(trials, pack)` gives one failure-sensitive number in
-`[0, 100]`: **benchmark-performance points under EMBER scoring version 1.0**,
+`[0, 100]`: **benchmark-performance points under EMBER scoring version 1.1**,
 never a percentage of people evacuated. It is
 `100 * Safety * Quality^beta * Severity`. Safety multiplies evacuation, a
 casualty factor and a stranding factor over losses attributed person by

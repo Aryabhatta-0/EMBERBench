@@ -194,7 +194,7 @@ def test_versions_are_pinned_and_unchanged() -> None:
         "generation_manifest": (GENERATION_MANIFEST_VERSION, "1.1"),
         "evaluation_manifest": (EVALUATION_MANIFEST_VERSION, "1.0"),
         "evaluation_result": (EVALUATION_RESULT_VERSION, "1.0"),
-        "scoring": (SCORING_VERSION, "1.0"),
+        "scoring": (SCORING_VERSION, "1.1"),
         "environment_pack": (ENVIRONMENT_PACK_VERSION, "1.0"),
         "environment_world": (ENVIRONMENT_WORLD_VERSION, "1.0"),
         "family_rules": (FAMILY_RULES_VERSION, "1.0"),
@@ -206,9 +206,9 @@ def test_versions_are_pinned_and_unchanged() -> None:
         "recipe_catalog": (RECIPE_CATALOG_VERSION, "1.0"),
         "suite_freeze_record": (SUITE_FREEZE_RECORD_VERSION, "1.0"),
         # Revision 3: the evaluator protocol for remote models.
-        "harness": (HARNESS_VERSION, "1.0"),
+        "harness": (HARNESS_VERSION, "1.1"),
         "adapter": (ADAPTER_VERSION, "r1"),
-        "accounting": (ACCOUNTING_VERSION, "1.0"),
+        "accounting": (ACCOUNTING_VERSION, "1.1"),
         "commitment": (COMMITMENT_VERSION, "1.0"),
     }
     for name, (actual, expected) in unchanged.items():
@@ -439,7 +439,7 @@ def test_evaluator_digest_is_checked_when_pinned(run: Run) -> None:
         (lambda p: p["versions"].update(simulator="0.1.0"), r"versions\.simulator"),
         (lambda p: p["versions"].update(generator="2.0.0"), r"versions\.generator"),
         (lambda p: p["versions"].update(benchmark_revision="1"), r"versions\.benchmark_revision"),
-        (lambda p: p["versions"].update(scoring="1.1"), r"versions\.scoring"),
+        (lambda p: p["versions"].update(scoring="1.0"), r"versions\.scoring"),
         (lambda p: p["versions"].update(family_rules="1.1"), r"versions\.family_rules"),
         (lambda p: p["versions"].update(difficulty_rules="1.1"), r"versions\.difficulty_rules"),
         (lambda p: p["versions"].update(environment_pack="1.1"), r"versions\.environment_pack"),

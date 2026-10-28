@@ -1,4 +1,4 @@
-"""The official EMBER Score (scoring version 1.0): one failure-sensitive number in [0, 100].
+"""The official EMBER Score (scoring version 1.1): one failure-sensitive number in [0, 100].
 
 The full definition, its justification and the sensitivity study are in
 ``docs/scoring.md`` and ``docs/benchmark-methodology.md``. In short, for one
@@ -74,7 +74,8 @@ from .statistics import (
 )
 from .suite import Suite
 
-SCORING_VERSION = "1.0"
+# 1.1 adds the failure kind ``refusal``; every score of version 1.0 is unchanged.
+SCORING_VERSION = "1.1"
 
 # Every value is computed in this context. libmpdec is a software library, so
 # the digits are identical on every platform and Python build.
@@ -757,6 +758,7 @@ class FailureKind(StrEnum):
     INVALID_OUTPUT = "invalid_output"  # ModelOutputError or another rejected action set
     MODEL_ERROR = "model_error"  # the model or its adapter raised
     TIMEOUT = "timeout"  # the adapter's own deadline expired
+    REFUSAL = "refusal"  # the model refused a valid benchmark question (EpisodeRefused); scoring 1.1
 
 
 def _q(value: Decimal) -> Fraction:
