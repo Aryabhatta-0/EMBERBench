@@ -5,6 +5,12 @@ optionally, a published wheel and sdist. The version policy is in
 [versioning.md](versioning.md). Never publish from a branch, a dirty tree or a
 local build that did not pass section 3.
 
+Runtime container publication has a separate
+[verified digest and source record](container-publication.md). Verify public
+access, an anonymous immutable-digest pull and public-only runtime smoke
+before pinning an image in the docs. A container publication does not create
+a final benchmark release tag or satisfy the remaining release gates below.
+
 Commands are for a POSIX shell (Linux or macOS). On Windows use
 `.venv\Scripts\activate` instead of `. .venv/bin/activate`; the other
 commands are the same.

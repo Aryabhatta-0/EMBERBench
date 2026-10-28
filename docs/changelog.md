@@ -170,8 +170,13 @@ suite `suite_version` `1.0.0`.
     [benchmark-methodology.md](benchmark-methodology.md). `crowd_100` must
     not be compared across strata.
   - **Container provenance:** add the OCI source label linking the image to
-    `Aryabhatta-0/EMBERBench`. GHCR publication and the immutable registry
-    digest are pending; no registry digest has been certified for this fix.
+    `Aryabhatta-0/EMBERBench`. The public Linux/amd64 runtime from source
+    `9d9999b913bc304001e6cf41f6b34a970109f296` is published at
+    `ghcr.io/aryabhatta-0/emberbench@sha256:1142df88f0d68b5a3d34323481168c6d3253ef6cef4e7879e5de25f9b2b712d8`.
+    The registry manifest bytes, source/revision labels, anonymous digest
+    pull and public-only baseline smoke were independently verified. The
+    [publication record](container-publication.md) pins the source and CI;
+    later documentation commits do not change this image's source identity.
     The test stage installs Git and indexes its copied public sources so the
     leak-guard and release tests can enumerate them inside the container.
 - **Remote-model runner** (research lane): any model behind a base URL and
