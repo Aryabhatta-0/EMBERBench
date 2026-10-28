@@ -1,0 +1,109 @@
+name: Publish runtime image
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Full SHA of a commit on main with all seven CI jobs passing
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ghcr-${{ inputs.source_commit }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'Aryabhatta-0/EMBERBench' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/aryabhatta-0/emberbench
+      SOURCE_SHA: ${{ inputs.source_commit }}
+    steps:
+      - name: Require exact source identity and successful source CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$SOURCE_SHA" --jq .sha)" = "$SOURCE_SHA"
+          status=$(gh api "repos/$GITHUB_REPOSITORY/compare/$SOURCE_SHA...main" --jq .status)
+          [[ "$status" == ahead || "$status" == identical ]]
+          gh api --method GET "repos/$GITHUB_REPOSITORY/actions/runs" \
+            -f "head_sha=$SOURCE_SHA" -f per_page=100 > "$RUNNER_TEMP/runs.json"
+          python3 - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          runs = json.loads((Path(os.environ['RUNNER_TEMP'])/'runs.json').read_text())['workflow_runs']
+          runs = [r for r in runs if r['path'] == '.github/workflows/tests.yml' and r['event'] == 'push' and r['head_branch'] == 'main']
+          assert runs, 'No main CI run exists for this exact source commit'
+          run = max(runs, key=lambda r: r['run_number'])
+          assert run['head_sha'] == os.environ['SOURCE_SHA'] and run['status'] == 'completed' and run['conclusion'] == 'success'
+          jobs = json.loads(subprocess.check_output(['gh','api',f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{run['id']}/jobs?per_page=100&filter=latest"]))
+          expected = {'packaging'} | {f'test ({system}-latest, {version})' for system in ('ubuntu','windows','macos') for version in ('3.12','3.13')}
+          assert jobs['total_count'] == 7 and {j['name'] for j in jobs['jobs']} == expected
+          assert all(j['status'] == 'completed' and j['conclusion'] == 'success' for j in jobs['jobs'])
+          print('All seven CI jobs passed:', run['html_url'])
+          PY
+      - name: Check out reviewed publishing tools
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: publisher
+          persist-credentials: false
+      - name: Check out the exact image source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.source_commit }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Verify source and leak guard
+        working-directory: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test -z "$(git status --porcelain)"
+          PYTHONPATH=src python tools/check_public_assets.py --untracked
+      - name: Build the runtime stage without registry credentials
+        working-directory: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --target runtime \
+            --label "org.opencontainers.image.revision=$SOURCE_SHA" \
+            --tag "$IMAGE:$SOURCE_SHA" .
+      - name: Audit all image layers and exact installed source
+        run: python publisher/tools/check_runtime_image.py --image "$IMAGE:$SOURCE_SHA" --source source --revision "$SOURCE_SHA"
+      - name: Smoke-test without network or evaluator assets
+        run: docker run --rm --network none "$IMAGE:$SOURCE_SHA" version --json
+      - name: Authenticate to GHCR only after the build and audits pass
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Preserve existing source tags and push
+        shell: bash
+        run: |
+          set -euo pipefail
+          if docker manifest inspect "$IMAGE:$SOURCE_SHA" >/dev/null 2>&1; then
+            echo 'This source tag already exists; refusing to overwrite it.' >&2
+            exit 1
+          fi
+          docker push "$IMAGE:$SOURCE_SHA"
+          {
+            echo "Published source tag: \`$IMAGE:$SOURCE_SHA\`"
+            echo "Source commit: \`$SOURCE_SHA\`"
+            echo 'Registry digest, public visibility and anonymous pull must be verified before documentation is pinned.'
+          } >> "$GITHUB_STEP_SUMMARY"
