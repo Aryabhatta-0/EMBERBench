@@ -39,7 +39,13 @@ COPY tests tests
 COPY tools tools
 COPY docs docs
 COPY .github .github
-RUN python -m pip install ".[dev]" && chown -R ember /opt/emberbench
+COPY .gitattributes .gitignore Dockerfile ./
+# The leak-guard and release fixtures enumerate the checkout with git. A test
+# image has a fresh index of these public sources, never the host's Git history.
+RUN apt-get update && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m pip install ".[dev]" \
+    && git init --quiet && git add . && chown -R ember /opt/emberbench
 USER ember
 ENTRYPOINT []
 CMD ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider"]

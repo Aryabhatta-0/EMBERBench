@@ -172,6 +172,8 @@ suite `suite_version` `1.0.0`.
   - **Container provenance:** add the OCI source label linking the image to
     `Aryabhatta-0/EMBERBench`. GHCR publication and the immutable registry
     digest are pending; no registry digest has been certified for this fix.
+    The test stage installs Git and indexes its copied public sources so the
+    leak-guard and release tests can enumerate them inside the container.
 - **Remote-model runner** (research lane): any model behind a base URL and
   an API key (OpenAI-compatible chat, Anthropic Messages or the Jev/SubQ
   decision API) on the same environment pack, with the same official scoring
