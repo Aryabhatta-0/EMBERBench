@@ -1,5 +1,9 @@
 # EMBERBench
 
+[Website](https://anantam-labs.vercel.app/) · [Public-development results](https://anantam-labs.vercel.app/benchmark.html) · [Methodology](https://anantam-labs.vercel.app/methodology.html) · [Documentation](https://anantam-labs.vercel.app/docs.html)
+
+EMBERBench is the first contribution from [Anantam (Anantam Labs)](https://anantam-labs.vercel.app/about.html).
+
 > **Scope:** These are public development or archived research rules. They do
 > not define the official hidden evaluation distribution. Previously disclosed
 > recipes and study seeds are exposed research, not secret evaluation assets.
