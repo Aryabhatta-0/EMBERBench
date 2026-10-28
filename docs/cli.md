@@ -417,6 +417,10 @@ Exactly one model source:
   at most 2 re-asks. `--joint-mode fixed_chunk --chunk-size N` is the declared
   variant for a provider with a request cap; its model ID ends in `-chunkN`.
   `--budget-usd` stops the run (resumable) at a spend limit.
+  `--exposure-log FILE` (required with `--private`) appends one line per
+  run segment that sends episodes, before its first request; `--retention`
+  records the endpoint's stated retention ([integrity.md](integrity.md),
+  section 12, "Exposure budget").
 - `--baseline ID`: a registered baseline.
 - `--agent MODULE:FACTORY --model-id ID`: a local agent (as in
   `evaluation run`).
@@ -429,7 +433,7 @@ their SHA-256 with `--private`), the commitment check, the model and its
 settings, the harness protocol and the SHA-256 of the harness module, start
 and end time, calls, tokens, cost and runtime, the accounting summary, the
 result SHA-256, the metrics and (1.1) `refusals`: the count, rate and
-indexes of refused episodes. A refused episode
+indexes of refused episodes, and the diagnostic `score_excluding_refusals`. A refused episode
 ([harness-protocol.md](harness-protocol.md), section 3) is listed in
 `refusals/<model_id>.json`, scores 0 as the failure `refusal` and is not run
 again on resume. A remote model also gets `ledger/` and

@@ -190,6 +190,21 @@ when **all** of these hold:
 - if the change alters what a score means, `BENCHMARK_REVISION` is bumped
   too (section 2).
 
+**Bootstrap seeds.** Every bootstrap stream is seeded with SHA-256 of the
+canonical JSON of what the interval describes, plus the owning version:
+
+| Interval | Seed material |
+| --- | --- |
+| Score CI ([scoring.md](scoring.md), section 7) | `SCORING_VERSION`, constants digest, evaluation manifest hash, model ID, exact episode scores |
+| Paired comparison CI ([scoring.md](scoring.md), section 8) | `SCORING_VERSION`, constants digest, evaluation manifest hash, both model IDs, exact per-episode deltas |
+| Metric statistics ([statistics.md](statistics.md)) | `STATISTICS_VERSION`, evaluation manifest hash, result digests, group, metric, resamples |
+
+So the same results under the same version always give the same interval,
+on every platform. A version bump re-draws every interval of that component
+even when no point estimate changes: the scoring `1.1` bump moved CI bounds
+by about 0.1 point on the public development pack and changed no point
+score. Compare intervals only within one version.
+
 Platform, Python version (within `requires-python`), `PYTHONHASHSEED`,
 locale, time zone, working directory, path spelling and line endings of
 accepted inputs never change a pinned hash. If one of them does, that is a

@@ -118,7 +118,13 @@ suite `suite_version` `1.0.0`.
   The run record and the accounting report the refusal count and rate.
   Transient provider failures keep the same fixed retry policy. Every score
   of scoring version `1.0` is unchanged; score reports gain the count
-  `failed_episode_trials.refusal`.
+  `failed_episode_trials.refusal`. The run record also gives
+  `score_excluding_refusals`, a diagnostic that never ranks models
+  (`score_excluding` in `emberbench.scoring`).
+- **Hidden exposure log** (run record 1.1): `emberbench run --private
+  --model` needs `--exposure-log`; each run segment that sends episodes logs
+  the router, upstream provider, endpoint, recorded retention and episode
+  count first. Rotation rule: [integrity.md](integrity.md), section 12.
 - **`emberbench run`** (CLI `1.1`): one command evaluates a remote model
   (`--model`), a registered baseline (`--baseline`) or a local agent
   (`--agent`) on any frozen environment pack, verifies the pack digest or
@@ -131,6 +137,13 @@ suite `suite_version` `1.0.0`.
   `--verify`, and the golden index and `REPORT.md`
   ([tools/experiments/v1/README.md](../tools/experiments/v1/README.md)). It
   is not a hidden-suite leaderboard and changes no version or pinned hash.
+  The smoke protocol (5 episodes, 100 resamples) now gives no
+  `a_better`/`inconclusive` verdicts: its comparison table has the mean
+  difference and interval only, and its index has `"verdicts": false`.
+- **Validity analysis** (research lane): a models-only view (adjacent model
+  pairs with the paired interval and bootstrap P(higher > lower), P(the whole
+  model order), the models-only tau and the size of one adjacent swap) and
+  the zero-score episode share of every agent. It changes no score.
 - **Remote-model runner** (research lane): any model behind a base URL and
   an API key (OpenAI-compatible chat, Anthropic Messages or the Jev/SubQ
   decision API) on the same environment pack, with the same official scoring

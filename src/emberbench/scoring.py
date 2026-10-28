@@ -1481,6 +1481,20 @@ def score_result(
     return score_results([result], target, failures=[failures or {}], resamples=resamples, constants=constants)
 
 
+def score_excluding(report: ScoreReport, excluded: Iterable[int]) -> Fraction | None:
+    """A diagnostic, never an official score: the family-balanced mean of ``report`` without ``excluded`` episodes.
+
+    Used for the refusal-excluded view: the episodes a model refused are left
+    out instead of scored 0. A scenario or family with no episode left drops
+    out of its mean. Two models with different exclusions are averaged over
+    different episodes, so this value never ranks models; the official score
+    (refusals count as 0) does.
+    """
+    drop = set(excluded)
+    values: dict[int, Fraction | None] = {i: (None if i in drop else v) for i, v in report.episode_scores}
+    return _hierarchical(report.layout, values)[0]
+
+
 # --------------------------------------------------------------------------- comparison and leaderboard
 
 

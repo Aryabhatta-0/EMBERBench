@@ -70,6 +70,7 @@ class Protocol:
     candidate_seeds: tuple[int, ...]  # the ordered candidate list of build_unique_world_manifest
     stochastic_worlds: int  # distinct fire worlds per stochastic-fire scenario
     resamples: int  # bootstrap resamples of every interval
+    verdicts: bool  # report comparison outcomes; False: point scores and intervals only
     suite_hash: str
     manifest_hash: str
 
@@ -87,6 +88,7 @@ PUBLIC = Protocol(
     candidate_seeds=CANDIDATE_SEEDS,
     stochastic_worlds=10,
     resamples=2000,  # the scoring and statistics library default
+    verdicts=True,
     suite_hash=PUBLIC_SUITE_HASH,
     manifest_hash="3290930556bee1cf0a8232fd9cf2a118b40d4560d79ef18fc23d79f76139b82c",
 )
@@ -94,13 +96,15 @@ PUBLIC = Protocol(
 # A tiny CI smoke subset: two small scenarios (one deterministic, one
 # stochastic), 4 stochastic worlds, so 5 unique worlds and a defined interval
 # (5 is the minimum bootstrap sample). It exercises the whole pipeline; its
-# numbers mean nothing.
+# numbers mean nothing, so it reports no comparison outcome: 5 worlds in 2
+# families cannot support a verdict.
 SMOKE = Protocol(
     name="smoke",
     scenario_ids=("v1-pub-01-single-exit-sparse", "v1-pub-10-route-invalidation"),
     candidate_seeds=(0, 1, 2, 3, 4, 5),
     stochastic_worlds=4,
     resamples=100,
+    verdicts=False,
     suite_hash="7b8e205b3bfe3faf7eee5dce1f32cd7aecec0b886d7d1b771029996c14c6052c",
     manifest_hash="a21a0152619d1e65c6c8825e46e307e1d218c967c2550d4c426216a960d0e7a0",
 )

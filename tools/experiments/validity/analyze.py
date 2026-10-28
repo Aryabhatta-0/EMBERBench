@@ -22,7 +22,12 @@ It reports, per agent and for the pack:
   their median bootstrap standard error;
 - with ``--reference`` (the JSON of another analysis, for example the public
   development set), Kendall tau-b over the common agents. This is supporting
-  evidence only: two suites with different families need not rank alike.
+  evidence only: two suites with different families need not rank alike;
+- a models-only view (agents whose run record has ``model.kind`` ``remote``):
+  each adjacent model pair with its paired 95% interval and bootstrap
+  P(higher > lower), P(the whole model order), the models-only tau with the
+  size of one adjacent swap (baselines are far apart and inflate the full
+  tau), and the zero-score episode share of every agent (floor check).
 
 ``--private`` writes no scenario ID, seed or stratum name; use it for a hidden
 batch and keep the output with the evaluator. This is an analysis tool: it
@@ -144,6 +149,16 @@ def interval(xs: Sequence[float]) -> tuple[float, float]:
     return s[int(0.025 * (len(s) - 1))], s[int(0.975 * (len(s) - 1))]
 
 
+def agent_kinds(dirs: Sequence[Path]) -> dict[str, str]:
+    """Agent ID -> ``model.kind`` of its ``emberbench run`` record (``remote``, ``baseline`` or ``agent``)."""
+    kinds: dict[str, str] = {}
+    for d in dirs:
+        for path in sorted((d / "runs").glob("*.json")):
+            model = json.loads(path.read_text(encoding="utf-8"))["model"]
+            kinds[model["model_id"]] = model["kind"]
+    return kinds
+
+
 def load_reports(pack: EnvironmentPack, dirs: Sequence[Path], resamples: int) -> dict[str, ScoreReport]:
     reports: dict[str, ScoreReport] = {}
     for d in dirs:
@@ -160,7 +175,7 @@ def load_reports(pack: EnvironmentPack, dirs: Sequence[Path], resamples: int) ->
     return reports
 
 
-def analyze(pack: EnvironmentPack, reports: Mapping[str, ScoreReport], args: argparse.Namespace) -> dict[str, Any]:
+def analyze(pack: EnvironmentPack, reports: Mapping[str, ScoreReport], args: argparse.Namespace, kinds: Mapping[str, str] | None = None) -> dict[str, Any]:
     episode = {a: {i: float(s) for i, s in r.episode_scores} for a, r in reports.items()}
     common = set.intersection(*(set(e) for e in episode.values()))
     layout = layout_of(pack, common)
@@ -259,6 +274,7 @@ def analyze(pack: EnvironmentPack, reports: Mapping[str, ScoreReport], args: arg
                       "too_little_power": spread < 2 * se})  # fmt: skip
 
     tau = None
+    ref_scores: dict[str, float] = {}
     if args.reference:
         ref = json.loads(Path(args.reference).read_text(encoding="utf-8"))
         ref_scores = {canonical_id(r["agent"]): r["score"] for r in ref["agents"]}
@@ -266,6 +282,32 @@ def analyze(pack: EnvironmentPack, reports: Mapping[str, ScoreReport], args: arg
         tau = {"reference": ref["pack_digest"], "agents": len(both),
                "kendall_tau_b": kendall_tau([point[a] for a in both], [ref_scores[canonical_id(a)] for a in both]),
                "note": "supporting evidence only"}  # fmt: skip
+
+    # Models only: the baselines are far apart and easy to rank, so they inflate the full tau.
+    models = [a for a in order if (kinds or {}).get(a) == "remote"]
+    model_view = None
+    if len(models) >= 2:
+        model_pairs = []
+        for hi, lo in zip(models, models[1:]):
+            deltas = [x - y for x, y in zip(boot[hi], boot[lo])]
+            low, high = interval(deltas)
+            model_pairs.append({"higher": hi, "lower": lo, "delta": round(point[hi] - point[lo], 3), "ci95": [round(low, 3), round(high, 3)],
+                                "p_higher_gt_lower": round(sum(d > 0 for d in deltas) / len(deltas), 4), "separated": not low <= 0 <= high})  # fmt: skip
+        p_order = sum(all(boot[a][k] > boot[b][k] for a, b in zip(models, models[1:])) for k in range(args.resamples)) / args.resamples
+        in_ref = [a for a in models if canonical_id(a) in ref_scores]
+        n = len(in_ref)
+        model_view = {
+            "models": models,
+            "adjacent_pairs": model_pairs,
+            "p_model_order": round(p_order, 4),
+            "tau_vs_reference": None if not args.reference else {
+                "models": n,
+                "kendall_tau_b": kendall_tau([point[a] for a in in_ref], [ref_scores[canonical_id(a)] for a in in_ref]),
+                "one_adjacent_swap": round(4 / (n * (n - 1)), 4) if n >= 2 else None,
+                "note": "supporting evidence only; little power at this number of models",
+            },
+        }  # fmt: skip
+    zero_share = {a: round(sum(1 for i in common if episode[a][i] == 0) / len(common), 4) for a in agents}
 
     return {
         "tool": "emberbench-validity/1.0",
@@ -277,6 +319,7 @@ def analyze(pack: EnvironmentPack, reports: Mapping[str, ScoreReport], args: arg
         "agents": [{"agent": a, "score": round(point[a], 3), "ci95": None if (ci := reports[a].ci) is None else [round(float(ci.lower), 3), round(float(ci.upper), 3)],
                     "bootstrap_se": round(statistics.stdev(boot[a]), 3), "safety": None if (sf := reports[a].safety) is None else round(float(sf), 4),
                     "quality": None if (q := reports[a].quality) is None else round(float(q), 4),
+                    "zero_score_share": zero_share[a],
                     "families": {f: round(v, 3) for f, v in family_means(layout, episode[a]).items()}} for a in order],  # fmt: skip
         "ranking": order,
         "rank_stability": {"p_point_ranking": round(same_order / args.resamples, 4), "adjacent_pairs": pairs},
@@ -285,16 +328,17 @@ def analyze(pack: EnvironmentPack, reports: Mapping[str, ScoreReport], args: arg
         "ablations": ablations,
         "power": power,
         "reference_tau": tau,
+        "models_only": model_view,
     }
 
 
 def markdown(rec: dict[str, Any]) -> str:
     lines = [f"# Validity analysis: `{rec['pack_id'] or 'private pack'}`", "",
              f"Pack digest `{rec['pack_digest'][:16]}`; {rec['episodes']} episodes; families {rec['families']}; {rec['resamples']} paired bootstrap resamples.", "",
-             "| Agent | Score | 95% CI | Bootstrap SE | Safety | Quality |", "|---|---:|---|---:|---:|---:|"]  # fmt: skip
+             "| Agent | Score | 95% CI | Bootstrap SE | Safety | Quality | Zero-score episodes |", "|---|---:|---|---:|---:|---:|---:|"]  # fmt: skip
     for a in rec["agents"]:
         ci = "-" if a["ci95"] is None else f"{a['ci95'][0]} to {a['ci95'][1]}"
-        lines.append(f"| `{a['agent']}` | {a['score']} | {ci} | {a['bootstrap_se']} | {a['safety']} | {a['quality']} |")
+        lines.append(f"| `{a['agent']}` | {a['score']} | {ci} | {a['bootstrap_se']} | {a['safety']} | {a['quality']} | {a['zero_score_share']} |")
     rs = rec["rank_stability"]
     lines += ["", f"P(point ranking) = {rs['p_point_ranking']}", "", "| Higher | Lower | Delta | 95% CI | P(order) | Underpowered |", "|---|---|---:|---|---:|---|"]
     lines += [f"| `{p['higher']}` | `{p['lower']}` | {p['delta']} | {p['ci95'][0]} to {p['ci95'][1]} | {p['p_order_holds']} | {p['underpowered']} |" for p in rs["adjacent_pairs"]]
@@ -311,6 +355,15 @@ def markdown(rec: dict[str, Any]) -> str:
     if rec["reference_tau"]:
         t = rec["reference_tau"]
         lines += ["", f"Kendall tau-b against reference `{t['reference'][:16]}` over {t['agents']} agents: {t['kendall_tau_b']} ({t['note']})."]
+    m = rec["models_only"]
+    if m:
+        lines += ["", "## Models only", "", f"P(whole model order {' > '.join(f'`{x}`' for x in m['models'])}) = {m['p_model_order']}", "",
+                  "| Higher | Lower | Delta | Paired 95% CI | P(higher > lower) | Separated |", "|---|---|---:|---|---:|---|"]  # fmt: skip
+        lines += [f"| `{p['higher']}` | `{p['lower']}` | {p['delta']} | {p['ci95'][0]} to {p['ci95'][1]} | {p['p_higher_gt_lower']} | {p['separated']} |" for p in m["adjacent_pairs"]]
+        if m["tau_vs_reference"]:
+            t = m["tau_vs_reference"]
+            lines += ["", f"Models-only Kendall tau-b against the reference over {t['models']} models: {t['kendall_tau_b']}; "
+                      f"one adjacent swap moves it by {t['one_adjacent_swap']} ({t['note']})."]  # fmt: skip
     return "\n".join(lines) + "\n"
 
 
@@ -330,7 +383,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except ValueError as exc:
         parser.error(f"--resamples: {exc}")
     pack = load_environment_pack(args.pack)
-    record = analyze(pack, load_reports(pack, args.results, min(args.resamples, 2000)), args)
+    record = analyze(pack, load_reports(pack, args.results, min(args.resamples, 2000)), args, agent_kinds(args.results))
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "validity.json").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (args.out / "validity.md").write_text(markdown(record), encoding="utf-8")

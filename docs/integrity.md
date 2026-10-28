@@ -416,6 +416,24 @@ leak, a reveal for audit) or retired on schedule. Rules:
 - A protocol flaw that let leakage happen is a revision change, not just a
   new batch.
 
+**Exposure budget.** Every remote run on a hidden batch sends all its
+scenarios to the router and to the model's provider, which can log them.
+
+- Develop, debug and compare protocols on the public development pack and
+  the public validation set. Run a hidden batch only for a reportable result.
+- `emberbench run --private --model` refuses to start without
+  `--exposure-log FILE`. Before its first request, every run segment that
+  sends episodes appends one line: time, suite commitment, model ID, router,
+  upstream provider, endpoint host, recorded retention (`--retention`:
+  `unknown`, `zero` or `provider_default`) and the number of episodes sent.
+  The log stays with the evaluator, outside the repository.
+- Prefer zero-retention endpoints, and record the retention that the
+  provider states. `unknown` counts as retained.
+- Rotate the batch (a regenerated batch, as above) when it has been sent to
+  **8 distinct upstream providers**, or at once after a send to an endpoint
+  that keeps or trains on inputs. Publish the exposure count (runs and
+  distinct providers) with every hidden-batch result.
+
 ## 13. What EMBERBench cannot prove
 
 - **Hashes establish content identity and integrity, not authorship.** A

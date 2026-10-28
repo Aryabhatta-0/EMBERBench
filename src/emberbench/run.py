@@ -17,7 +17,10 @@ for ``--model``, so a local run loads no network code.
 run record), plus ``ledger/`` and ``cache.jsonl`` for a remote model, and
 ``refusals/`` when the model refused a question. A refused episode scores 0
 (failure kind ``refusal``) and the run continues; a rerun with the same model
-resumes and does not run a refused episode again. With ``--private`` the record and the printed
+resumes and does not run a refused episode again. The run record also gives
+the refusal-excluded score as a diagnostic. A remote run appends one line per
+segment to ``--exposure-log`` (required with ``--private``): which router,
+upstream lab and endpoint received how many episodes of which suite. With ``--private`` the record and the printed
 summary hold no scenario ID, seed or answer text; errors are redacted.
 """
 
@@ -42,10 +45,10 @@ from .environment_pack import EnvironmentPack, load_environment_pack
 from .errors import EmberBenchError, EpisodeRefused
 from .evaluation import EpisodeSpec, EvaluationResult, check_model_id, load_evaluation_result, run_evaluation
 from .integrity import benchmark_versions
-from .scoring import FailureKind, ScoreReport, score_result
+from .scoring import FailureKind, ScoreReport, score_excluding, score_result
 from .statistics import check_resamples
 
-RUN_RECORD_VERSION = "1.1"  # 1.1: refusals
+RUN_RECORD_VERSION = "1.1"  # 1.1: refusals, the exposure log
 DEFAULT_DECISIONS_URL = "https://openrouter.ai/api/alpha/decisions"
 DEFAULT_RESAMPLES = 2000
 _SOURCE_ROOT = Path(__file__).resolve().parents[2]
@@ -154,13 +157,20 @@ def load_refusals(path: Path, pack: EnvironmentPack, model_id: str) -> dict[int,
 
 
 def refusal_summary(evaluation: Evaluation) -> dict[str, Any]:
-    """Refused episodes, reported apart from the score: count, rate over the scheduled episodes, indices."""
+    """Refused episodes, reported apart from the score: count, rate over the scheduled episodes, indices.
+
+    ``score_excluding_refusals`` is a diagnostic (never official, never a
+    ranking input): the score with the refused episodes left out instead of
+    scored 0. It separates a provider's content filter from the decisions.
+    """
     scheduled = len(evaluation.result.manifest.episodes)
+    excluded = score_excluding(evaluation.report, evaluation.refused)
     return {
         "count": len(evaluation.refused),
         "rate": round(len(evaluation.refused) / scheduled, 6) if scheduled else None,
         "episodes": list(evaluation.refused),
         "failure_kind": FailureKind.REFUSAL.value,
+        "score_excluding_refusals": None if excluded is None else _f(excluded, 3),
     }
 
 
@@ -210,6 +220,8 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     remote.add_argument("--budget-usd", type=float, metavar="USD", help="stop (resumable) once the reported cost of this invocation reaches this")
     remote.add_argument("--input-price", type=float, metavar="USD", help="USD per million input tokens, when the API reports no cost")
     remote.add_argument("--output-price", type=float, metavar="USD", help="USD per million output tokens, when the API reports no cost")
+    remote.add_argument("--exposure-log", metavar="FILE", help="append one JSON line per run segment that sends episodes (required with --private)")
+    remote.add_argument("--retention", choices=RETENTION, default="unknown", help="the endpoint's data retention, as recorded in the exposure log")
 
 
 # --------------------------------------------------------------------------- checks
@@ -325,6 +337,25 @@ def execute(args: argparse.Namespace, *, load_agent: Callable[[argparse.Namespac
     }
 
 
+RETENTION = ("unknown", "zero", "provider_default")
+
+
+def commitment_or_digest(pack: EnvironmentPack, args: argparse.Namespace) -> dict[str, str]:
+    """The suite label of an exposure line: the published commitment of a hidden batch, else the pack digest."""
+    return {"commitment": args.commitment} if args.commitment else {"pack_digest": pack.digest}
+
+
+def log_exposure(path: Path, line: dict[str, Any]) -> None:
+    """Append one exposure line (canonical JSON). The log is outside the source repository, like a run directory."""
+    target = path.resolve()
+    if (_SOURCE_ROOT / "pyproject.toml").is_file() and _SOURCE_ROOT in target.parents:
+        raise RunError("output", f"{path}: the exposure log must be outside the source repository ({_SOURCE_ROOT})")
+    if not target.parent.is_dir():
+        raise RunError("output", f"{path}: parent directory does not exist (it is never created)")
+    with target.open("a", encoding="ascii", newline="\n") as f:
+        f.write(json.dumps(line, sort_keys=True, separators=(",", ":")) + "\n")
+
+
 def _run_remote(args: argparse.Namespace, pack: EnvironmentPack, out: Path) -> tuple[Evaluation, dict[str, Any], dict[str, Any]]:
     from . import harness  # the network harness, loaded only for a remote model
 
@@ -355,6 +386,25 @@ def _run_remote(args: argparse.Namespace, pack: EnvironmentPack, out: Path) -> t
     provider = harness.label(args.provider or harness.provider_label(args.base_url))
     model_id = check_model_id(args.model_id or harness.remote_model_id(provider, args.model, args.api, protocol))
     segment = datetime.datetime.now(datetime.UTC).strftime("%Y%m%dT%H%M%S.%fZ")
+    if args.private and not args.exposure_log:
+        raise RunError("usage", "--private with --model needs --exposure-log: every hidden-suite exposure is logged")
+    if args.exposure_log:
+        refused = load_refusals(out / "refusals" / f"{model_id}.json", pack, model_id)
+        pending = pending_episodes(out / "results" / f"{model_id}.json", pack.suite, pack.manifest, skip=refused)
+        if pending:  # logged before the first request: a segment that fails part-way still counts
+            log_exposure(Path(args.exposure_log), {
+                "run_record_version": RUN_RECORD_VERSION,
+                "logged_utc": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "segment": segment,
+                "suite": commitment_or_digest(pack, args),
+                "model_id": model_id,
+                "requested_model": args.model,
+                "router": provider,
+                "upstream": args.model.split("/")[0] if "/" in args.model else provider,
+                "endpoint_host": host,
+                "retention": args.retention,
+                "episodes_sent": len(pending),
+            })  # fmt: skip
     prices = (args.input_price or 0.0, args.output_price or 0.0) if args.input_price is not None or args.output_price is not None else None
 
     def make_factory(ledger: Any) -> AgentFactory:

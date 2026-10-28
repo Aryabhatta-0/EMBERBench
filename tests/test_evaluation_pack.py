@@ -338,7 +338,8 @@ def test_paired_comparisons_use_the_same_worlds_and_the_official_api(smoke_out: 
         assert doc["paired_episode_indices"] == all_indices
         assert doc["evaluation_manifest_hash"] == pack.manifest.manifest_hash() and doc["environment_pack_digest"] == pack.digest
         official = compare_scores(reports[a], reports[b], resamples=protocol_mod.SMOKE.resamples)
-        assert doc["comparison"] == official.to_dict() and pair["outcome"] == official.outcome.value
+        # The smoke protocol computes the official comparison but reports no outcome (5 worlds support no verdict).
+        assert doc["comparison"] == {k: v for k, v in official.to_dict().items() if k != "outcome"} and pair["outcome"] is None
 
 
 SCORING_INTERNALS = {"score_episode", "score_evidence", "episode_evidence", "quality_components", "severe_failures", "_references", "_stratified_ci", "_hierarchical"}

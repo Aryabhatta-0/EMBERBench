@@ -27,9 +27,11 @@ from emberbench import (
     agent_policy_factory,
     build_unique_world_manifest,
     freeze_environment_pack,
+    load_evaluation_result,
     load_suite,
     run_episode,
     run_evaluation,
+    score_result,
 )
 from emberbench.baselines import baseline_factory
 from emberbench.cli import main as cli_main
@@ -45,7 +47,7 @@ from emberbench.harness import (
     remote_model_id,
 )
 from emberbench.integrity import benchmark_versions
-from emberbench.scoring import FailureKind
+from emberbench.scoring import score_excluding
 from emberbench.scenario import load_scenario
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -399,7 +401,11 @@ def test_run_scores_a_refused_episode_0_and_keeps_the_others(
     log = json.loads((out / "refusals" / f"{model_id}.json").read_text(encoding="ascii"))
     assert log["refused"] == [{"index": first, "step": 0, "question": "q0"}]
     record = _record(out, model_id)
+    diagnostic = record["refusals"].pop("score_excluding_refusals")
     assert record["refusals"] == {"count": 1, "rate": round(1 / scheduled, 6), "episodes": [first], "failure_kind": "refusal"}
+    report = score_result(load_evaluation_result(reference / "results" / f"{model_id}.json", pack.suite), pack, resamples=100)
+    excluded = score_excluding(report, [first])
+    assert excluded is not None and diagnostic == round(float(excluded), 3)
     assert record["accounting"]["refusals"]["episodes"] == 1
     assert record["accounting"]["refusals"]["rate"] == pytest.approx(1 / scheduled)
     report = json.loads((out / "scores" / f"{model_id}.json").read_text(encoding="ascii"))
@@ -414,3 +420,30 @@ def test_run_scores_a_refused_episode_0_and_keeps_the_others(
     model.requests.clear()
     assert _run(pack, out, "--model", "fake", "--base-url", base_url, "--provider", "t", "--key-env", KEY_ENV)[0] == 0
     assert model.requests == []
+
+
+# --------------------------------------------------------------------------- hidden exposure log
+
+
+def test_private_remote_runs_log_every_exposure(
+    pack: EnvironmentPack, server: tuple[str, FakeDecisionModel], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    base_url, _ = server
+    monkeypatch.setenv(KEY_ENV, "test-key")
+    monkeypatch.setenv("EMBERBENCH_TEST_SALT", SALT)
+    commitment = suite_commitment(pack.digest, SALT)
+    out, log = tmp_path / "hidden", tmp_path / "exposure.jsonl"
+    remote = ("--model", "lab/fake", "--base-url", base_url, "--provider", "t", "--key-env", KEY_ENV,
+              "--private", "--commitment", commitment, "--salt-env", "EMBERBENCH_TEST_SALT")  # fmt: skip
+    assert _run(pack, out, *remote)[0] == 2  # a private remote run must log its exposure
+    assert not log.exists() and not (out / "results").exists()
+    assert _run(pack, out, *remote, "--exposure-log", REPO_ROOT / "exposure.jsonl")[0] == 6
+    assert _run(pack, out, *remote, "--exposure-log", log, "--retention", "zero")[0] == 0
+    text = log.read_text(encoding="ascii")
+    line = json.loads(text)
+    assert line["suite"] == {"commitment": commitment} and line["episodes_sent"] == len(pack.manifest.episodes)
+    assert (line["router"], line["upstream"], line["retention"], line["endpoint_host"]) == ("t", "lab", "zero", "127.0.0.1")
+    for secret in (*SMALL_IDS, pack.pack_id, SALT):
+        assert secret not in text
+    assert _run(pack, out, *remote, "--exposure-log", log)[0] == 0  # nothing pending: nothing sent, nothing logged
+    assert log.read_text(encoding="ascii") == text

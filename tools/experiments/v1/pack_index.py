@@ -164,6 +164,7 @@ def build_index(
             "candidate_seeds": list(protocol.candidate_seeds),
             "stochastic_worlds": protocol.stochastic_worlds,
             "resamples": protocol.resamples,
+            "verdicts": protocol.verdicts,
         },
         "benchmark": {
             "package": "emberbench",
@@ -219,7 +220,7 @@ def build_index(
                 "delta": "A - B",
                 "file": comparison_file(a, b),
                 "digest": text_digest(text),
-                "outcome": json.loads(text)["comparison"]["outcome"],
+                "outcome": json.loads(text)["comparison"].get("outcome"),  # None without verdicts
             }
             for (a, b), text in comparisons.items()
         ],

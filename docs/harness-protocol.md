@@ -90,7 +90,11 @@ unique worlds) with four decision models through the OpenRouter decisions API.
   episode. A refusal never changes another episode's result, and a resume
   does not run a refused episode again. The run record (`refusals`) and the
   accounting summary report the refusal count and rate apart from the
-  score.
+  score. Report both views: the official score (a refusal is 0) and, as a
+  diagnostic only, `score_excluding_refusals` (refused episodes left out). A
+  provider's content filter can fire on fire and casualty wording; the two
+  views tell a filter apart from poor decisions. The diagnostic never ranks
+  models, because each model then averages over different episodes.
 - **Budget.** An optional spend limit (`--budget-usd`) stops the run before the
   next request; this also fails closed.
 

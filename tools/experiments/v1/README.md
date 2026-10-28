@@ -65,6 +65,10 @@ python tools/experiments/v1/run_public_benchmark.py --out ../emberbench-pack-out
 python tools/experiments/v1/run_public_benchmark.py --protocol smoke --out ../emberbench-pack-smoke
 ```
 
+The `smoke` protocol (5 worlds, 100 resamples) only tests the pipeline. It
+reports point scores and intervals, and no comparison outcome
+(`verdicts: false` in the index): 5 worlds in 2 families support no verdict.
+
 The output directory must be outside the repository. On Windows keep its path
 short: the environment pack adds about 70 characters below it, and paths are
 limited to 260 characters. A rerun with the same directory resumes:

@@ -137,6 +137,7 @@ def render_report(
         ["environment pack", f"`{index['environment_pack']['pack_id']}`"],
         ["environment pack digest", f"`{index['environment_pack']['digest']}`"],
         ["bootstrap resamples", str(protocol.resamples)],
+        ["comparison verdicts", "reported" if protocol.verdicts else "not reported (too few worlds)"],
     ]
     out += _table(["Item", "Value"], pins, ["l", "l"])
 
@@ -275,64 +276,83 @@ def render_report(
     )
 
     # ------------------------------------------------------------------ comparisons
-    out += [
-        "",
-        "## 6. Paired comparisons",
-        "",
-        "Official `compare_scores`: the family-balanced mean of paired world-score differences (A - B), its "
-        "stratified paired 95% bootstrap interval, and the outcome rule: `a_better` needs the interval above 0 "
-        f"**and** a difference of at least the practical difference ({_num(any_report.constants.practical_difference, 1)} "
-        "point); `exact_tie` needs every paired world equal; everything else is `inconclusive`. Both models of every "
-        f"pair ran the same {n_worlds} worlds. The required pairs come first. \"A vs B\" reads the official outcome "
-        "from A's side: Better (`a_better`), Worse (`b_better`), Inconclusive or Tie (`exact_tie`). A higher mean "
-        "alone is never called better.",
-        "",
-    ]
-    rows = []
-    for (a, b), text in comparisons.items():
-        c = json.loads(text)["comparison"]
-        rows.append(
+    if not protocol.verdicts:
+        out += [
+            "",
+            "## 6. Paired comparisons",
+            "",
+            f"The `{protocol.name}` protocol has {n_worlds} worlds. That is too few for a verdict, so it reports no "
+            "comparison outcome: only the mean difference (A - B) and its stratified paired 95% bootstrap interval "
+            "from the official `compare_scores`, to test the pipeline.",
+            "",
+        ]
+        out += _table(
+            ["A", "B", "Mean difference", "Paired 95% CI", "Worlds A higher / B higher / equal"],
             [
-                _short(a),
-                _short(b),
-                _signed(c["delta"], 2),
-                _ci(c["ci"], 2, signed=True),
-                _num(c["practical_difference"], 1),
-                f"`{c['outcome']}`",
-                f"**{VERDICTS[c['outcome']]}**",
-                f"{c['a_higher']} / {c['b_higher']} / {c['equal']}",
-            ]
+                [_short(a), _short(b), _signed(c["delta"], 2), _ci(c["ci"], 2, signed=True), f"{c['a_higher']} / {c['b_higher']} / {c['equal']}"]
+                for (a, b), text in comparisons.items()
+                for c in [json.loads(text)["comparison"]]
+            ],
         )
-    out += _table(
-        ["A", "B", "Mean difference", "Paired 95% CI", "Practical difference", "Official outcome", "A vs B", "Worlds A higher / B higher / equal"], rows
-    )
-    zero_width, fewer_worlds = [], []
-    for (a, b), text in comparisons.items():
-        c = json.loads(text)["comparison"]
-        if c["outcome"] != "exact_tie" and c["ci"] is not None and c["ci"]["lower"] == c["ci"]["upper"]:
-            zero_width.append(f"{_short(a)} - {_short(b)}")
-        if (c["outcome"] == "a_better" and c["b_higher"] > c["a_higher"]) or (c["outcome"] == "b_better" and c["a_higher"] > c["b_higher"]):
-            fewer_worlds.append(f"{_short(a)} - {_short(b)} ({c['a_higher']} / {c['b_higher']})")
-    if zero_width:
+    else:
         out += [
             "",
-            "Zero-width intervals: " + ", ".join(f"`{p}`" for p in zero_width) + ". The paired differences on the stochastic "
-            "worlds are all equal, so resampling never changes the mean difference. The interval is exact for these "
-            f"{n_worlds} worlds and says nothing about other worlds.",
+            "## 6. Paired comparisons",
+            "",
+            "Official `compare_scores`: the family-balanced mean of paired world-score differences (A - B), its "
+            "stratified paired 95% bootstrap interval, and the outcome rule: `a_better` needs the interval above 0 "
+            f"**and** a difference of at least the practical difference ({_num(any_report.constants.practical_difference, 1)} "
+            "point); `exact_tie` needs every paired world equal; everything else is `inconclusive`. Both models of every "
+            f"pair ran the same {n_worlds} worlds. The required pairs come first. \"A vs B\" reads the official outcome "
+            "from A's side: Better (`a_better`), Worse (`b_better`), Inconclusive or Tie (`exact_tie`). A higher mean "
+            "alone is never called better.",
+            "",
         ]
-    if fewer_worlds:
+        rows = []
+        for (a, b), text in comparisons.items():
+            c = json.loads(text)["comparison"]
+            rows.append(
+                [
+                    _short(a),
+                    _short(b),
+                    _signed(c["delta"], 2),
+                    _ci(c["ci"], 2, signed=True),
+                    _num(c["practical_difference"], 1),
+                    f"`{c['outcome']}`",
+                    f"**{VERDICTS[c['outcome']]}**",
+                    f"{c['a_higher']} / {c['b_higher']} / {c['equal']}",
+                ]
+            )
+        out += _table(
+            ["A", "B", "Mean difference", "Paired 95% CI", "Practical difference", "Official outcome", "A vs B", "Worlds A higher / B higher / equal"], rows
+        )
+        zero_width, fewer_worlds = [], []
+        for (a, b), text in comparisons.items():
+            c = json.loads(text)["comparison"]
+            if c["outcome"] != "exact_tie" and c["ci"] is not None and c["ci"]["lower"] == c["ci"]["upper"]:
+                zero_width.append(f"{_short(a)} - {_short(b)}")
+            if (c["outcome"] == "a_better" and c["b_higher"] > c["a_higher"]) or (c["outcome"] == "b_better" and c["a_higher"] > c["b_higher"]):
+                fewer_worlds.append(f"{_short(a)} - {_short(b)} ({c['a_higher']} / {c['b_higher']})")
+        if zero_width:
+            out += [
+                "",
+                "Zero-width intervals: " + ", ".join(f"`{p}`" for p in zero_width) + ". The paired differences on the stochastic "
+                "worlds are all equal, so resampling never changes the mean difference. The interval is exact for these "
+                f"{n_worlds} worlds and says nothing about other worlds.",
+            ]
+        if fewer_worlds:
+            out += [
+                "",
+                "Family balance decides: " + ", ".join(f"`{p}`" for p in fewer_worlds) + ". The better model by the official "
+                "family-balanced difference wins fewer worlds than the other model (A higher / B higher), because the 10 "
+                "stochastic worlds form one family and count as one tenth of the score.",
+            ]
         out += [
             "",
-            "Family balance decides: " + ", ".join(f"`{p}`" for p in fewer_worlds) + ". The better model by the official "
-            "family-balanced difference wins fewer worlds than the other model (A higher / B higher), because the 10 "
-            "stochastic worlds form one family and count as one tenth of the score.",
+            "The paired interval has the same limitation as the score interval: deterministic worlds give one fixed "
+            "difference each, so the interval reflects only the stochastic worlds of one family. An `a_better` here means "
+            "\"better on these public worlds\", not \"better in general\".",
         ]
-    out += [
-        "",
-        "The paired interval has the same limitation as the score interval: deterministic worlds give one fixed "
-        "difference each, so the interval reflects only the stochastic worlds of one family. An `a_better` here means "
-        "\"better on these public worlds\", not \"better in general\".",
-    ]
 
     # ------------------------------------------------------------------ lower tail
     out += [

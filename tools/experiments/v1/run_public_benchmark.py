@@ -371,6 +371,8 @@ def run_pack(protocol: pack_protocol.Protocol, out: Path, *, log: Callable[[str]
     for a, b in pack_protocol.paired_comparisons(model_ids):
         log(f"compare  {a} - {b}")
         doc = pack_index.comparison_document(reports[a], reports[b], compare_scores(reports[a], reports[b], resamples=protocol.resamples))
+        if not protocol.verdicts:
+            del doc["comparison"]["outcome"]  # the smoke protocol reports point scores and intervals only
         text = pack_index.canonical(doc) + "\n"
         write(out / pack_index.comparison_file(a, b), text)
         comparisons[(a, b)] = text
